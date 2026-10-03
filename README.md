@@ -63,9 +63,9 @@ Request logs do not include the token.
 | `cacheTTL` | none | `30s` | How long a successful allocation URL is reused. `0s` selects 30 seconds. A negative value disables the cache. |
 | `requestsPerSecond` | none | `10` | Outbound allocation rate. `0` selects 10 per second. Past that limit, the call is `ResourceExhausted` and does not reach the backend. |
 | `rateBurst` | none | `20` | How many outbound requests may run together. `0` selects 20. |
-| `clusterId` | `KUBECOST_CLUSTER_ID` | empty | Stored for the prediction client. Cost methods do not send it. |
-| `defaultNamespace` | `KUBECOST_DEFAULT_NAMESPACE` | `default` | Stored for the prediction client. Cost methods do not send it. |
-| `predictionWindow` | `KUBECOST_PREDICTION_WINDOW` | `2d` | Stored for the prediction client. Cost methods do not send it. |
+| `clusterId` | `KUBECOST_CLUSTER_ID` | empty | Profile `kubecost` `EstimateCost` sends this as `clusterID`. Other cost methods do not. |
+| `defaultNamespace` | `KUBECOST_DEFAULT_NAMESPACE` | `default` | Profile `kubecost` `EstimateCost` sends this as `defaultNamespace`. Other cost methods do not. |
+| `predictionWindow` | `KUBECOST_PREDICTION_WINDOW` | `2d` | Profile `kubecost` `EstimateCost` sends this as `windowAvgUsage`. Other cost methods do not. |
 
 ## Profiles
 
