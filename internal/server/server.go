@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
@@ -42,20 +41,17 @@ func (s *Server) GetActualCost(ctx context.Context, req *pbc.GetActualCostReques
 	if err != nil {
 		return nil, err
 	}
-	resp, err := s.cli.EnhancedAllocation(ctx, query)
+	ref, err := parseResourceID(req.GetResourceId())
+	if err != nil {
+		return nil, err
+	}
+	detailed, err := s.cli.GetDetailedAllocation(ctx, query)
 	if err != nil {
 		return nil, mapBackendError(err)
 	}
-	if len(resp.Items) == 0 {
+	results := resultsFor(detailed, ref)
+	if len(results) == 0 {
 		return nil, noCostData(req.GetResourceId())
-	}
-	results := make([]*pbc.ActualCostResult, 0, len(resp.Items))
-	for _, item := range resp.Items {
-		results = append(results, &pbc.ActualCostResult{
-			Timestamp: timestamppb.New(itemTime(item.Start)),
-			Cost:      item.Cost,
-			Source:    pluginName,
-		})
 	}
 	return &pbc.GetActualCostResponse{Results: results}, nil
 }
