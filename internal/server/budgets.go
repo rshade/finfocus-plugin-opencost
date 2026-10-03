@@ -3,9 +3,11 @@ package server
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
@@ -56,16 +58,17 @@ func namespaceBudgets(rules []allocation.BudgetRule, currency string, includeSta
 		if len(names) == 0 {
 			continue
 		}
-		for _, name := range names {
-			budget, err := budgetFromRule(rule, name, currency, includeStatus)
-			if err != nil {
-				return nil, err
-			}
-			if len(names) > 1 {
-				budget.Id = rule.ID + "/" + name
-			}
-			budgets = append(budgets, budget)
+		budget, err := budgetFromRule(rule, names[0], currency, includeStatus)
+		if err != nil {
+			return nil, err
 		}
+		if len(names) > 1 {
+			// One rule has one spend limit. Keep every name on that budget
+			// instead of copying the full amount onto each name.
+			delete(budget.GetFilter().GetTags(), "namespace")
+			budget.Metadata["namespaces"] = strings.Join(names, ",")
+		}
+		budgets = append(budgets, budget)
 	}
 	return budgets, nil
 }
@@ -131,11 +134,39 @@ func filterBudgets(budgets []*pbc.Budget, filter *pbc.BudgetFilter) []*pbc.Budge
 	}
 	kept := make([]*pbc.Budget, 0, len(budgets))
 	for _, budget := range budgets {
-		if budget.GetFilter().GetTags()["namespace"] == namespace {
-			kept = append(kept, budget)
+		if budgetCoversNamespace(budget, namespace) {
+			kept = append(kept, budgetScopedToNamespace(budget, namespace))
 		}
 	}
 	return kept
+}
+
+func budgetCoversNamespace(budget *pbc.Budget, namespace string) bool {
+	if budget.GetFilter().GetTags()["namespace"] == namespace {
+		return true
+	}
+	for _, name := range strings.Split(budget.GetMetadata()["namespaces"], ",") {
+		if name == namespace {
+			return true
+		}
+	}
+	return false
+}
+
+func budgetScopedToNamespace(budget *pbc.Budget, namespace string) *pbc.Budget {
+	if budget.GetMetadata()["namespaces"] == "" {
+		return budget
+	}
+	cloned, ok := proto.Clone(budget).(*pbc.Budget)
+	if !ok || cloned.GetFilter() == nil {
+		return budget
+	}
+	if cloned.GetFilter().GetTags() == nil {
+		cloned.Filter.Tags = map[string]string{}
+	}
+	cloned.Filter.Tags["namespace"] = namespace
+	cloned.Id = budget.GetId() + "/" + namespace
+	return cloned
 }
 
 func budgetPeriod(interval string) (pbc.BudgetPeriod, error) {
