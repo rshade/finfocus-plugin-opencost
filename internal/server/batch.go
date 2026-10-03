@@ -24,59 +24,63 @@ func (s *Server) EstimateCost(
 	ctx context.Context,
 	req *pbc.EstimateCostRequest,
 ) (*pbc.EstimateCostResponse, error) {
-	ref, err := refForEstimate(req.GetResourceType(), req.GetAttributes())
-	if err != nil {
-		return nil, err
-	}
-	detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
-		Window:      projectionWindow,
-		AggregateBy: ref.aggregate(),
+	return observeResult(ctx, s, "EstimateCost", func() (*pbc.EstimateCostResponse, error) {
+		ref, err := refForEstimate(req.GetResourceType(), req.GetAttributes())
+		if err != nil {
+			return nil, err
+		}
+		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
+			Window:      projectionWindow,
+			AggregateBy: ref.aggregate(),
+		})
+		if err != nil {
+			return nil, mapBackendError(err)
+		}
+		parts := partsFor(detailed, ref)
+		if parts.samples == 0 {
+			return nil, noCostData(ref.id())
+		}
+		currency, err := s.costCurrency(detailed)
+		if err != nil {
+			return nil, err
+		}
+		return estimateFromParts(parts, currency, detailed.FetchedUntil)
 	})
-	if err != nil {
-		return nil, mapBackendError(err)
-	}
-	parts := partsFor(detailed, ref)
-	if parts.samples == 0 {
-		return nil, noCostData(ref.id())
-	}
-	currency, err := s.costCurrency(detailed)
-	if err != nil {
-		return nil, err
-	}
-	return estimateFromParts(parts, currency, detailed.FetchedUntil)
 }
 
 // BatchCost reads one allocation window and reports each resource in request order.
 func (s *Server) BatchCost(ctx context.Context, req *pbc.BatchCostRequest) (*pbc.BatchCostResponse, error) {
-	resp := &pbc.BatchCostResponse{MaxBatchSize: pluginsdk.DefaultMaxBatchSize}
-	resources := req.GetResources()
-	if len(resources) == 0 {
+	return observeResult(ctx, s, "BatchCost", func() (*pbc.BatchCostResponse, error) {
+		resp := &pbc.BatchCostResponse{MaxBatchSize: pluginsdk.DefaultMaxBatchSize}
+		resources := req.GetResources()
+		if len(resources) == 0 {
+			return resp, nil
+		}
+		queryType := req.GetQueryType()
+		if queryType == pbc.CostQueryType_COST_QUERY_TYPE_UNSPECIFIED {
+			queryType = pbc.CostQueryType_COST_QUERY_TYPE_ESTIMATE
+		}
+		window, err := batchWindow(req, queryType)
+		if err != nil {
+			return nil, err
+		}
+		refs, failures, valid := batchRefs(resources)
+		var detailed *allocation.DetailedAllocationResponse
+		var backendErr error
+		if len(valid) > 0 {
+			detailed, backendErr = s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
+				Window:      window,
+				AggregateBy: aggregateFor(valid),
+			})
+		}
+		resp.Results = make([]*pbc.ResourceCostResult, 0, len(resources))
+		for i, resource := range resources {
+			resp.Results = append(resp.Results, s.resourceResult(
+				resource, refs[i], failures[i], detailed, backendErr, queryType,
+			))
+		}
 		return resp, nil
-	}
-	queryType := req.GetQueryType()
-	if queryType == pbc.CostQueryType_COST_QUERY_TYPE_UNSPECIFIED {
-		queryType = pbc.CostQueryType_COST_QUERY_TYPE_ESTIMATE
-	}
-	window, err := batchWindow(req, queryType)
-	if err != nil {
-		return nil, err
-	}
-	refs, failures, valid := batchRefs(resources)
-	var detailed *allocation.DetailedAllocationResponse
-	var backendErr error
-	if len(valid) > 0 {
-		detailed, backendErr = s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
-			Window:      window,
-			AggregateBy: aggregateFor(valid),
-		})
-	}
-	resp.Results = make([]*pbc.ResourceCostResult, 0, len(resources))
-	for i, resource := range resources {
-		resp.Results = append(resp.Results, s.resourceResult(
-			resource, refs[i], failures[i], detailed, backendErr, queryType,
-		))
-	}
-	return resp, nil
+	})
 }
 
 func batchWindow(req *pbc.BatchCostRequest, queryType pbc.CostQueryType) (string, error) {

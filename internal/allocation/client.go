@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 const (
@@ -86,6 +88,9 @@ func httpClient(cfg Config) *http.Client {
 }
 
 func (c *Client) do(req *http.Request) (*http.Response, error) {
+	if id := pluginsdk.TraceIDFromContext(req.Context()); id != "" {
+		req.Header.Set(pluginsdk.TraceIDMetadataKey, id)
+	}
 	c.logger.Info().
 		Str("method", req.Method).
 		Str("url", req.URL.Redacted()).
