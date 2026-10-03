@@ -1,0 +1,10 @@
+source: https://www.ibm.com/docs/en/SSW0JQG_1.x/apis/apis-overview/budget-api.html
+checked: 2026-10-03
+method: GET
+path: /model/budgets
+response fields: code, data, name, id, values, kind, interval, intervalDay, spendLimit, actions, percentage, window, start, end, currentSpend
+namespace example: budget-rule-2, namespace kubecost, monthly, intervalDay 1, spendLimit 400, percentage 25, currentSpend 100
+cluster example: budget-rule, cluster test, weekly, intervalDay 3, spendLimit 100, percentage 75
+window timestamps fill the documented empty strings with RFC3339 placeholders
+ids stand in for the generated budget id
+not verified against live Kubecost
