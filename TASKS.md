@@ -153,7 +153,7 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 | Id | Task | Status |
 | --- | --- | --- |
 | OC-8.1 | Disposition of #18 (Dependency Dashboard): not code. Record "obsolete, Renovate handles it; owner closes" in the register | DONE (`TestDependencyDashboardIsOwnerClose` reads section 8. The register says obsolete, Renovate handles it; owner closes. `renovate.json` extends `config:recommended` and leaves the dashboard on. Break: removing that sentence fails the test. Issue 18 stays open) |
-| OC-8.2 | Convert any remaining Phase 1 to 7 behaviour not yet captured into `openspec/specs/` capabilities and archive the changes | TODO |
+| OC-8.2 | Convert any remaining Phase 1 to 7 behaviour not yet captured into `openspec/specs/` capabilities and archive the changes | DONE (OpenSpec change `remaining-behaviour` archived as `2026-10-03-remaining-behaviour`. New capabilities: `plugin-info`, `cost-errors`, `contract-sources`, and `kind-suite`. Earlier specs already cover allocation, cost, budgets, health, and pricing. Packaging and the Pulumi example stay outside the spec set. No production code change. Break: replacing `no upstream module` in the contract-sources spec fails `TestRemainingBehaviourSpecsExist`. `mise exec -- openspec validate --all --strict` exit 0) |
 | OC-8.3 | Write `superpowers-run-report.md` with the issue-by-issue table, the "Not delivered" register and the spec-gap log | TODO |
 
 ## 6. OpenSpec conversion
