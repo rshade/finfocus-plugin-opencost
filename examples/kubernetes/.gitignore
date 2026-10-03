@@ -1,0 +1,3 @@
+rendered/
+.pulumi-state/
+Pulumi.*.yaml
