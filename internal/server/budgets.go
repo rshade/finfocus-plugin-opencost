@@ -40,7 +40,12 @@ func (s *Server) GetBudgets(
 		if err != nil {
 			return nil, err
 		}
-		return &pbc.GetBudgetsResponse{Budgets: filterBudgets(budgets, req.GetFilter())}, nil
+		filtered := filterBudgets(budgets, req.GetFilter())
+		resp := &pbc.GetBudgetsResponse{Budgets: filtered}
+		if req.GetIncludeStatus() {
+			resp.Summary = budgetSummary(filtered)
+		}
+		return resp, nil
 	})
 }
 
@@ -98,7 +103,7 @@ func budgetFromRule(rule allocation.BudgetRule, namespace, currency string, incl
 			CurrentSpend:   rule.CurrentSpend,
 			PercentageUsed: rule.CurrentSpend / rule.SpendLimit * percentScale,
 			Currency:       currency,
-			Health:         budgetHealth(rule.CurrentSpend, rule.SpendLimit),
+			Health:         budgetHealth(rule.CurrentSpend, rule.SpendLimit, rule.Actions),
 		}
 	}
 	return budget, nil
@@ -133,9 +138,56 @@ func budgetPeriod(interval string) (pbc.BudgetPeriod, error) {
 	}
 }
 
-func budgetHealth(spend, limit float64) pbc.BudgetHealthStatus {
+func budgetSummary(budgets []*pbc.Budget) *pbc.BudgetSummary {
+	var okCount, warningCount, criticalCount, exceededCount int32
+	for _, budget := range budgets {
+		switch budget.GetStatus().GetHealth() {
+		case pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_OK:
+			okCount++
+		case pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_WARNING:
+			warningCount++
+		case pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_CRITICAL:
+			criticalCount++
+		case pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_EXCEEDED:
+			exceededCount++
+		case pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_UNSPECIFIED:
+			continue
+		}
+	}
+	return &pbc.BudgetSummary{
+		TotalBudgets:    okCount + warningCount + criticalCount + exceededCount,
+		BudgetsOk:       okCount,
+		BudgetsWarning:  warningCount,
+		BudgetsCritical: criticalCount,
+		BudgetsExceeded: exceededCount,
+	}
+}
+
+func budgetHealth(spend, limit float64, actions []allocation.BudgetAction) pbc.BudgetHealthStatus {
 	if spend > limit {
 		return pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_EXCEEDED
 	}
+	if spend == limit {
+		return pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_CRITICAL
+	}
+	lowest, found := lowestActionPercentage(actions)
+	if found && limit > 0 && spend/limit*percentScale >= lowest {
+		return pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_WARNING
+	}
 	return pbc.BudgetHealthStatus_BUDGET_HEALTH_STATUS_OK
+}
+
+func lowestActionPercentage(actions []allocation.BudgetAction) (float64, bool) {
+	lowest := 0.0
+	found := false
+	for _, action := range actions {
+		if action.Percentage <= 0 {
+			continue
+		}
+		if !found || action.Percentage < lowest {
+			lowest = action.Percentage
+			found = true
+		}
+	}
+	return lowest, found
 }

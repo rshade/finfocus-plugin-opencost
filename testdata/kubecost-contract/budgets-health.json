@@ -1,0 +1,137 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "name": "budget-ok",
+      "id": "health-ok",
+      "values": {
+        "namespace": ["ns-ok"]
+      },
+      "kind": "soft",
+      "interval": "monthly",
+      "intervalDay": 1,
+      "spendLimit": 100,
+      "actions": [
+        {
+          "percentage": 75,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-11-01T00:00:00Z"
+      },
+      "currentSpend": 10
+    },
+    {
+      "name": "budget-warn",
+      "id": "health-warn",
+      "values": {
+        "namespace": ["ns-warn"]
+      },
+      "kind": "soft",
+      "interval": "monthly",
+      "intervalDay": 1,
+      "spendLimit": 400,
+      "actions": [
+        {
+          "percentage": 75,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        },
+        {
+          "percentage": 25,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-11-01T00:00:00Z"
+      },
+      "currentSpend": 100
+    },
+    {
+      "name": "budget-critical",
+      "id": "health-critical",
+      "values": {
+        "namespace": ["ns-critical"]
+      },
+      "kind": "soft",
+      "interval": "monthly",
+      "intervalDay": 1,
+      "spendLimit": 100,
+      "actions": [
+        {
+          "percentage": 75,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-11-01T00:00:00Z"
+      },
+      "currentSpend": 100
+    },
+    {
+      "name": "budget-exceeded",
+      "id": "health-exceeded",
+      "values": {
+        "namespace": ["ns-exceeded"]
+      },
+      "kind": "soft",
+      "interval": "monthly",
+      "intervalDay": 1,
+      "spendLimit": 100,
+      "actions": [
+        {
+          "percentage": 25,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-11-01T00:00:00Z"
+      },
+      "currentSpend": 400
+    },
+    {
+      "name": "budget-rule",
+      "id": "cluster-budget-1",
+      "values": {
+        "cluster": ["test"]
+      },
+      "kind": "soft",
+      "interval": "weekly",
+      "intervalDay": 3,
+      "spendLimit": 100,
+      "actions": [
+        {
+          "percentage": 75,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-09-30T00:00:00Z",
+        "end": "2026-10-07T00:00:00Z"
+      },
+      "currentSpend": 10
+    }
+  ]
+}

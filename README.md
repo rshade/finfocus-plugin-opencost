@@ -20,6 +20,12 @@ The plugin does not report `ALLOCATION` and does not implement `AllocatorService
 Profile `kubecost` `GetBudgets` calls `GET /model/budgets` and returns rules whose `values.namespace` is set.
 A request tag `namespace` keeps that namespace.
 `amount.currency` comes from pricing config.
+When `include_status` is set, spend over the limit is exceeded, spend equal to the limit is critical, and spend that reaches the lowest action percentage is warning.
+Spend under that percentage is healthy.
+The summary counts OK, warning, critical, and exceeded for the budgets the filter returns.
+Those four counts equal the number of budgets.
+Critical stays its own count.
+A request without `include_status` omits the summary.
 That response is a contract fixture and is not verified against live Kubecost.
 That decision is in [docs/allocator-decision.md](docs/allocator-decision.md).
 

@@ -44,3 +44,26 @@ from `interval`. A namespace tag SHALL name the namespace. An action
 - **WHEN** profile `kubecost` lists budgets and pricing config has no currency
 - **THEN** the RPC is `FailedPrecondition`
 - **AND** the message does not contain `USD`
+
+### Requirement: Budget health and summary counts
+
+When `include_status` is true, each returned budget's health SHALL come from
+`currentSpend`, `spendLimit`, and the lowest positive action `percentage`.
+Spend over `spendLimit` SHALL be exceeded. Spend equal to `spendLimit` SHALL
+be critical. Spend at or above that percentage and under the limit SHALL be
+warning. Spend below that percentage SHALL be ok. The summary SHALL count ok,
+warning, critical, and exceeded for the budgets the filter returns. Those four
+counts SHALL equal `total_budgets`. Critical SHALL stay in its own count. A
+namespace filter SHALL count only the budgets that filter returns. Without
+`include_status`, the summary SHALL be absent. The contract is not verified
+against live Kubecost.
+
+#### Scenario: Four health states beside a cluster rule
+
+- **WHEN** profile `kubecost` lists the health contract fixture with `include_status` set
+- **THEN** each namespace budget health matches its spend, limit, and lowest action percentage
+- **AND** the summary counts equal the returned budgets
+- **AND** the cluster rule is absent from the budgets and from the summary total
+- **AND** a namespace tag for one rule counts only that rule
+- **AND** an unknown namespace returns no budgets and a zero summary
+- **AND** a request without `include_status` has no summary
