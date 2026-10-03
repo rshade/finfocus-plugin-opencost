@@ -46,7 +46,7 @@ dockers:
   - image_templates:
       - "ghcr.io/rshade/finfocus-plugin-opencost:{{ .Version }}"
       - "ghcr.io/rshade/finfocus-plugin-opencost:latest"
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - "--platform=linux/amd64"

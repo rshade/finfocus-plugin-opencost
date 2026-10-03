@@ -30,6 +30,9 @@ jobs:
       - name: Run tests
         run: go test ./...
 
+      - name: Build plugin image
+        run: docker build -t finfocus-plugin-opencost:dev .
+
       - name: Run go vet
         run: go vet ./...
 
