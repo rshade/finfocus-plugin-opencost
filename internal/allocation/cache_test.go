@@ -2,6 +2,7 @@ package allocation //nolint:testpackage // cache clock and transport fields are 
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -30,6 +31,54 @@ func BenchmarkCachedAllocation(b *testing.B) {
 		if _, err = client.GetDetailedAllocation(context.Background(), query); err != nil {
 			b.Fatal(err)
 		}
+	}
+}
+
+func TestCachePutDropsExpiredEntries(t *testing.T) {
+	now := time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
+	cache := newResponseCache(time.Second)
+	cache.put("https://opencost/a", 200, []byte("body-a"), now)
+	cache.put("https://opencost/b", 200, []byte("body-b"), now)
+	now = now.Add(2 * time.Second)
+	cache.put("https://opencost/c", 200, []byte("body-c"), now)
+	if _, ok := cache.entries["https://opencost/a"]; ok {
+		t.Fatal("expired entry a is still stored")
+	}
+	if _, ok := cache.entries["https://opencost/b"]; ok {
+		t.Fatal("expired entry b is still stored")
+	}
+	got, ok := cache.entries["https://opencost/c"]
+	if !ok || string(got.body) != "body-c" {
+		t.Fatal("live entry c was dropped")
+	}
+}
+
+func TestCachePutCapsLiveEntries(t *testing.T) {
+	now := time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
+	cache := newResponseCache(time.Minute)
+	for i := range maxCacheEntries + 1 {
+		cache.put(fmt.Sprintf("https://opencost/%d", i), 200, []byte("x"), now.Add(time.Duration(i)))
+	}
+	if len(cache.entries) != maxCacheEntries {
+		t.Fatalf("entries = %d, want %d", len(cache.entries), maxCacheEntries)
+	}
+	if _, ok := cache.entries["https://opencost/0"]; ok {
+		t.Fatal("oldest live entry was kept past the cap")
+	}
+}
+
+func TestCachePutKeepsNewestWhenExpiriesTie(t *testing.T) {
+	now := time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
+	cache := newResponseCache(time.Minute)
+	newest := fmt.Sprintf("https://opencost/%d", maxCacheEntries)
+	for i := range maxCacheEntries + 1 {
+		cache.put(fmt.Sprintf("https://opencost/%d", i), 200, []byte("x"), now)
+	}
+	if len(cache.entries) != maxCacheEntries {
+		t.Fatalf("entries = %d, want %d", len(cache.entries), maxCacheEntries)
+	}
+	if _, ok := cache.entries[newest]; !ok {
+		t.Fatal("newest entry was dropped when expiries tie")
 	}
 }
 

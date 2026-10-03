@@ -5,7 +5,10 @@ import (
 	"time"
 )
 
-const defaultCacheTTL = 30 * time.Second
+const (
+	defaultCacheTTL = 30 * time.Second
+	maxCacheEntries = 256
+)
 
 func resolvedCacheTTL(configured time.Duration) time.Duration {
 	if configured < 0 {
@@ -55,7 +58,29 @@ func (c *responseCache) put(key string, status int, body []byte, now time.Time) 
 	copied := make([]byte, len(body))
 	copy(copied, body)
 	c.mu.Lock()
+	for existing, entry := range c.entries {
+		if !now.Before(entry.expires) {
+			delete(c.entries, existing)
+		}
+	}
 	c.entries[key] = cachedBody{status: status, body: copied, expires: expires}
+	for len(c.entries) > maxCacheEntries {
+		oldestKey := ""
+		var oldest time.Time
+		for existing, entry := range c.entries {
+			if existing == key {
+				continue
+			}
+			if oldestKey == "" || entry.expires.Before(oldest) {
+				oldestKey = existing
+				oldest = entry.expires
+			}
+		}
+		if oldestKey == "" {
+			break
+		}
+		delete(c.entries, oldestKey)
+	}
 	c.mu.Unlock()
 	return expires
 }
