@@ -9,7 +9,7 @@
 
 ## 1. Scope decision
 
-The owner's decision on 2026-10-03: **all 20 open issues are in scope for v0.1.0**. The plugin is the consolidated Kubecost and OpenCost plugin, named `opencost`, with one client and two endpoint profiles.
+The owner's decision on 2026-10-03: **all 21 open issues (the owner said "20"; #48 makes 21) are in scope for v0.1.0**. The plugin is the consolidated Kubecost and OpenCost plugin, named `opencost`, with one client and two endpoint profiles.
 
 Evidence strength differs by profile and the report must say so:
 
@@ -125,7 +125,7 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 | OC-5.2 | Wait for data: poll `/allocation` until the `oc-test` namespace appears, with a documented timeout | #14 | the poll returns within the timeout on a fresh cluster | TODO |
 | OC-5.3 | `make e2e-kind`: run the plugin binary against the cluster and compare `GetActualCost` for `oc-test` with the oracle | #14 | passes; break check: change one fixed rate and it fails | TODO |
 | OC-5.4 | Plugin conformance: run the SDK conformance suite against the plugin over a real gRPC connection | #14 | suite passes | TODO |
-| OC-5.5 | GitHub Actions job on `ubuntu-latest` using `helm/kind-action`, label-gated or nightly, with cluster logs uploaded on failure | #14, #7 | `actionlint`; the first CI run is an owner action | TODO |
+| OC-5.5 | GitHub Actions job on `ubuntu-latest` using `helm/kind-action` with `install_only: true` (the `finfocus` core `E2E (kind)` job in `ci.yml` does exactly this and passes on `ubuntu-latest`; the make target creates the cluster), label-gated or nightly, with cluster logs uploaded on failure | #14, #7 | `actionlint`; the first CI run is an owner action | TODO |
 | OC-5.6 | **Drift check, live** (section 4a): a scheduled CI job installs the **latest** published `opencost` chart (not the pinned one) on kind, queries `/allocation`, and compares the response key set and the error behaviour (HTTP 400, plain text) with the recorded fixtures. On a difference it fails and prints the added and removed keys. It never rewrites fixtures | #14 | `actionlint`; run the comparison locally against the pinned chart and see it pass, then against a copy of the fixture with one key removed and see it fail | TODO |
 
 ### Phase 6: Packaging and docs
@@ -164,31 +164,31 @@ OpenSpec describes behaviour that exists. At the start there is none, so:
 - From Phase 3 on, each behaviour-changing task or task group is one OpenSpec change. Target capabilities: `allocation-client`, `cost-rpcs`, `endpoint-profiles`, `security`, `kind-suite`, `kubecost-profile`.
 - Each change is proposed, applied, verified and archived. The archive lands in the same commit as the code. After the run, `openspec/specs/` is the description of current behaviour and `TASKS.md` is history.
 
-## 7. Issue index (20 open on 2026-10-03)
+## 7. Issue index (21 open on 2026-10-03)
 
 | Issue | Title | Task |
 | --- | --- | --- |
-| #3 | Supports() implementation | OC-2.3 |
-| #4 | Projected cost, 30-day average | OC-3.4 |
-| #5 | Plugin manifest and install path | OC-1.1, OC-2.2 |
-| #6 | End-to-end example Pulumi stack | OC-6.2 |
-| #7 | CI/CD pipeline | OC-1.4, OC-5.5 |
-| #8 | Protocol buffer integration | OC-2.1 |
-| #9 | Error handling and structured logging | OC-2.5, OC-2.6 |
-| #10 | Docker containerization | OC-6.1 |
-| #11 | Monitoring and observability | OC-4.3 |
-| #12 | Performance optimisation | OC-4.2 |
-| #13 | Security enhancements | OC-4.1 |
-| #14 | Integration testing suite | OC-5.1 to OC-5.5 |
-| #15 | Documentation | OC-6.3 |
-| #18 | Dependency Dashboard | OC-8.1 |
-| #21 | Cost Prediction API | OC-7.1 |
-| #36 | zerolog and trace propagation | OC-2.5 |
-| #38 | GetBudgets | OC-7.2 |
-| #42 | Budget mapping tests | OC-7.3 |
-| #43 | Budget health tests | OC-7.4 |
-| #44 | Namespace filtering and metadata | OC-3.7 |
-| #48 | OpenCost plugin returning pre-allocated rows | OC-3.6 and the whole plan |
+| [#3](https://github.com/rshade/finfocus-plugin-opencost/issues/3) | Supports() implementation | OC-2.3 |
+| [#4](https://github.com/rshade/finfocus-plugin-opencost/issues/4) | Projected cost, 30-day average | OC-3.4 |
+| [#5](https://github.com/rshade/finfocus-plugin-opencost/issues/5) | Plugin manifest and install path | OC-1.1, OC-2.2 |
+| [#6](https://github.com/rshade/finfocus-plugin-opencost/issues/6) | End-to-end example Pulumi stack | OC-6.2 |
+| [#7](https://github.com/rshade/finfocus-plugin-opencost/issues/7) | CI/CD pipeline | OC-1.4, OC-5.5 |
+| [#8](https://github.com/rshade/finfocus-plugin-opencost/issues/8) | Protocol buffer integration | OC-2.1 |
+| [#9](https://github.com/rshade/finfocus-plugin-opencost/issues/9) | Error handling and structured logging | OC-2.5, OC-2.6 |
+| [#10](https://github.com/rshade/finfocus-plugin-opencost/issues/10) | Docker containerization | OC-6.1 |
+| [#11](https://github.com/rshade/finfocus-plugin-opencost/issues/11) | Monitoring and observability | OC-4.3 |
+| [#12](https://github.com/rshade/finfocus-plugin-opencost/issues/12) | Performance optimisation | OC-4.2 |
+| [#13](https://github.com/rshade/finfocus-plugin-opencost/issues/13) | Security enhancements | OC-4.1 |
+| [#14](https://github.com/rshade/finfocus-plugin-opencost/issues/14) | Integration testing suite | OC-5.1 to OC-5.5 |
+| [#15](https://github.com/rshade/finfocus-plugin-opencost/issues/15) | Documentation | OC-6.3 |
+| [#18](https://github.com/rshade/finfocus-plugin-opencost/issues/18) | Dependency Dashboard | OC-8.1 |
+| [#21](https://github.com/rshade/finfocus-plugin-opencost/issues/21) | Cost Prediction API | OC-7.1 |
+| [#36](https://github.com/rshade/finfocus-plugin-opencost/issues/36) | zerolog and trace propagation | OC-2.5 |
+| [#38](https://github.com/rshade/finfocus-plugin-opencost/issues/38) | GetBudgets | OC-7.2 |
+| [#42](https://github.com/rshade/finfocus-plugin-opencost/issues/42) | Budget mapping tests | OC-7.3 |
+| [#43](https://github.com/rshade/finfocus-plugin-opencost/issues/43) | Budget health tests | OC-7.4 |
+| [#44](https://github.com/rshade/finfocus-plugin-opencost/issues/44) | Namespace filtering and metadata | OC-3.7 |
+| [#48](https://github.com/rshade/finfocus-plugin-opencost/issues/48) | OpenCost plugin returning pre-allocated rows | OC-3.6 and the whole plan |
 
 ## 8. Not delivered (the agent fills this in)
 
