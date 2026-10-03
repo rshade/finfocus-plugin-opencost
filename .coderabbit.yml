@@ -269,9 +269,9 @@ custom_rules:
       pattern: "kubecost"
       severity: "medium"
       
-    - name: "pulumicost_plugin_structure"
-      description: "Verify proper PulumiCost plugin structure"
-      pattern: "pulumicost"
+    - name: "finfocus_plugin_structure"
+      description: "Verify proper FinFocus plugin structure"
+      pattern: "finfocus"
       severity: "medium"
       
     - name: "grpc_implementation"

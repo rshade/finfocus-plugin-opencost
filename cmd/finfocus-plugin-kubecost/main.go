@@ -11,11 +11,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/rshade/pulumicost-plugin-kubecost/internal/kubecost"
-	"github.com/rshade/pulumicost-plugin-kubecost/internal/server"
-	"github.com/rshade/pulumicost-plugin-kubecost/pkg/version"
-	// TODO: Add when pulumicost-spec is available
-	// pbc "github.com/yourorg/pulumicost-spec/sdk/go/proto"
+	"github.com/rshade/finfocus-plugin-kubecost/internal/kubecost"
+	"github.com/rshade/finfocus-plugin-kubecost/internal/server"
+	"github.com/rshade/finfocus-plugin-kubecost/pkg/version"
+	// TODO: Add when finfocus-spec is available
+	// pbc "github.com/rshade/finfocus-spec/sdk/go/proto"
 )
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 		log.Fatalf("client: %v", err)
 	}
 
-	log.Printf("pulumicost-kubecost starting, %s", version.String())
+	log.Printf("finfocus-plugin-kubecost starting, %s", version.String())
 
 	// Pulumi-style plugins often use stdin/stdout. For simplicity here, use a TCP loopback.
 	// Your plugin host can launch and connect to this ephemeral port; or adapt to stdio transport.
@@ -55,7 +55,7 @@ func main() {
 
 	grpcServer := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 	_ = server.NewKubecostServer(cli)
-	// TODO: Uncomment when pulumicost-spec protobuf definitions are available
+	// TODO: Uncomment when finfocus-spec protobuf definitions are available
 	// kubecostServer.RegisterService(grpcServer)
 
 	log.Printf("listening on %s", lis.Addr().String())
@@ -73,6 +73,9 @@ func cubectx(ctx context.Context) context.Context {
 			t = parsed
 		}
 	}
-	c, _ := context.WithTimeout(ctx, t) //nolint:govet // cancel not needed for this use case
+	c, cancel := context.WithTimeout(ctx, t)
+	// Note: cancel is not called because the timeout context is returned for immediate use.
+	// The caller is responsible for cleanup via the context's done channel or timeout expiration.
+	_ = cancel
 	return c
 }

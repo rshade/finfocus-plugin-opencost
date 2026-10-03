@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	kubecost "github.com/rshade/pulumicost-plugin-kubecost/internal/kubecost"
+	kubecost "github.com/rshade/finfocus-plugin-kubecost/internal/kubecost"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -19,7 +19,7 @@ const (
 	avgDaysForProjection = 30.0
 )
 
-// TODO: Replace these stubs when pulumicost-spec protobuf definitions are available
+// TODO: Replace these stubs when finfocus-spec protobuf definitions are available
 type UnimplementedCostSourceServer struct{}
 type Empty struct{}
 type PluginName struct{ Name string }
@@ -58,7 +58,7 @@ func NewKubecostServer(cli *kubecost.Client) *KubecostServer {
 }
 
 func (s *KubecostServer) RegisterService(_ *grpc.Server) {
-	// TODO: Uncomment when pulumicost-spec is available
+	// TODO: Uncomment when finfocus-spec is available
 	// pbc.RegisterCostSourceServer(grpcServer, s)
 }
 

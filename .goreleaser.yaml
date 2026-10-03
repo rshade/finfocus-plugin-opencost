@@ -1,0 +1,112 @@
+version: 2
+
+project_name: finfocus-plugin-kubecost
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.Version={{.Version}}
+      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.BuildDate={{.Date}}
+      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitCommit={{.Commit}}
+      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitBranch={{.Branch}}
+      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitState={{if .Dirty}}dirty{{else}}clean{{end}}
+    binary: finfocus-plugin-kubecost
+    main: ./cmd/finfocus-plugin-kubecost
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ title .Os }}_{{ if eq .Arch \"amd64\" }}x86_64{{ else }}{{ .Arch }}{{ end }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - plugin.manifest.json
+      - config.example.yaml
+
+dockers:
+  - image_templates:
+      - "ghcr.io/rshade/finfocus-plugin-kubecost:{{ .Version }}"
+      - "ghcr.io/rshade/finfocus-plugin-kubecost:latest"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--platform=linux/arm64"
+    extra_files:
+      - config.example.yaml
+      - plugin.manifest.json
+
+brews:
+  - name: finfocus-plugin-kubecost
+    homepage: "https://github.com/rshade/finfocus-plugin-kubecost"
+    description: "FinFocus plugin for Kubecost integration"
+    repository:
+      owner: rshade
+      name: homebrew-tap
+    commit_author:
+      name: goreleaserbot
+      email: goreleaser@carlosbecker.com
+    test: |
+      system "#{bin}/finfocus-plugin-kubecost", "-version"
+    install: |
+      bin.install "finfocus-plugin-kubecost"
+      prefix.install "config.example.yaml"
+      prefix.install "plugin.manifest.json"
+
+nfpms:
+  - maintainer: "rshade <rshade@example.com>"
+    description: "FinFocus plugin for Kubecost integration"
+    homepage: "https://github.com/rshade/finfocus-plugin-kubecost"
+    license: "MIT"
+    formats:
+      - deb
+      - rpm
+    contents:
+      - src: config.example.yaml
+        dst: /etc/finfocus/kubecost/config.example.yaml
+      - src: plugin.manifest.json
+        dst: /etc/finfocus/kubecost/plugin.manifest.json
+    scripts:
+      postinstall: scripts/postinstall.sh
+      postremove: scripts/postremove.sh
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - Merge pull request
+      - Merge branch
+
+release:
+  draft: false
+  prerelease: auto
+
+dist: dist

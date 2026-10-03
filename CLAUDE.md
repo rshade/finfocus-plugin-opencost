@@ -20,7 +20,7 @@ make install
 
 ## Project Architecture
 
-This is a gRPC plugin that implements the CostSource service from `pulumicost-spec`. Key components:
+This is a gRPC plugin that implements the CostSource service from `finfocus-spec`. Key components:
 
 - **gRPC Server**: Listens on port 50051, implements the CostSource service methods
 - **Kubecost Client**: HTTP client that queries the Kubecost API for allocation data
@@ -53,7 +53,7 @@ The plugin supports IBM Kubecost Cost Prediction API for proactive cost forecast
 ## Dependencies
 
 The plugin depends on:
-- `github.com/yourorg/pulumicost-spec/sdk/go/proto` - Protocol buffer definitions (needs to be replaced with actual import path)
+- `github.com/rshade/finfocus-spec/sdk/go/proto` - Protocol buffer definitions
 - Standard gRPC and protobuf libraries
 - `gopkg.in/yaml.v3` for configuration parsing
 
@@ -154,7 +154,7 @@ The project has two allocation methods with different capabilities:
 
 ### Testing Architecture
 - Uses mock HTTP servers (`httptest.NewServer`) for integration testing
-- Mock protobuf types defined locally due to missing `pulumicost-spec` dependency
+- Mock protobuf types defined locally due to missing `finfocus-spec` dependency
 - Integration tests validate end-to-end functionality including URL building and response parsing
 
 ### Configuration Handling
