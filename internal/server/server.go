@@ -4,7 +4,6 @@ package server
 import (
 	"context"
 	"sync/atomic"
-	"time"
 
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
@@ -55,7 +54,10 @@ func (s *Server) GetActualCost(
 		if err != nil {
 			return nil, mapBackendError(err)
 		}
-		results := resultsFor(detailed, ref)
+		results, err := resultsFor(detailed, ref)
+		if err != nil {
+			return nil, err
+		}
 		if len(results) == 0 {
 			return nil, noCostData(req.GetResourceId())
 		}
@@ -67,14 +69,6 @@ func (s *Server) GetActualCost(
 		stampActualExpiry(results, detailed.FetchedUntil)
 		return &pbc.GetActualCostResponse{Results: results}, nil
 	})
-}
-
-func itemTime(start string) time.Time {
-	parsed, err := time.Parse(time.RFC3339, start)
-	if err != nil {
-		return time.Unix(0, 0).UTC()
-	}
-	return parsed
 }
 
 // GetProjectedCost projects one resource from its trailing allocation, not the cluster.
@@ -159,7 +153,7 @@ func (s *Server) GetPricingSpec(
 				Unit:         "hour",
 				Source:       "opencost",
 				Description:  "observed hourly cost from the trailing allocation window",
-				Assumptions:  []string{projectedBillingDetail},
+				Assumptions:  []string{hourlyRateAssumption},
 			},
 		}, nil
 	})

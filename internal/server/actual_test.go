@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
@@ -90,7 +92,23 @@ func TestGetActualCostFiltersRecordedAllocations(t *testing.T) {
 		for i := range want {
 			require.InDelta(t, want[i], resp.GetResults()[i].GetCost(), 1e-9)
 		}
+		first := resp.GetResults()[0].GetTimestamp().AsTime().UTC().Format(time.RFC3339)
+		second := resp.GetResults()[1].GetTimestamp().AsTime().UTC().Format(time.RFC3339)
+		require.Equal(t, "2026-10-03T10:54:00Z", first)
+		require.Equal(t, "2026-10-03T10:55:00Z", second)
 	})
+}
+
+func TestActualCostRejectsUnparsedWindowStart(t *testing.T) {
+	t.Parallel()
+
+	body := []byte(`{"code":200,"data":[{"oc-test":{"name":"oc-test",` +
+		`"properties":{"namespace":"oc-test"},"window":{"start":"not-a-time"},` +
+		`"start":"not-a-time","minutes":1,"totalCost":1}}]}`)
+	srv := serverForRecorded(t, body, `namespace:"oc-test"`, "namespace")
+	_, err := srv.GetActualCost(t.Context(), actualWindow("namespace/oc-test"))
+	require.Error(t, err)
+	require.Equal(t, codes.FailedPrecondition, status.Code(err))
 }
 
 func serverForRecorded(t *testing.T, body []byte, filter, aggregate string) *server.Server {

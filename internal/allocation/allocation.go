@@ -94,16 +94,17 @@ func ResponseCurrency(resp *DetailedAllocationResponse) (string, error) {
 
 // Properties contains metadata about the allocation.
 type Properties struct {
-	Cluster        string            `json:"cluster,omitempty"`
-	Node           string            `json:"node,omitempty"`
-	Container      string            `json:"container,omitempty"`
-	Controller     string            `json:"controller,omitempty"`
-	ControllerKind string            `json:"controllerKind,omitempty"`
-	Namespace      string            `json:"namespace,omitempty"`
-	Pod            string            `json:"pod,omitempty"`
-	Services       []string          `json:"services,omitempty"`
-	Labels         map[string]string `json:"labels,omitempty"`
-	Annotations    map[string]string `json:"annotations,omitempty"`
+	Cluster         string            `json:"cluster,omitempty"`
+	Node            string            `json:"node,omitempty"`
+	Container       string            `json:"container,omitempty"`
+	Controller      string            `json:"controller,omitempty"`
+	ControllerKind  string            `json:"controllerKind,omitempty"`
+	Namespace       string            `json:"namespace,omitempty"`
+	Pod             string            `json:"pod,omitempty"`
+	Services        []string          `json:"services,omitempty"`
+	Labels          map[string]string `json:"labels,omitempty"`
+	NamespaceLabels map[string]string `json:"namespaceLabels,omitempty"`
+	Annotations     map[string]string `json:"annotations,omitempty"`
 }
 
 // Window represents the time window for the allocation.

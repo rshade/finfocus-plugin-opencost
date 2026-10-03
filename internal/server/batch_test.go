@@ -62,6 +62,28 @@ func TestBatchCostKeepsOrderAndPartialFailure(t *testing.T) {
 		1e-6)
 }
 
+func TestEstimateCostDefaultsEmptyNamespace(t *testing.T) {
+	t.Parallel()
+
+	body := []byte(`{"code":200,"data":[{"default/deployment:nginx":{` +
+		`"properties":{"namespace":"default","controller":"nginx","controllerKind":"deployment"},` +
+		`"minutes":60,"totalCost":2,"cpuCost":2},` +
+		`"other/deployment:nginx":{` +
+		`"properties":{"namespace":"other","controller":"nginx","controllerKind":"deployment"},` +
+		`"minutes":60,"totalCost":9,"cpuCost":9}}]}`)
+	srv := serverForFilter(t, body, nil)
+	attrs, err := structpb.NewStruct(map[string]any{
+		"metadata": map[string]any{"name": "nginx"},
+	})
+	require.NoError(t, err)
+	resp, err := srv.EstimateCost(t.Context(), &pbc.EstimateCostRequest{
+		ResourceType: "kubernetes:apps/v1:Deployment",
+		Attributes:   attrs,
+	})
+	require.NoError(t, err)
+	require.InDelta(t, 2.0/1.0*730, resp.GetCostMonthly(), 1e-6)
+}
+
 func TestEstimateCostUsesRecordedNamespace(t *testing.T) {
 	t.Parallel()
 

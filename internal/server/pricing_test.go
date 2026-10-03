@@ -38,6 +38,9 @@ func TestGetPricingSpecUsesObservedHourlyRate(t *testing.T) {
 	require.Greater(t, spec.GetRatePerUnit(), 0.0)
 	hours := left.entry.Minutes / 60
 	require.InDelta(t, left.entry.TotalCost/hours, spec.GetRatePerUnit(), 1e-9)
+	require.Equal(t, []string{
+		"observed hourly cost over the trailing 30-day allocation window",
+	}, spec.GetAssumptions())
 
 	_, err = srv.GetPricingSpec(t.Context(), &pbc.GetPricingSpecRequest{
 		Resource: &pbc.ResourceDescriptor{
