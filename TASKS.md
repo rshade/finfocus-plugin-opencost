@@ -141,7 +141,7 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 
 | Id | Task | Issues | Verify | Status |
 | --- | --- | --- | --- | --- |
-| OC-7.1 | Cost prediction (`/model/prediction/speccost`) behind the `kubecost` profile, exposed through `EstimateCost`. Read `kubecost/kubectl-cost` `pkg/query/prediction_speccost.go` first (Apache-2.0) and cite the file and commit in each fixture | #21 | contract-fixture test; label `contract-fixture`; report as "not verified against live Kubecost" | TODO |
+| OC-7.1 | Cost prediction (`/model/prediction/speccost`) behind the `kubecost` profile, exposed through `EstimateCost`. Read `kubecost/kubectl-cost` `pkg/query/prediction_speccost.go` first (Apache-2.0) and cite the file and commit in each fixture | #21 | contract-fixture test; label `contract-fixture`; report as "not verified against live Kubecost" | DONE (`TestEstimateCostKubecostUsesSpecCostContract` label contract-fixture. Profile kubecost posts attributes to `/model/prediction/speccost` and `cost_monthly` is `costAfter.totalMonthlyRate`. Fixture cites `pkg/query/prediction_speccost.go` commit `1f45d3085b2ffa84758bfa8131ea8b7784cd8ed1`. Break: returning `costBefore` differs by 15.5. Restored `costAfter` passes. Not verified against live Kubecost. Issue 21 stays open) |
 | OC-7.2 | `GetBudgets` from Kubecost namespace budgets | #38 | contract-fixture test | TODO |
 | OC-7.3 | Budget mapping and namespace filtering tests | #42 | tests pass over fixtures | TODO |
 | OC-7.4 | Budget health aggregation and multi-provider summary tests | #43 | tests pass over fixtures | TODO |

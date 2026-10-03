@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -125,20 +126,43 @@ type AllocationResponse struct {
 	Items []AllocationPoint `json:"items"`
 }
 
-// PredictionRequest represents the request for cost prediction API.
+// SpecCostWindowResourceCost is the kubectl-cost --window-cost default.
+// pkg/cmd/predict.go at 1f45d3085b2ffa84758bfa8131ea8b7784cd8ed1.
+const SpecCostWindowResourceCost = "7d offset 48h"
+
+const specCostWindowUsageDefault = "2d"
+
+// PredictionRequest is the POST /model/prediction/speccost query.
+// Query names follow pkg/cmd/predict.go at the commit cited above.
 type PredictionRequest struct {
-	ClusterID        string `json:"clusterID"`
-	DefaultNamespace string `json:"defaultNamespace"`
-	Window           string `json:"window,omitempty"`  // Optional: duration for cost prediction (default: "2d")
-	NoUsage          bool   `json:"noUsage,omitempty"` // Optional: ignore historical usage data
-	WorkloadSpec     string `json:"workloadSpec"`      // YAML or JSON workload specification
+	ClusterID          string
+	DefaultNamespace   string
+	WindowAvgUsage     string
+	WindowResourceCost string
+	NoUsage            bool
+	WorkloadSpec       string
 }
 
-// PredictionResponse represents the response from cost prediction API.
-type PredictionResponse struct {
-	CostBefore string `json:"costBefore"` // Current monthly cost
-	CostAfter  string `json:"costAfter"`  // Projected monthly cost
-	CostChange string `json:"costChange"` // Difference between costs
+// CostPrediction is one side of a spec cost diff.
+// json tags match pkg/query/prediction_speccost.go at that commit.
+type CostPrediction struct {
+	TotalMonthlyRate    float64 `json:"totalMonthlyRate"`
+	CPUMonthlyRate      float64 `json:"cpuMonthlyRate"`
+	RAMMonthlyRate      float64 `json:"ramMonthlyRate"`
+	GPUMonthlyRate      float64 `json:"gpuMonthlyRate"`
+	MonthlyCPUCoreHours float64 `json:"monthlyCPUCoreHours"`
+	MonthlyRAMByteHours float64 `json:"monthlyRAMByteHours"`
+	MonthlyGPUHours     float64 `json:"monthlyGPUHours"`
+}
+
+// SpecCostDiff is one predicted workload from the spec cost API.
+type SpecCostDiff struct {
+	Namespace      string         `json:"namespace"`
+	ControllerKind string         `json:"controllerKind"`
+	ControllerName string         `json:"controllerName"`
+	CostBefore     CostPrediction `json:"costBefore"`
+	CostAfter      CostPrediction `json:"costAfter"`
+	CostChange     CostPrediction `json:"costChange"`
 }
 
 func (c *Client) Allocation(ctx context.Context, q AllocationQuery) (AllocationResponse, error) {
@@ -163,38 +187,38 @@ func (c *Client) Allocation(ctx context.Context, q AllocationQuery) (AllocationR
 	return out, nil
 }
 
-// PredictSpecCost sends a workload specification to the Kubecost prediction API
-// and returns the predicted cost impact.
-func (c *Client) PredictSpecCost(ctx context.Context, req PredictionRequest) (PredictionResponse, error) {
-	// Build the prediction API URL
+// PredictSpecCost posts a workload spec to /model/prediction/speccost.
+// The response shape is the kubectl-cost SpecCostResponse array.
+// Not verified against live Kubecost.
+func (c *Client) PredictSpecCost(ctx context.Context, req PredictionRequest) ([]SpecCostDiff, error) {
+	if err := c.limiter.allow(c.clock()); err != nil {
+		return nil, err
+	}
 	u, err := url.Parse(c.cfg.BaseURL)
 	if err != nil {
-		return PredictionResponse{}, fmt.Errorf("invalid base URL: %w", err)
+		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}
 	u.Path = "/model/prediction/speccost"
-
-	// Build query parameters
+	usage := req.WindowAvgUsage
+	if usage == "" {
+		usage = specCostWindowUsageDefault
+	}
+	costWindow := req.WindowResourceCost
+	if costWindow == "" {
+		costWindow = SpecCostWindowResourceCost
+	}
 	params := url.Values{}
 	params.Set("clusterID", req.ClusterID)
 	params.Set("defaultNamespace", req.DefaultNamespace)
-
-	// Add optional parameters
-	if req.Window != "" {
-		params.Set("window", req.Window)
-	}
-	if req.NoUsage {
-		params.Set("noUsage", "true")
-	}
-
+	params.Set("windowAvgUsage", usage)
+	params.Set("windowResourceCost", costWindow)
+	params.Set("noUsage", strconv.FormatBool(req.NoUsage))
 	u.RawQuery = params.Encode()
 
-	// Determine content type based on workload spec format
 	contentType := "application/yaml"
 	if isJSON(req.WorkloadSpec) {
 		contentType = "application/json"
 	}
-
-	// Create the HTTP request with workload spec as body
 	httpReq, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -202,32 +226,25 @@ func (c *Client) PredictSpecCost(ctx context.Context, req PredictionRequest) (Pr
 		bytes.NewBufferString(req.WorkloadSpec),
 	)
 	if err != nil {
-		return PredictionResponse{}, fmt.Errorf("creating request: %w", err)
+		return nil, fmt.Errorf("creating request: %w", err)
 	}
-
-	// Set headers
 	httpReq.Header.Set("Content-Type", contentType)
 	httpReq.Header.Set("Accept", "application/json")
 	c.setAuth(httpReq)
 
 	resp, err := c.do(httpReq)
 	if err != nil {
-		return PredictionResponse{}, fmt.Errorf("executing request: %w", err)
+		return nil, fmt.Errorf("executing request: %w", err)
 	}
 	defer resp.Body.Close()
-
-	// Check for HTTP errors
 	if resp.StatusCode >= httpClientError {
-		return PredictionResponse{}, fmt.Errorf("kubecost prediction API error: status=%d", resp.StatusCode)
+		return nil, fmt.Errorf("prediction API error: status=%d", resp.StatusCode)
 	}
-
-	// Decode the response
-	var predResp PredictionResponse
-	if decodeErr := json.NewDecoder(resp.Body).Decode(&predResp); decodeErr != nil {
-		return PredictionResponse{}, fmt.Errorf("decoding response: %w", decodeErr)
+	var rows []SpecCostDiff
+	if decodeErr := json.NewDecoder(resp.Body).Decode(&rows); decodeErr != nil {
+		return nil, fmt.Errorf("decoding response: %w", decodeErr)
 	}
-
-	return predResp, nil
+	return rows, nil
 }
 
 // isJSON checks if the string appears to be JSON format.
