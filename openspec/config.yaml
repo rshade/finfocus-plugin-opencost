@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  Plugin: finfocus-plugin-opencost, FinFocus cost source named opencost.
+  Module: github.com/rshade/finfocus-plugin-opencost. Binary: finfocus-plugin-opencost.
+  Spec: finfocus-spec v0.7.1 via the sibling SDK. Do not import github.com/opencost/opencost
+  from the plugin module. Drift checks live in the separate test/drift module.
+  Profiles: opencost calls /allocation with includeIdle and no required token.
+  kubecost calls /model/allocation with a bearer token. Kubecost behaviour is
+  contract-fixture only and is not verified against a live Kubecost backend.
+  Owner-owned ground truth in testdata/opencost-real/ is read-only.
+  Go 1.27. Tests use testify require and assert, go test -count=1.
+  Conventional commits. One task, one commit. No absolute machine paths.
+  Errors are explicit gRPC statuses. A zero cost is only a real zero.
+  cost_breakdown sums to cost_per_month. Trace ids come from the SDK.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
