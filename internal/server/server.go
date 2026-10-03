@@ -97,8 +97,3 @@ func (s *Server) GetProjectedCost(
 func (s *Server) GetPricingSpec(context.Context, *pbc.GetPricingSpecRequest) (*pbc.GetPricingSpecResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "OC-2.1")
 }
-
-// EstimateCost is completed in OC-3.5.
-func (s *Server) EstimateCost(context.Context, *pbc.EstimateCostRequest) (*pbc.EstimateCostResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "OC-3.5")
-}

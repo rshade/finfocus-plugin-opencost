@@ -7,23 +7,30 @@ import (
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
+const (
+	typeNamespace  = "kubernetes:core/v1:Namespace"
+	typeNode       = "kubernetes:core/v1:Node"
+	aliasNamespace = "k8s-namespace"
+	aliasNode      = "k8s-node"
+)
+
 // supportedTypes are the resource types core forwards and this plugin can filter.
 // Pulumi tokens are copied through by finfocus (see docs/resource-mapping.md).
 // The k8s-* names are the examples in costsource.proto ResourceDescriptor.resource_type.
 var supportedTypes = map[string]struct{}{
-	"kubernetes:core/v1:Namespace":   {},
+	typeNamespace:                    {},
 	"kubernetes:core/v1:Pod":         {},
-	"kubernetes:core/v1:Node":        {},
+	typeNode:                         {},
 	"kubernetes:apps/v1:Deployment":  {},
 	"kubernetes:apps/v1:StatefulSet": {},
 	"kubernetes:apps/v1:DaemonSet":   {},
 	"kubernetes:apps/v1:ReplicaSet":  {},
 	"kubernetes:batch/v1:Job":        {},
 	"kubernetes:batch/v1:CronJob":    {},
-	"k8s-namespace":                  {},
+	aliasNamespace:                   {},
 	"k8s-pod":                        {},
 	"k8s-controller":                 {},
-	"k8s-node":                       {},
+	aliasNode:                        {},
 }
 
 // Supports reports whether this cost source can price the resource.
