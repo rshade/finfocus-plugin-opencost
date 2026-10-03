@@ -1,4 +1,4 @@
-package kubecost
+package allocation
 
 import (
 	"bytes"

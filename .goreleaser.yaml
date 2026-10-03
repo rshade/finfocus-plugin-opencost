@@ -1,6 +1,6 @@
 version: 2
 
-project_name: finfocus-plugin-kubecost
+project_name: finfocus-plugin-opencost
 
 before:
   hooks:
@@ -22,13 +22,13 @@ builds:
         goarch: arm64
     ldflags:
       - -s -w
-      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.Version={{.Version}}
-      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.BuildDate={{.Date}}
-      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitCommit={{.Commit}}
-      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitBranch={{.Branch}}
-      - -X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitState={{if .Dirty}}dirty{{else}}clean{{end}}
-    binary: finfocus-plugin-kubecost
-    main: ./cmd/finfocus-plugin-kubecost
+      - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.Version={{.Version}}
+      - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.BuildDate={{.Date}}
+      - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitCommit={{.Commit}}
+      - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitBranch={{.Branch}}
+      - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitState={{if .Dirty}}dirty{{else}}clean{{end}}
+    binary: finfocus-plugin-opencost
+    main: ./cmd/finfocus-plugin-opencost
 
 archives:
   - format: tar.gz
@@ -44,8 +44,8 @@ archives:
 
 dockers:
   - image_templates:
-      - "ghcr.io/rshade/finfocus-plugin-kubecost:{{ .Version }}"
-      - "ghcr.io/rshade/finfocus-plugin-kubecost:latest"
+      - "ghcr.io/rshade/finfocus-plugin-opencost:{{ .Version }}"
+      - "ghcr.io/rshade/finfocus-plugin-opencost:latest"
     dockerfile: Dockerfile
     use: buildx
     build_flag_templates:
@@ -56,8 +56,8 @@ dockers:
       - plugin.manifest.json
 
 brews:
-  - name: finfocus-plugin-kubecost
-    homepage: "https://github.com/rshade/finfocus-plugin-kubecost"
+  - name: finfocus-plugin-opencost
+    homepage: "https://github.com/rshade/finfocus-plugin-opencost"
     description: "FinFocus plugin for Kubecost integration"
     repository:
       owner: rshade
@@ -66,25 +66,25 @@ brews:
       name: goreleaserbot
       email: goreleaser@carlosbecker.com
     test: |
-      system "#{bin}/finfocus-plugin-kubecost", "-version"
+      system "#{bin}/finfocus-plugin-opencost", "-version"
     install: |
-      bin.install "finfocus-plugin-kubecost"
+      bin.install "finfocus-plugin-opencost"
       prefix.install "config.example.yaml"
       prefix.install "plugin.manifest.json"
 
 nfpms:
   - maintainer: "rshade <rshade@example.com>"
     description: "FinFocus plugin for Kubecost integration"
-    homepage: "https://github.com/rshade/finfocus-plugin-kubecost"
+    homepage: "https://github.com/rshade/finfocus-plugin-opencost"
     license: "MIT"
     formats:
       - deb
       - rpm
     contents:
       - src: config.example.yaml
-        dst: /etc/finfocus/kubecost/config.example.yaml
+        dst: /etc/finfocus/opencost/config.example.yaml
       - src: plugin.manifest.json
-        dst: /etc/finfocus/kubecost/plugin.manifest.json
+        dst: /etc/finfocus/opencost/plugin.manifest.json
     scripts:
       postinstall: scripts/postinstall.sh
       postremove: scripts/postremove.sh

@@ -1,4 +1,4 @@
-package kubecost //nolint:testpackage // Package name intentionally matches implementation for simplicity
+package allocation //nolint:testpackage // Package name intentionally matches implementation for simplicity
 
 import (
 	"context"

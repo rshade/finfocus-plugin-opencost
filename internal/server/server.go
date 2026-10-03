@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	kubecost "github.com/rshade/finfocus-plugin-kubecost/internal/kubecost"
+	allocation "github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -50,10 +50,10 @@ type PredictionResponse struct{ CostBefore, CostAfter, CostChange string }
 
 type KubecostServer struct {
 	UnimplementedCostSourceServer
-	cli *kubecost.Client
+	cli *allocation.Client
 }
 
-func NewKubecostServer(cli *kubecost.Client) *KubecostServer {
+func NewKubecostServer(cli *allocation.Client) *KubecostServer {
 	return &KubecostServer{cli: cli}
 }
 
@@ -100,7 +100,7 @@ func (s *KubecostServer) GetActualCost(ctx context.Context, q *ActualCostQuery) 
 		}
 	}
 
-	resp, err := s.cli.EnhancedAllocation(ctx, kubecost.AllocationQuery{
+	resp, err := s.cli.EnhancedAllocation(ctx, allocation.AllocationQuery{
 		Window: window,
 		Filter: filter,
 	})
@@ -189,7 +189,7 @@ func (s *KubecostServer) PredictSpecCost(ctx context.Context, req *PredictionReq
 	}
 
 	// Create kubecost prediction request
-	kubecostReq := kubecost.PredictionRequest{
+	kubecostReq := allocation.PredictionRequest{
 		ClusterID:        clusterID,
 		DefaultNamespace: defaultNamespace,
 		Window:           window,

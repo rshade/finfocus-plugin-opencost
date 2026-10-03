@@ -1,4 +1,4 @@
-module github.com/rshade/finfocus-plugin-kubecost
+module github.com/rshade/finfocus-plugin-opencost
 
 go 1.27.1
 
