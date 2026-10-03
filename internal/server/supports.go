@@ -27,8 +27,10 @@ var supportedTypes = map[string]struct{}{
 }
 
 // Supports reports whether this cost source can price the resource.
-func (s *Server) Supports(_ context.Context, req *pbc.SupportsRequest) (*pbc.SupportsResponse, error) {
+func (s *Server) Supports(ctx context.Context, req *pbc.SupportsRequest) (*pbc.SupportsResponse, error) {
 	resourceType := req.GetResource().GetResourceType()
+	log := s.requestLogger(ctx)
+	log.Info().Str("resource_type", resourceType).Msg("supports")
 	if _, ok := supportedTypes[resourceType]; ok {
 		return &pbc.SupportsResponse{Supported: true}, nil
 	}

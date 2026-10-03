@@ -29,7 +29,9 @@ func Info() *pluginsdk.PluginInfo {
 }
 
 // GetPluginInfo returns the name, the pkg/version value, and a v-prefixed spec version.
-func (s *Server) GetPluginInfo(context.Context, *pbc.GetPluginInfoRequest) (*pbc.GetPluginInfoResponse, error) {
+func (s *Server) GetPluginInfo(ctx context.Context, _ *pbc.GetPluginInfoRequest) (*pbc.GetPluginInfoResponse, error) {
+	log := s.requestLogger(ctx)
+	log.Info().Msg("plugin info")
 	info := Info()
 	if err := info.Validate(); err != nil {
 		return nil, status.Errorf(codes.Internal, "plugin info: %v", err)

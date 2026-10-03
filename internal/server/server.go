@@ -7,6 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/rs/zerolog"
+
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
@@ -15,7 +17,8 @@ const pluginName = "opencost"
 
 // Server implements the FinFocus cost-source plugin interface.
 type Server struct {
-	cli *allocation.Client
+	cli    *allocation.Client
+	logger zerolog.Logger
 }
 
 // New returns a server that reads allocation data through cli.
