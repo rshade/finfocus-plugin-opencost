@@ -152,7 +152,7 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 
 | Id | Task | Status |
 | --- | --- | --- |
-| OC-8.1 | Disposition of #18 (Dependency Dashboard): not code. Record "obsolete, Renovate handles it; owner closes" in the register | TODO |
+| OC-8.1 | Disposition of #18 (Dependency Dashboard): not code. Record "obsolete, Renovate handles it; owner closes" in the register | DONE (`TestDependencyDashboardIsOwnerClose` reads section 8. The register says obsolete, Renovate handles it; owner closes. `renovate.json` extends `config:recommended` and leaves the dashboard on. Break: removing that sentence fails the test. Issue 18 stays open) |
 | OC-8.2 | Convert any remaining Phase 1 to 7 behaviour not yet captured into `openspec/specs/` capabilities and archive the changes | TODO |
 | OC-8.3 | Write `superpowers-run-report.md` with the issue-by-issue table, the "Not delivered" register and the spec-gap log | TODO |
 
@@ -195,6 +195,7 @@ OpenSpec describes behaviour that exists. At the start there is none, so:
 | Item | Reason | Owner action |
 | --- | --- | --- |
 | [#48](https://github.com/rshade/finfocus-plugin-opencost/issues/48) AllocatorService | OpenCost totals are not a split of host priced node costs, so they fail conservation in `allocation.proto`. See `docs/allocator-decision.md`. | Leave the issue open. Do not claim `ALLOCATION`. |
+| [#18](https://github.com/rshade/finfocus-plugin-opencost/issues/18) Dependency Dashboard | obsolete, Renovate handles it; owner closes. `renovate.json` extends `config:recommended` and leaves the dashboard on. | Owner closes #18. |
 
 ## 9. Spec-gap log (the agent fills this in)
 
