@@ -47,6 +47,9 @@ e2e-kind-up:
 e2e-kind-wait:
 	hack/kind/e2e-wait.sh
 
+e2e-kind:
+	hack/kind/e2e-kind.sh
+
 e2e-kind-down:
 	hack/kind/e2e-down.sh
 
