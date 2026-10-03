@@ -24,9 +24,9 @@ func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
 	}
 	id := resource.GetId()
 	switch resource.GetResourceType() {
-	case "kubernetes:core/v1:Namespace", "k8s-namespace":
+	case typeNamespace, aliasNamespace:
 		return singleName(kindNamespace, id)
-	case "kubernetes:core/v1:Node", "k8s-node":
+	case typeNode, aliasNode:
 		return singleName(kindNode, id)
 	case "kubernetes:core/v1:Pod", "k8s-pod":
 		return namespacedName(kindPod, id)

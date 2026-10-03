@@ -29,4 +29,5 @@ func TestGetPluginInfoReportsSpecAndCapabilities(t *testing.T) {
 	require.Contains(t, resp.GetCapabilities(), pbc.PluginCapability_PLUGIN_CAPABILITY_PROJECTED_COSTS)
 	require.Contains(t, resp.GetCapabilities(), pbc.PluginCapability_PLUGIN_CAPABILITY_PRICING_SPEC)
 	require.Contains(t, resp.GetCapabilities(), pbc.PluginCapability_PLUGIN_CAPABILITY_ESTIMATE_COST)
+	require.Contains(t, resp.GetCapabilities(), pbc.PluginCapability_PLUGIN_CAPABILITY_BATCH_COST)
 }
