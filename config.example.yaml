@@ -1,10 +1,12 @@
-baseUrl: https://kubecost.example.com
-apiToken: ""
+baseUrl: https://opencost.example.com
+profile: opencost
+currency: EUR
 defaultWindow: 30d
 timeout: 15s
 tlsSkipVerify: false
-
-# Prediction API specific configuration
-clusterId: your-cluster-id
+cacheTTL: 30s
+requestsPerSecond: 10
+rateBurst: 20
+clusterId: production-cluster
 defaultNamespace: default
 predictionWindow: 2d

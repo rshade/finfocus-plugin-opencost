@@ -1,4 +1,12 @@
 FinFocus
 Kubecost
+OpenCost
+Pulumi
 gRPC
 EKS
+namespace
+RPC
+RPCs
+stderr
+DaemonSet
+config
