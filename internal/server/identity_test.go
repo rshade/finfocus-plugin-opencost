@@ -87,6 +87,36 @@ func TestActualCostUsesCloudIDAndResourceTypeTag(t *testing.T) {
 	require.InDelta(t, 1.5, resp.GetResults()[0].GetCost(), 1e-9)
 }
 
+func TestProjectedCostRejectsEmptyIDEvenWithMetadataName(t *testing.T) {
+	t.Parallel()
+
+	var filter string
+	srv := serverForFilter(t, []byte(`{"code":200,"data":[]}`), &filter)
+	_, err := srv.GetProjectedCost(t.Context(), &pbc.GetProjectedCostRequest{
+		Resource: &pbc.ResourceDescriptor{
+			ResourceType: "kubernetes:core/v1:Namespace",
+			Id:           "  ",
+			Tags:         map[string]string{"metadata.name": "oc-test"},
+		},
+	})
+	require.Error(t, err)
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
+	require.Empty(t, filter)
+}
+
+func TestActualCostRejectsKindIDThatDisagreesWithResourceTypeTag(t *testing.T) {
+	t.Parallel()
+
+	var filter string
+	srv := serverForFilter(t, []byte(`{"code":200,"data":[]}`), &filter)
+	req := actualWindow("namespace/payments")
+	req.Tags = map[string]string{"resource_type": "kubernetes:apps/v1:Deployment"}
+	_, err := srv.GetActualCost(t.Context(), req)
+	require.Error(t, err)
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
+	require.Empty(t, filter)
+}
+
 func TestProjectedCostRejectsKindIDThatDisagreesWithType(t *testing.T) {
 	t.Parallel()
 
