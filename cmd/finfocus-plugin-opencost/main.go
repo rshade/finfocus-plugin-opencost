@@ -3,79 +3,69 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
-	"net"
 	"os"
-	"time"
+	"os/signal"
+	"syscall"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"github.com/rs/zerolog"
 
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	"github.com/rshade/finfocus-plugin-opencost/internal/server"
 	"github.com/rshade/finfocus-plugin-opencost/pkg/version"
-	// TODO: Add when finfocus-spec is available
-	// pbc "github.com/rshade/finfocus-spec/sdk/go/proto"
+	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 )
 
 func main() {
-	// Parse command line flags
+	os.Exit(run())
+}
+
+func run() int {
 	showVersion := flag.Bool("version", false, "Show version information")
 	showVersionFull := flag.Bool("version-full", false, "Show detailed version information")
 	flag.Parse()
 
-	// Handle version flags
 	if *showVersion {
 		_, _ = os.Stdout.WriteString(version.String() + "\n")
-		os.Exit(0)
+		return 0
 	}
 	if *showVersionFull {
 		_, _ = os.Stdout.WriteString(version.FullString() + "\n")
-		os.Exit(0)
+		return 0
 	}
 
-	cfg, err := allocation.LoadConfigFromEnvOrFile(os.Getenv("KUBECOST_CONFIG"))
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("plugin", "opencost").Logger()
+
+	configPath := os.Getenv("OPENCOST_CONFIG")
+	if configPath == "" {
+		configPath = os.Getenv("KUBECOST_CONFIG")
+	}
+	cfg, err := allocation.LoadConfigFromEnvOrFile(configPath)
 	if err != nil {
-		log.Fatalf("config: %v", err)
+		logger.Error().Err(err).Msg("config")
+		return 1
 	}
-
-	cli, err := allocation.NewClient(cubectx(context.Background()), cfg)
+	cli, err := allocation.NewClient(context.Background(), cfg)
 	if err != nil {
-		log.Fatalf("client: %v", err)
+		logger.Error().Err(err).Msg("client")
+		return 1
 	}
 
-	log.Printf("finfocus-plugin-opencost starting, %s", version.String())
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
 
-	// Pulumi-style plugins often use stdin/stdout. For simplicity here, use a TCP loopback.
-	// Your plugin host can launch and connect to this ephemeral port; or adapt to stdio transport.
-	lis, err := net.Listen("tcp", "127.0.0.1:50051")
-	if err != nil {
-		log.Fatalf("listen: %v", err)
+	port := pluginsdk.ParsePortFlag()
+	if port == 0 {
+		port = pluginsdk.GetPort()
 	}
 
-	grpcServer := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
-	_ = server.NewKubecostServer(cli)
-	// TODO: Uncomment when finfocus-spec protobuf definitions are available
-	// kubecostServer.RegisterService(grpcServer)
-
-	log.Printf("listening on %s", lis.Addr().String())
-	if serveErr := grpcServer.Serve(lis); serveErr != nil {
-		log.Fatalf("serve: %v", serveErr)
+	serveErr := pluginsdk.Serve(ctx, pluginsdk.ServeConfig{
+		Plugin: server.New(cli),
+		Port:   port,
+		Logger: &logger,
+	})
+	if serveErr != nil {
+		logger.Error().Err(serveErr).Msg("serve")
+		return 1
 	}
-}
-
-const defaultTimeoutSeconds = 30
-
-func cubectx(ctx context.Context) context.Context {
-	t := defaultTimeoutSeconds * time.Second
-	if d := os.Getenv("KUBECOST_TIMEOUT"); d != "" {
-		if parsed, err := time.ParseDuration(d); err == nil {
-			t = parsed
-		}
-	}
-	c, cancel := context.WithTimeout(ctx, t)
-	// Note: cancel is not called because the timeout context is returned for immediate use.
-	// The caller is responsible for cleanup via the context's done channel or timeout expiration.
-	_ = cancel
-	return c
+	return 0
 }

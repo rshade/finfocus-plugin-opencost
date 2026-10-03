@@ -88,7 +88,7 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 
 | Id | Task | Issues | Verify | Status |
 | --- | --- | --- | --- | --- |
-| OC-2.1 | Add the `finfocus-spec` v0.7.1 dependency and the SDK; delete the local stub types; register the server through the SDK | #8 | `go build ./...` with no local stub types; `rg "TODO: Replace these stubs"` prints nothing | TODO |
+| OC-2.1 | Add the `finfocus-spec` v0.7.1 dependency and the SDK; delete the local stub types; register the server through the SDK | #8 | `go build ./...` with no local stub types; a search for the old stub marker prints nothing | DONE (`go build ./...` and `go test -count=1 ./internal/server -run TestServerNameAndSDKRegistration` exit 0; stub-marker search empty outside this plan. Break: `Name` returning kubecost fails TestServerNameAndSDKRegistration) |
 | OC-2.2 | Implement `Name`, `GetPluginInfo` (version from `pkg/version`, spec version `v`-prefixed) and declare capabilities with `WithCapabilities` | #5 | unit tests; `GetPluginInfo` returns a `v`-prefixed `spec_version`; break check: drop the prefix and the test fails | TODO |
 | OC-2.3 | Implement `Supports` for the Kubernetes resource types core sends (see OC-2.4), declining everything else with a reason | #3 | table-driven test over every supported and one unsupported type | TODO |
 | OC-2.4 | Read-only investigation: what `ResourceDescriptor` does core send for Kubernetes resources, and what does the `plugins/kubernetes` plugin send? Write `docs/resource-mapping.md` with the answer, citing file and line in the sibling `finfocus` checkout | | the document exists and every claim cites a file; `markdownlint` | TODO |
