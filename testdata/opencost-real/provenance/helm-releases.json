@@ -1,0 +1,1 @@
+[{"name":"opencost","namespace":"opencost","revision":"1","updated":"2026-10-03 05:51:38.839966146 -0500 CDT","status":"deployed","chart":"opencost-2.5.32","app_version":"1.121.3"},{"name":"prometheus","namespace":"prometheus-system","revision":"1","updated":"2026-10-03 05:50:33.068920334 -0500 CDT","status":"deployed","chart":"prometheus-29.35.0","app_version":"v3.15.0"}]

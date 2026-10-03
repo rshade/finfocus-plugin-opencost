@@ -1,0 +1,23 @@
+{
+  "description": "Expected OpenCost allocation for namespace oc-test, computed from the workload manifest and the fixed rates without calling OpenCost.",
+  "inputs": {
+    "namespace": "oc-test",
+    "replicas": 2,
+    "cpu_request_cores_per_pod": 0.5,
+    "memory_request_gib_per_pod": 0.5,
+    "rates_per_hour": {"cpu_per_core": 2.0, "ram_per_gib": 1.0},
+    "source_files": ["provenance/workload.yaml", "provenance/oc-values.yaml"]
+  },
+  "formulas": {
+    "cpuCost": "replicas * cpu_request_cores_per_pod * rates_per_hour.cpu_per_core * minutes / 60",
+    "ramCost": "replicas * memory_request_gib_per_pod * rates_per_hour.ram_per_gib * minutes / 60",
+    "totalCost": "cpuCost + ramCost"
+  },
+  "minutes_source": "the 'minutes' field of the response under test, because the window start is rounded to Prometheus data",
+  "relative_tolerance": 0.005,
+  "applies_when": "the pods are idle (usage below request), so OpenCost bills the request",
+  "observed_2026-10-03": {
+    "file": "allocation-namespace-60m.json",
+    "note": "the first sample after install had negative minutes and cost; wait until minutes is positive and request averages are non-zero"
+  }
+}
