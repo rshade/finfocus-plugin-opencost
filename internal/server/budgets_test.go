@@ -127,6 +127,36 @@ func TestGetBudgetsUsesNamespaceBudgetContract(t *testing.T) {
 	require.Equal(t, "Bearer test-token", gotAuth)
 }
 
+func TestGetBudgetsKeepsEveryNamespaceOnARule(t *testing.T) {
+	t.Parallel()
+
+	body := []byte(`{"code":200,"data":[{"name":"shared","id":"shared",` +
+		`"values":{"namespace":["web","payments"]},"kind":"namespace","interval":"monthly",` +
+		`"spendLimit":10,"currentSpend":1}]}`)
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/model/budgets" {
+			http.NotFound(w, r)
+			return
+		}
+		_, _ = w.Write(body)
+	}))
+	t.Cleanup(backend.Close)
+	cli, err := allocation.NewClient(t.Context(), allocation.Config{
+		BaseURL:  backend.URL,
+		Profile:  allocation.ProfileKubecost,
+		Currency: "EUR",
+	})
+	require.NoError(t, err)
+	srv := server.New(cli)
+	resp, err := srv.GetBudgets(t.Context(), &pbc.GetBudgetsRequest{
+		Filter: &pbc.BudgetFilter{Tags: map[string]string{"namespace": "payments"}},
+	})
+	require.NoError(t, err)
+	require.Len(t, resp.GetBudgets(), 1)
+	require.Equal(t, "shared/payments", resp.GetBudgets()[0].GetId())
+	require.Equal(t, "payments", resp.GetBudgets()[0].GetFilter().GetTags()["namespace"])
+}
+
 func TestGetBudgetsKubecostNeedsCurrency(t *testing.T) {
 	t.Parallel()
 	t.Attr("label", "contract-fixture")
