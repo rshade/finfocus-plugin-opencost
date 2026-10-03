@@ -1,6 +1,7 @@
 package server
 
 import (
+	"maps"
 	"sort"
 	"strings"
 
@@ -11,10 +12,12 @@ import (
 )
 
 const (
-	kindNamespace  = "namespace"
-	kindController = "controller"
-	kindPod        = "pod"
-	kindNode       = "node"
+	kindNamespace          = "namespace"
+	kindController         = "controller"
+	kindPod                = "pod"
+	kindNode               = "node"
+	columnControllerKind   = "controllerKind"
+	annotationColumnPrefix = "annotation."
 )
 
 type resourceRef struct {
@@ -98,11 +101,37 @@ func resultsFor(resp *allocation.DetailedAllocationResponse, ref resourceRef) []
 				continue
 			}
 			results = append(results, &pbc.ActualCostResult{
-				Timestamp: timestamppb.New(itemTime(entry.Start)),
-				Cost:      entry.TotalCost,
-				Source:    pluginName,
+				Timestamp:   timestamppb.New(itemTime(entry.Start)),
+				Cost:        entry.TotalCost,
+				Source:      pluginName,
+				FocusRecord: focusFor(entry.Properties),
 			})
 		}
 	}
 	return results
+}
+
+// focusFor copies OpenCost labels, annotations, and controller kind onto the
+// result. ActualCostResult has no metadata map. FOCUS tags are the label map.
+// Controller kind and annotations use extended columns, which the spec defines
+// as provider-specific extensions. The record stays partial: currency is OC-3.8.
+func focusFor(props allocation.AllocationProperties) *pbc.FocusCostRecord {
+	if len(props.Labels) == 0 && props.ControllerKind == "" && len(props.Annotations) == 0 {
+		return nil
+	}
+	record := &pbc.FocusCostRecord{}
+	if len(props.Labels) > 0 {
+		record.Tags = maps.Clone(props.Labels)
+	}
+	columns := make(map[string]string, len(props.Annotations))
+	if props.ControllerKind != "" {
+		columns[columnControllerKind] = props.ControllerKind
+	}
+	for key, value := range props.Annotations {
+		columns[annotationColumnPrefix+key] = value
+	}
+	if len(columns) > 0 {
+		record.ExtendedColumns = columns
+	}
+	return record
 }
