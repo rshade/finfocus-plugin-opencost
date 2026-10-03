@@ -32,7 +32,7 @@ func (s *Server) EstimateCost(
 		if profile == allocation.ProfileKubecost {
 			return s.estimatePredicted(ctx, req)
 		}
-		ref, err := refForEstimate(req.GetResourceType(), req.GetAttributes())
+		ref, err := refForEstimate(req.GetResourceType(), req.GetAttributes(), "default")
 		if err != nil {
 			return nil, err
 		}
@@ -274,7 +274,7 @@ func estimateFromParts(parts costParts, currency string, until time.Time) (*pbc.
 	return resp, nil
 }
 
-func refForEstimate(resourceType string, attrs *structpb.Struct) (resourceRef, error) {
+func refForEstimate(resourceType string, attrs *structpb.Struct, namespaceFallback string) (resourceRef, error) {
 	if !knownType(resourceType) {
 		return resourceRef{}, status.Errorf(codes.InvalidArgument, "resource type %q is not supported", resourceType)
 	}
@@ -282,7 +282,10 @@ func refForEstimate(resourceType string, attrs *structpb.Struct) (resourceRef, e
 	id := name
 	if namespacedEstimate(resourceType) {
 		if namespace == "" {
-			namespace = "default"
+			if namespaceFallback == "" {
+				namespaceFallback = "default"
+			}
+			namespace = namespaceFallback
 		}
 		id = namespace + "/" + name
 	}

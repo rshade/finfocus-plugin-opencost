@@ -18,7 +18,8 @@ func (s *Server) estimatePredicted(
 	ctx context.Context,
 	req *pbc.EstimateCostRequest,
 ) (*pbc.EstimateCostResponse, error) {
-	ref, err := refForEstimate(req.GetResourceType(), req.GetAttributes())
+	cfg := s.cli.GetConfig()
+	ref, err := refForEstimate(req.GetResourceType(), req.GetAttributes(), cfg.DefaultNamespace)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +27,6 @@ func (s *Server) estimatePredicted(
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "workload spec: %v", err)
 	}
-	cfg := s.cli.GetConfig()
 	rows, err := s.cli.PredictSpecCost(ctx, allocation.PredictionRequest{
 		ClusterID:          cfg.ClusterID,
 		DefaultNamespace:   cfg.DefaultNamespace,

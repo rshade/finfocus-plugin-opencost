@@ -53,7 +53,7 @@ A bare cloud id such as `oc-example` is a namespace or node when `resource_type`
 
 ### Cost prediction
 
-Profile `opencost` `EstimateCost` reads `metadata.name` as a namespace and queries the allocation API for window `30d`. Profile `kubecost` `EstimateCost` posts the resource attributes to `POST /model/prediction/speccost` and returns `costAfter.totalMonthlyRate`. Query names are `clusterID`, `defaultNamespace`, `windowAvgUsage` (`predictionWindow`, default `2d`), `windowResourceCost` (`7d offset 48h`), and `noUsage=false`. Currency comes from pricing config. The response fixture is a contract example.
+Profile `opencost` `EstimateCost` reads `metadata.name` as a namespace and queries the allocation API for window `30d`. An empty `metadata.namespace` on that profile uses the namespace `default`. Profile `kubecost` `EstimateCost` posts the resource attributes unchanged to `POST /model/prediction/speccost` and returns `costAfter.totalMonthlyRate`. An empty `metadata.namespace` on that profile matches the row in `defaultNamespace`. Query names are `clusterID`, `defaultNamespace`, `windowAvgUsage` (`predictionWindow`, default `2d`), `windowResourceCost` (`7d offset 48h`), and `noUsage=false`. Currency comes from pricing config. The response fixture is a contract example.
 
 ### Error Handling
 

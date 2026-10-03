@@ -112,6 +112,63 @@ func TestEstimateCostKubecostUsesSpecCostContract(t *testing.T) {
 	require.JSONEq(t, string(wantBody), got.body)
 }
 
+func TestEstimateCostKubecostUsesConfiguredDefaultNamespace(t *testing.T) {
+	t.Parallel()
+
+	const configured = "payments"
+	const wantMonthly = 25.5
+	fixture := []byte(`[` +
+		`{"namespace":"default","controllerKind":"deployment","controllerName":"fixed",` +
+		`"costAfter":{"totalMonthlyRate":9}},` +
+		`{"namespace":"payments","controllerKind":"deployment","controllerName":"fixed",` +
+		`"costAfter":{"totalMonthlyRate":25.5}}]`)
+	attrs, err := structpb.NewStruct(map[string]any{
+		"metadata": map[string]any{"name": "fixed"},
+	})
+	require.NoError(t, err)
+	wantBody, err := protojson.Marshal(attrs)
+	require.NoError(t, err)
+
+	var mu sync.Mutex
+	var got specCostCall
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, readErr := io.ReadAll(r.Body)
+		if readErr != nil {
+			http.Error(w, readErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		q := r.URL.Query()
+		mu.Lock()
+		got = specCostCall{
+			query: map[string]string{"defaultNamespace": q.Get("defaultNamespace")},
+			body:  string(body),
+		}
+		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(fixture)
+	}))
+	t.Cleanup(backend.Close)
+
+	cli, err := allocation.NewClient(t.Context(), allocation.Config{
+		BaseURL:          backend.URL,
+		Profile:          allocation.ProfileKubecost,
+		Currency:         "EUR",
+		DefaultNamespace: configured,
+	})
+	require.NoError(t, err)
+	resp, err := server.New(cli).EstimateCost(t.Context(), &pbc.EstimateCostRequest{
+		ResourceType: "kubernetes:apps/v1:Deployment",
+		Attributes:   attrs,
+	})
+	require.NoError(t, err)
+	require.InDelta(t, wantMonthly, resp.GetCostMonthly(), 1e-9)
+
+	mu.Lock()
+	defer mu.Unlock()
+	require.Equal(t, configured, got.query["defaultNamespace"])
+	require.JSONEq(t, string(wantBody), got.body)
+}
+
 func TestEstimateCostKubecostPredictionNeedsCurrency(t *testing.T) {
 	t.Parallel()
 	t.Attr("label", "contract-fixture")
