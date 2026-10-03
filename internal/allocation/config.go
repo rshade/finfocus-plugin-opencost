@@ -19,8 +19,9 @@ const (
 )
 
 type Config struct {
-	BaseURL       string        `yaml:"baseUrl"`
-	APIToken      string        `yaml:"apiToken"`
+	BaseURL string `yaml:"baseUrl"`
+	// APIToken is read from KUBECOST_API_TOKEN. YAML apiToken is ignored.
+	APIToken      string        `yaml:"-"`
 	Profile       string        `yaml:"profile"`
 	DefaultWindow string        `yaml:"defaultWindow"` // e.g. "30d"
 	Timeout       time.Duration `yaml:"timeout"`
@@ -63,6 +64,7 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	if currency := os.Getenv("OPENCOST_CURRENCY"); currency != "" {
 		cfg.Currency = currency
 	}
+	cfg.APIToken = os.Getenv("KUBECOST_API_TOKEN")
 	return cfg, nil
 }
 

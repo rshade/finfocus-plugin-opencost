@@ -3,6 +3,7 @@ module github.com/rshade/finfocus-plugin-opencost
 go 1.27.1
 
 require (
+	github.com/rs/zerolog v1.35.1
 	github.com/rshade/finfocus-spec v0.7.1
 	github.com/stretchr/testify v1.12.1
 	google.golang.org/grpc v1.84.0
@@ -29,7 +30,6 @@ require (
 	github.com/prometheus/client_model v0.6.3 // indirect
 	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
-	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/rshade/ax-go v0.7.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect

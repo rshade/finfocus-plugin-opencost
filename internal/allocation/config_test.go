@@ -110,13 +110,13 @@ tlsSkipVerify: false
 		t.Fatalf("LoadConfigFromEnvOrFile failed: %v", err)
 	}
 
-	// File values should override environment values
+	// File values override environment values. The API token stays on the environment.
 	if cfg.BaseURL != "http://file-test:9090" {
 		t.Errorf("Expected BaseURL %s, got %s", "http://file-test:9090", cfg.BaseURL)
 	}
 
-	if cfg.APIToken != "file-token" {
-		t.Errorf("Expected APIToken %s, got %s", "file-token", cfg.APIToken)
+	if cfg.APIToken != "env-token" {
+		t.Errorf("Expected APIToken from the environment, got %s", cfg.APIToken)
 	}
 
 	if cfg.DefaultWindow != "14d" {
