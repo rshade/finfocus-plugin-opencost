@@ -127,6 +127,59 @@ func TestGetBudgetsUsesNamespaceBudgetContract(t *testing.T) {
 	require.Equal(t, "Bearer test-token", gotAuth)
 }
 
+func TestGetBudgetsDoesNotDoubleCountSharedNamespaceSpend(t *testing.T) {
+	t.Parallel()
+
+	const spendLimit = 10.0
+	const currentSpend = 4.0
+	body := []byte(`{"code":200,"data":[{"name":"shared","id":"shared",` +
+		`"values":{"namespace":["web","payments"]},"kind":"namespace","interval":"monthly",` +
+		`"spendLimit":10,"currentSpend":4}]}`)
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/model/budgets" {
+			http.NotFound(w, r)
+			return
+		}
+		_, _ = w.Write(body)
+	}))
+	t.Cleanup(backend.Close)
+	cli, err := allocation.NewClient(t.Context(), allocation.Config{
+		BaseURL:  backend.URL,
+		Profile:  allocation.ProfileKubecost,
+		Currency: "EUR",
+	})
+	require.NoError(t, err)
+	srv := server.New(cli)
+
+	resp, err := srv.GetBudgets(t.Context(), &pbc.GetBudgetsRequest{IncludeStatus: true})
+	require.NoError(t, err)
+	var limit, spend float64
+	for _, budget := range resp.GetBudgets() {
+		limit += budget.GetAmount().GetLimit()
+		spend += budget.GetStatus().GetCurrentSpend()
+	}
+	require.InDelta(t, spendLimit, limit, 1e-9)
+	require.InDelta(t, currentSpend, spend, 1e-9)
+	require.Equal(t, int32(1), resp.GetSummary().GetTotalBudgets())
+	require.Equal(t, int32(1), resp.GetSummary().GetBudgetsOk())
+	require.Equal(t, "shared", resp.GetBudgets()[0].GetId())
+
+	for _, name := range []string{"web", "payments"} {
+		filtered, filterErr := srv.GetBudgets(t.Context(), &pbc.GetBudgetsRequest{
+			IncludeStatus: true,
+			Filter:        &pbc.BudgetFilter{Tags: map[string]string{"namespace": name}},
+		})
+		require.NoError(t, filterErr)
+		require.Len(t, filtered.GetBudgets(), 1)
+		got := filtered.GetBudgets()[0]
+		require.Equal(t, "shared/"+name, got.GetId())
+		require.Equal(t, name, got.GetFilter().GetTags()["namespace"])
+		require.InDelta(t, spendLimit, got.GetAmount().GetLimit(), 1e-9)
+		require.InDelta(t, currentSpend, got.GetStatus().GetCurrentSpend(), 1e-9)
+		require.Equal(t, int32(1), filtered.GetSummary().GetTotalBudgets())
+	}
+}
+
 func TestGetBudgetsKeepsEveryNamespaceOnARule(t *testing.T) {
 	t.Parallel()
 
