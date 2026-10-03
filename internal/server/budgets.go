@@ -40,7 +40,7 @@ func (s *Server) GetBudgets(
 		if err != nil {
 			return nil, err
 		}
-		return &pbc.GetBudgetsResponse{Budgets: budgets}, nil
+		return &pbc.GetBudgetsResponse{Budgets: filterBudgets(budgets, req.GetFilter())}, nil
 	})
 }
 
@@ -102,6 +102,20 @@ func budgetFromRule(rule allocation.BudgetRule, namespace, currency string, incl
 		}
 	}
 	return budget, nil
+}
+
+func filterBudgets(budgets []*pbc.Budget, filter *pbc.BudgetFilter) []*pbc.Budget {
+	namespace := filter.GetTags()["namespace"]
+	if namespace == "" {
+		return budgets
+	}
+	kept := make([]*pbc.Budget, 0, len(budgets))
+	for _, budget := range budgets {
+		if budget.GetFilter().GetTags()["namespace"] == namespace {
+			kept = append(kept, budget)
+		}
+	}
+	return kept
 }
 
 func budgetPeriod(interval string) (pbc.BudgetPeriod, error) {

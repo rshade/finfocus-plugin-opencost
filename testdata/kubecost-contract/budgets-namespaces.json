@@ -1,0 +1,80 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "name": "oc-test-month",
+      "id": "ns-oc-test",
+      "values": {
+        "namespace": ["oc-test"]
+      },
+      "kind": "soft",
+      "interval": "monthly",
+      "intervalDay": 1,
+      "spendLimit": 400,
+      "actions": [
+        {
+          "percentage": 25,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-11-01T00:00:00Z"
+      },
+      "currentSpend": 100
+    },
+    {
+      "name": "web-week",
+      "id": "ns-web",
+      "values": {
+        "namespace": ["web"]
+      },
+      "kind": "soft",
+      "interval": "weekly",
+      "intervalDay": 3,
+      "spendLimit": 100,
+      "actions": [
+        {
+          "percentage": 75,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-09-30T00:00:00Z",
+        "end": "2026-10-07T00:00:00Z"
+      },
+      "currentSpend": 10
+    },
+    {
+      "name": "cluster-week",
+      "id": "cluster-budget-1",
+      "values": {
+        "cluster": ["test"]
+      },
+      "kind": "soft",
+      "interval": "weekly",
+      "intervalDay": 3,
+      "spendLimit": 100,
+      "actions": [
+        {
+          "percentage": 75,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-09-30T00:00:00Z",
+        "end": "2026-10-07T00:00:00Z"
+      },
+      "currentSpend": 10
+    }
+  ]
+}

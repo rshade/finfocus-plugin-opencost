@@ -30,6 +30,15 @@ from `interval`. A namespace tag SHALL name the namespace. An action
 - **WHEN** profile `kubecost` lists the same fixture without `include_status`
 - **THEN** the namespace budget has no status
 
+#### Scenario: Namespace filter
+
+- **WHEN** profile `kubecost` lists two namespace rules and one cluster rule, and the request tag `namespace` names the weekly rule
+- **THEN** the only budget is that weekly rule
+- **AND** `period` is weekly
+- **AND** metadata `intervalDay` and `kind` match the rule
+- **AND** a request for an unknown namespace returns no budgets
+- **AND** a request without a namespace tag returns both namespace rules and not the cluster rule
+
 #### Scenario: No configured currency
 
 - **WHEN** profile `kubecost` lists budgets and pricing config has no currency
