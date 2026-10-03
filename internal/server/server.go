@@ -58,6 +58,7 @@ func (s *Server) GetActualCost(ctx context.Context, req *pbc.GetActualCostReques
 		return nil, err
 	}
 	applyCurrency(results, currency)
+	stampActualExpiry(results, detailed.FetchedUntil)
 	return &pbc.GetActualCostResponse{Results: results}, nil
 }
 
@@ -99,7 +100,7 @@ func (s *Server) GetProjectedCost(
 	if err != nil {
 		return nil, err
 	}
-	return projectedResponse(parts, currency)
+	return projectedResponse(parts, currency, detailed.FetchedUntil)
 }
 
 // GetPricingSpec reports that this plugin prices from allocation, not a price catalog.
