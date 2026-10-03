@@ -32,6 +32,13 @@ type Config struct {
 	PredictionWindow string `yaml:"predictionWindow"` // e.g. "2d" (default for prediction API)
 	// Currency is the ISO 4217 code from pricing config. Empty is not USD.
 	Currency string `yaml:"currency"`
+	// CacheTTL is how long a successful allocation URL is reused.
+	// Zero uses the default. A negative value disables the cache.
+	CacheTTL time.Duration `yaml:"cacheTTL"`
+	// RequestsPerSecond limits outbound allocation requests. Zero uses the default.
+	RequestsPerSecond float64 `yaml:"requestsPerSecond"`
+	// RateBurst is how many outbound requests may run at once. Zero uses the default.
+	RateBurst int `yaml:"rateBurst"`
 }
 
 func LoadConfigFromEnvOrFile(path string) (Config, error) {

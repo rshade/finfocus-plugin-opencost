@@ -6,28 +6,49 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/rs/zerolog"
 )
 
 const (
-	httpRedirectStatus = 300
-	httpClientError    = 400
+	httpRedirectStatus   = 300
+	httpClientError      = 400
+	pooledIdleConns      = 10
+	dialTimeout          = 5 * time.Second
+	keepAlivePeriod      = 30 * time.Second
+	idleConnTimeout      = 90 * time.Second
+	tlsHandshakeTimeout  = 10 * time.Second
+	expectContinuePeriod = time.Second
 )
 
 type Client struct {
-	cfg    Config
-	http   *http.Client
-	logger zerolog.Logger
+	cfg     Config
+	http    *http.Client
+	logger  zerolog.Logger
+	now     func() time.Time
+	cache   *responseCache
+	limiter *limiter
 }
 
 func NewClient(_ context.Context, cfg Config) (*Client, error) {
 	return &Client{
-		cfg:  cfg,
-		http: httpClient(cfg),
+		cfg:     cfg,
+		http:    httpClient(cfg),
+		now:     time.Now,
+		cache:   newResponseCache(resolvedCacheTTL(cfg.CacheTTL)),
+		limiter: newLimiter(cfg.RequestsPerSecond, cfg.RateBurst),
 	}, nil
+}
+
+func (c *Client) clock() time.Time {
+	if c != nil && c.now != nil {
+		return c.now()
+	}
+	return time.Now()
 }
 
 // SetLogger sets the logger for outbound requests. The zero logger discards events.
@@ -40,9 +61,23 @@ func (c *Client) SetLogger(logger zerolog.Logger) {
 }
 
 func httpClient(cfg Config) *http.Client {
+	headerTimeout := cfg.Timeout
+	if headerTimeout <= 0 {
+		headerTimeout = defaultTimeoutDuration
+	}
+	dialer := &net.Dialer{Timeout: dialTimeout, KeepAlive: keepAlivePeriod}
 	return &http.Client{
 		Timeout: cfg.Timeout,
 		Transport: &http.Transport{
+			Proxy:                 http.ProxyFromEnvironment,
+			DialContext:           dialer.DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          pooledIdleConns,
+			MaxIdleConnsPerHost:   pooledIdleConns,
+			IdleConnTimeout:       idleConnTimeout,
+			TLSHandshakeTimeout:   tlsHandshakeTimeout,
+			ResponseHeaderTimeout: headerTimeout,
+			ExpectContinueTimeout: expectContinuePeriod,
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: cfg.TLSSkipVerify, //nolint:gosec // explicit opt-in, off by default
 			},

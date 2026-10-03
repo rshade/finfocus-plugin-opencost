@@ -2,6 +2,7 @@ package server
 
 import (
 	"strings"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -165,7 +166,7 @@ func scaledBreakdown(parts costParts, monthly float64) map[string]float64 {
 	return out
 }
 
-func projectedResponse(parts costParts, currency string) (*pbc.GetProjectedCostResponse, error) {
+func projectedResponse(parts costParts, currency string, until time.Time) (*pbc.GetProjectedCostResponse, error) {
 	hourly, monthly, breakdown, err := projectMonth(parts)
 	if err != nil {
 		return nil, err
@@ -176,6 +177,7 @@ func projectedResponse(parts costParts, currency string) (*pbc.GetProjectedCostR
 		Currency:      currency,
 		BillingDetail: projectedBillingDetail,
 		CostBreakdown: breakdown,
+		ExpiresAt:     expiryStamp(until),
 	}
 	if validateErr := pluginsdk.ValidateGetProjectedCostResponse(resp); validateErr != nil {
 		return nil, status.Errorf(codes.Internal, "projected cost: %v", validateErr)

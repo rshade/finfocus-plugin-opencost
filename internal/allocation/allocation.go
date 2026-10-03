@@ -27,6 +27,8 @@ type DetailedAllocationResponse struct {
 	Message  string                       `json:"message,omitempty"`
 	Currency string                       `json:"currency,omitempty"`
 	Data     []map[string]AllocationEntry `json:"data"`
+	// FetchedUntil is when a cached copy of this body becomes stale. It is not a wire field.
+	FetchedUntil time.Time `json:"-"`
 }
 
 // AllocationEntry represents a single allocation entry from Kubecost.
@@ -199,12 +201,18 @@ func (c *Client) setAuth(req *http.Request) {
 
 // GetDetailedAllocation retrieves detailed allocation data from Kubecost.
 func (c *Client) GetDetailedAllocation(ctx context.Context, q AllocationQuery) (*DetailedAllocationResponse, error) {
-	url, err := c.BuildAllocationURL(q)
+	endpoint, err := c.BuildAllocationURL(q)
 	if err != nil {
 		return nil, err
 	}
+	if hit, ok := c.cache.get(endpoint, c.clock()); ok {
+		return allocationFromCache(hit)
+	}
+	if err = c.limiter.allow(c.clock()); err != nil {
+		return nil, err
+	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
@@ -222,7 +230,21 @@ func (c *Client) GetDetailedAllocation(ctx context.Context, q AllocationQuery) (
 	if err != nil {
 		return nil, fmt.Errorf("reading response: %w", err)
 	}
-	return DecodeAllocationBody(resp.StatusCode, body)
+	decoded, err := DecodeAllocationBody(resp.StatusCode, body)
+	if err != nil {
+		return nil, err
+	}
+	decoded.FetchedUntil = c.cache.put(endpoint, resp.StatusCode, body, c.clock())
+	return decoded, nil
+}
+
+func allocationFromCache(hit cachedBody) (*DetailedAllocationResponse, error) {
+	decoded, err := DecodeAllocationBody(hit.status, hit.body)
+	if err != nil {
+		return nil, err
+	}
+	decoded.FetchedUntil = hit.expires
+	return decoded, nil
 }
 
 // DecodeAllocationBody decodes an allocation envelope.
