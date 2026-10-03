@@ -177,7 +177,7 @@ docker run --rm finfocus-plugin-opencost:dev --help
 
 `--help` prints `-version`, `-version-full`, and `-port`, and the process exits 0.
 `-port` overrides `FINFOCUS_PLUGIN_PORT`.
-GoReleaser builds its image from `Dockerfile.goreleaser`, which copies a binary that GoReleaser already compiled.
+GoReleaser builds its image from `Dockerfile.goreleaser`, which copies `$TARGETPLATFORM/finfocus-plugin-opencost` from the binary GoReleaser already compiled.
 
 The project kind suite is `make e2e-kind`.
 `make e2e-kind-up` deletes a cluster named `oc-e2e` and then creates it.

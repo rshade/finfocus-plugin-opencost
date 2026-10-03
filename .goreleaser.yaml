@@ -31,31 +31,29 @@ builds:
     main: ./cmd/finfocus-plugin-opencost
 
 archives:
-  - format: tar.gz
+  - formats: ["tar.gz"]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ title .Os }}_{{ if eq .Arch \"amd64\" }}x86_64{{ else }}{{ .Arch }}{{ end }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ["zip"]
     files:
       - README.md
       - LICENSE
       - plugin.manifest.json
       - config.example.yaml
 
-dockers:
-  - image_templates:
-      - "ghcr.io/rshade/finfocus-plugin-opencost:{{ .Version }}"
-      - "ghcr.io/rshade/finfocus-plugin-opencost:latest"
+dockers_v2:
+  - images:
+      - ghcr.io/rshade/finfocus-plugin-opencost
+    tags:
+      - "{{ .Version }}"
+      - latest
     dockerfile: Dockerfile.goreleaser
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/amd64"
-      - "--platform=linux/arm64"
     extra_files:
       - config.example.yaml
       - plugin.manifest.json
 
-brews:
+homebrew_casks:
   - name: finfocus-plugin-opencost
     homepage: "https://github.com/rshade/finfocus-plugin-opencost"
     description: "FinFocus plugin for Kubecost integration"
@@ -65,12 +63,8 @@ brews:
     commit_author:
       name: goreleaserbot
       email: goreleaser@carlosbecker.com
-    test: |
-      system "#{bin}/finfocus-plugin-opencost", "-version"
-    install: |
-      bin.install "finfocus-plugin-opencost"
-      prefix.install "config.example.yaml"
-      prefix.install "plugin.manifest.json"
+    binaries:
+      - finfocus-plugin-opencost
 
 nfpms:
   - maintainer: "rshade <rshade@example.com>"
@@ -93,7 +87,7 @@ checksum:
   name_template: 'checksums.txt'
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 changelog:
   sort: asc

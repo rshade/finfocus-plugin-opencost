@@ -1,5 +1,6 @@
 FROM gcr.io/distroless/static-debian12:nonroot
-COPY finfocus-plugin-opencost /finfocus-plugin-opencost
+ARG TARGETPLATFORM
+COPY $TARGETPLATFORM/finfocus-plugin-opencost /finfocus-plugin-opencost
 COPY config.example.yaml /etc/finfocus/opencost/config.example.yaml
 COPY plugin.manifest.json /etc/finfocus/opencost/plugin.manifest.json
 USER nonroot:nonroot
