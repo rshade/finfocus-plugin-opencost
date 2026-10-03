@@ -35,6 +35,9 @@ func mapBackendError(err error) error {
 	if err == nil || status.Code(err) == codes.OK {
 		return nil
 	}
+	if allocation.IsHostileFilter(err) {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
 	if errors.Is(err, context.DeadlineExceeded) || status.Code(err) == codes.DeadlineExceeded {
 		return status.Error(codes.DeadlineExceeded, "allocation query timed out")
 	}

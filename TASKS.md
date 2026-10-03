@@ -113,7 +113,7 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 
 | Id | Task | Issues | Verify | Status |
 | --- | --- | --- | --- | --- |
-| OC-4.1 | Security: HTTPS and `tlsSkipVerify` off by default, token read from env only and never logged, input validation on filter values (no injection into the filter grammar) | #13 | tests for a hostile namespace value and for a token absent from logs | TODO |
+| OC-4.1 | Security: HTTPS and `tlsSkipVerify` off by default, token read from env only and never logged, input validation on filter values (no injection into the filter grammar) | #13 | tests for a hostile namespace value and for a token absent from logs | DONE (`go test -count=1 ./internal/allocation ./internal/server -run 'TestTLSVerifyIsOnUnlessSkipped\|TestTokenIsEnvOnlyAndAbsentFromLogs\|TestHostileNamespaceIsRejected'` exit 0. Break: logging the Authorization header puts the token in the log, and accepting every filter value returns NotFound instead of InvalidArgument. OpenSpec `allocation-query` updated. Issue #13 stays open because rate limits and gRPC auth are not this task) |
 | OC-4.2 | Performance: connection-pooled HTTP client with timeouts, a short TTL cache for repeated windows honouring `expires_at`, a request rate limit | #12 | benchmark and a test that two identical calls make one backend request | TODO |
 | OC-4.3 | Observability: `HealthCheck` that probes the backend, request counters and latency, trace propagation | #11 | health test against a stub server returning 200 then 500 | TODO |
 

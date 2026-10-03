@@ -49,6 +49,7 @@ func run() int {
 		logger.Error().Err(err).Msg("client")
 		return 1
 	}
+	cli.SetLogger(logger)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()

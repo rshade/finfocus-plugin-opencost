@@ -3,10 +3,13 @@ package allocation
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -15,15 +18,44 @@ const (
 )
 
 type Client struct {
-	cfg  Config
-	http *http.Client
+	cfg    Config
+	http   *http.Client
+	logger zerolog.Logger
 }
 
 func NewClient(_ context.Context, cfg Config) (*Client, error) {
 	return &Client{
 		cfg:  cfg,
-		http: &http.Client{},
+		http: httpClient(cfg),
 	}, nil
+}
+
+// SetLogger sets the logger for outbound requests. The zero logger discards events.
+// Request logs include the URL and not the API token.
+func (c *Client) SetLogger(logger zerolog.Logger) {
+	if c == nil {
+		return
+	}
+	c.logger = logger
+}
+
+func httpClient(cfg Config) *http.Client {
+	return &http.Client{
+		Timeout: cfg.Timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: cfg.TLSSkipVerify, //nolint:gosec // explicit opt-in, off by default
+			},
+		},
+	}
+}
+
+func (c *Client) do(req *http.Request) (*http.Response, error) {
+	c.logger.Info().
+		Str("method", req.Method).
+		Str("url", req.URL.Redacted()).
+		Msg("allocation request")
+	return c.http.Do(req)
 }
 
 // GetConfig returns the client configuration.
@@ -76,7 +108,7 @@ func (c *Client) Allocation(ctx context.Context, q AllocationQuery) (AllocationR
 	}
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	c.setAuth(req)
-	resp, err := c.http.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return AllocationResponse{}, err
 	}
@@ -136,12 +168,9 @@ func (c *Client) PredictSpecCost(ctx context.Context, req PredictionRequest) (Pr
 	// Set headers
 	httpReq.Header.Set("Content-Type", contentType)
 	httpReq.Header.Set("Accept", "application/json")
-	if c.cfg.APIToken != "" {
-		httpReq.Header.Set("Authorization", "Bearer "+c.cfg.APIToken)
-	}
+	c.setAuth(httpReq)
 
-	// Execute the request
-	resp, err := c.http.Do(httpReq)
+	resp, err := c.do(httpReq)
 	if err != nil {
 		return PredictionResponse{}, fmt.Errorf("executing request: %w", err)
 	}

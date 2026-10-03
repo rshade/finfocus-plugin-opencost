@@ -3,7 +3,6 @@ package allocation
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +12,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode"
 )
 
 const (
@@ -122,7 +122,11 @@ func (c *Client) BuildAllocationURL(q AllocationQuery) (string, error) {
 	}
 	params := url.Values{}
 	params.Set("window", q.Window)
-	if filter := filterValue(q.Filter); filter != "" {
+	filter, err := filterValue(q.Filter)
+	if err != nil {
+		return "", err
+	}
+	if filter != "" {
 		params.Set("filter", filter)
 	}
 	if len(q.AggregateBy) > 0 {
@@ -145,9 +149,20 @@ func (c *Client) BuildAllocationURL(q AllocationQuery) (string, error) {
 	return u.String(), nil
 }
 
-func filterValue(filter map[string]string) string {
+type hostileFilterError struct{}
+
+func (hostileFilterError) Error() string {
+	return "filter value contains a reserved character"
+}
+
+// IsHostileFilter reports a filter key or value that would change the OpenCost filter grammar.
+func IsHostileFilter(err error) bool {
+	return errors.Is(err, hostileFilterError{})
+}
+
+func filterValue(filter map[string]string) (string, error) {
 	if len(filter) == 0 {
-		return ""
+		return "", nil
 	}
 	keys := make([]string, 0, len(filter))
 	for key := range filter {
@@ -156,9 +171,22 @@ func filterValue(filter map[string]string) string {
 	sort.Strings(keys)
 	parts := make([]string, 0, len(keys))
 	for _, key := range keys {
+		if err := rejectHostileFilter(key); err != nil {
+			return "", err
+		}
+		if err := rejectHostileFilter(filter[key]); err != nil {
+			return "", err
+		}
 		parts = append(parts, fmt.Sprintf(`%s:"%s"`, key, filter[key]))
 	}
-	return strings.Join(parts, "+")
+	return strings.Join(parts, "+"), nil
+}
+
+func rejectHostileFilter(value string) error {
+	if strings.ContainsAny(value, "\"+\\()") || strings.ContainsFunc(value, unicode.IsSpace) {
+		return hostileFilterError{}
+	}
+	return nil
 }
 
 func (c *Client) setAuth(req *http.Request) {
@@ -184,19 +212,7 @@ func (c *Client) GetDetailedAllocation(ctx context.Context, q AllocationQuery) (
 	c.setAuth(req)
 	req.Header.Set("Accept", "application/json")
 
-	// Configure HTTP client with TLS settings
-	if c.http == nil {
-		c.http = &http.Client{
-			Timeout: c.cfg.Timeout,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: c.cfg.TLSSkipVerify, //nolint:gosec // Configurable for dev environments
-				},
-			},
-		}
-	}
-
-	resp, err := c.http.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, fmt.Errorf("executing request: %w", err)
 	}

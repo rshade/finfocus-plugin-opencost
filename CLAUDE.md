@@ -274,7 +274,7 @@ make lint
 
 ## Allocation profiles and recorded responses
 
-- The client package is `internal/allocation`. Profile `opencost` (the default) calls `GET /allocation` with `includeIdle` and `shareIdle` and does not send a token. Profile `kubecost` calls `GET /model/allocation` with `idle`, `accumulate`, and `shareIdle`, and sends a bearer token. Set `OPENCOST_PROFILE` or `profile` in the config. Filter keys are sorted.
+- The client package is `internal/allocation`. Profile `opencost` (the default) calls `GET /allocation` with `includeIdle` and `shareIdle` and does not send a token. Profile `kubecost` calls `GET /model/allocation` with `idle`, `accumulate`, and `shareIdle`, and sends a bearer token. Set `OPENCOST_PROFILE` or `profile` in the config. Filter keys are sorted. TLS verification is on unless `tlsSkipVerify` is set. The API token comes only from `KUBECOST_API_TOKEN`; a YAML `apiToken` is ignored, and request logs omit the token. Filter values that contain a quote, plus, backslash, whitespace, or parenthesis are `InvalidArgument` and are not sent.
 - `DecodeAllocationBody` reads typed cost fields. `ConsumedFields` and `IgnoredFields` together cover every key of the recorded allocations. Those objects have 53 keys. `allocation-namespace-idle.json` also has `proportionalAssetResourceCosts` and `sharedCostBreakdown`. Do not edit `testdata/opencost-real/`.
 - HTTP 400 bodies in that directory are plain text, not JSON.
 - Cost RPCs use `finfocus-spec` v0.7.1. `Supports` accepts the Pulumi tokens documented in `docs/resource-mapping.md`.
