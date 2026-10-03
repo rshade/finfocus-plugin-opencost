@@ -38,6 +38,9 @@ fmt:
 govulncheck:
 	govulncheck ./...
 
+drift:
+	cd test/drift && go test -count=1 ./...
+
 goreleaser-check:
 	goreleaser check
 
