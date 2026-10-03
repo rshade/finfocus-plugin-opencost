@@ -1,6 +1,6 @@
 {
   "name": "opencost",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "costsource",
   "description": "Kubecost plugin for FinFocus - provides actual and projected cost for Kubernetes resources",
   "executable": "finfocus-plugin-opencost",
