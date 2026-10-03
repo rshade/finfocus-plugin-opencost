@@ -26,17 +26,17 @@ docker run --rm finfocus-plugin-opencost:dev --help
 
 ## Project Architecture
 
-This is a gRPC plugin that implements the CostSource service from `finfocus-spec`. Key components:
+This is a gRPC plugin that implements the CostSource service from `finfocus-spec`. The plugin name is `opencost`. `GetPluginInfo` reports `PROJECTED_COSTS`, `ACTUAL_COSTS`, `PRICING_SPEC`, `ESTIMATE_COST`, and `BATCH_COST`. It does not report `ALLOCATION`. Key components:
 
 - **gRPC Server**: Listens on port 50051, implements the CostSource service methods
-- **Kubecost Client**: HTTP client that queries the Kubecost API for allocation data
+- **Allocation client**: HTTP client in `internal/allocation`. Profile `opencost` queries the OpenCost allocation API. Profile `kubecost` uses the model allocation path.
 - **Configuration**: Supports both environment variables and YAML config files
 
 ## Key Implementation Details
 
 ### Resource ID Mapping
 
-The plugin maps resource IDs to Kubecost filters:
+The plugin maps resource IDs to allocation filters:
 - `namespace/<name>` → filter by namespace
 - `pod/<namespace>/<name>` → filter by namespace and pod
 - `controller/<namespace>/<name>` → filter by namespace and controller
@@ -46,13 +46,9 @@ The plugin maps resource IDs to Kubecost filters:
 
 `GetProjectedCost` queries window `30d` for the requested object, not the cluster. Monthly cost is `totalCost / (minutes / 60) * 730`. `billing_detail` states that 30-day trailing average. `cost_breakdown` sums to `cost_per_month`. A namespace id is the namespace name. `unit_price` is the observed hourly rate. Currency comes from the allocation body or pricing config (`OPENCOST_CURRENCY`). The plugin does not assume USD.
 
-### Cost Prediction API
+### Cost prediction
 
-The plugin supports IBM Kubecost Cost Prediction API for proactive cost forecasting:
-- **Endpoint**: `POST /model/prediction/speccost`
-- **Purpose**: Predict cost impact for Kubernetes workloads before deployment
-- **Supported Formats**: YAML and JSON workload specifications
-- **Parameters**: cluster ID, namespace, prediction window, usage data options
+`EstimateCost` reads `metadata.name` as a namespace and queries the allocation API for window `30d`. It does not call `POST /model/prediction/speccost`. `clusterId`, `defaultNamespace`, and `predictionWindow` are loaded and unused by cost methods. Profile `kubecost` selects `GET /model/allocation`. That profile is not a shipped prediction path.
 
 ### Error Handling
 
@@ -77,41 +73,13 @@ The plugin depends on:
 
 ### Adding New Resource Types
 
-1. Update the `Supports()` method in `kubecost_server.go`
+1. Update `Supports()` in `internal/server/supports.go`
 2. Add mapping logic in `GetActualCost()` for the new resource ID format
 3. Update `plugin.manifest.json` with the new resource type
 
-### Using Cost Prediction API
+### Legacy environment names
 
-The prediction API allows forecasting costs before deployment:
-
-```go
-// Configure prediction settings
-cfg := kubecost.Config{
-    BaseURL:          "https://kubecost.example.com",
-    APIToken:         "your-api-token",
-    ClusterID:        "production-cluster",
-    DefaultNamespace: "default",
-    PredictionWindow: "7d",
-}
-
-// Create prediction request
-req := kubecost.PredictionRequest{
-    ClusterID:        "production-cluster",
-    DefaultNamespace: "web-services",
-    Window:           "2d",
-    WorkloadSpec:     yamlDeploymentSpec,
-    NoUsage:          false, // Include historical usage data
-}
-
-// Get cost prediction
-resp, err := client.PredictSpecCost(ctx, req)
-// resp.CostBefore: "$42.50/month"
-// resp.CostAfter:  "$67.80/month"
-// resp.CostChange: "+$25.30/month"
-```
-
-### Environment Variables for Prediction
+These names are still read. Cost methods do not send the cluster id, the default namespace, or the prediction window.
 
 ```bash
 export KUBECOST_CLUSTER_ID="production-cluster"
@@ -128,9 +96,10 @@ grpcurl -plaintext localhost:50051 list
 grpcurl -plaintext localhost:50051 describe CostSource
 ```
 
-### Modifying Kubecost API Calls
+### Modifying allocation API calls
 
-The HTTP client in `client.go` handles the Kubecost API interaction. To add new endpoints:
+The HTTP client in `internal/allocation/client.go` queries the allocation API. To add new endpoints:
+
 1. Add new methods to the Client struct
 2. Define request/response types
 3. Handle the API call with proper error handling and timeout
@@ -298,3 +267,4 @@ make lint
 - The README configuration reference and `config.example.yaml` list every YAML key on `allocation.Config`. `OPENCOST_CONFIG` wins over `KUBECOST_CONFIG`. `OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, and `KUBECOST_API_TOKEN` replace the file. A YAML `apiToken` is ignored. `defaultWindow`, `clusterId`, `defaultNamespace`, and `predictionWindow` are loaded. Cost methods do not send them. `EstimateCost` uses the 30-day allocation query and does not call `POST /model/prediction/speccost`. Vale `IgnoredScopes` skips inline code. Issue #15 stays open.
 - `examples/kubernetes` is a Pulumi YAML stack. `pulumi preview --json` renders a namespace, deployment, service, and daemonset through `renderYamlToDirectory` and does not need a cluster. `examples/kubernetes/preview.json` is that output from Pulumi 3.264.0 on a file backend. FinFocus reads `steps`, and the resource type is on `newState.type`. The plugin prices the namespace, deployment, and daemonset. Service stays unsupported. A node id is `node/<node name>`. Issue #6 stays open.
 - `Dockerfile` builds `./cmd/finfocus-plugin-opencost` with `CGO_ENABLED=0` on `golang:1.27.1` and copies that binary into `gcr.io/distroless/static-debian12:nonroot`. `docker run --rm finfocus-plugin-opencost:dev --help` prints `-version` and `-port` and exits 0. `.github/workflows/test.yml` builds tag `finfocus-plugin-opencost:dev`. `.github/workflows/kind.yml` builds the same tag and smoke-runs `--help` before `make e2e-kind`. The smoke step accepts exit 0 or 2 and requires both flags. GoReleaser's docker context has the prebuilt binary plus `config.example.yaml` and `plugin.manifest.json`, so `.goreleaser.yaml` sets `dockerfile: Dockerfile.goreleaser`. That file copies the binary and does not run `go build`. `goreleaser check` exits 2 on deprecated properties that already fail on the previous config. Issue #10 stays open. These jobs do not push the image.
+- `CLAUDE.md` and `plugin.manifest.json` may mention `kubecost` only as profile `kubecost` or as a `KUBECOST_` environment name. There is no `ROADMAP.md`. The manifest `capabilities` list matches `GetPluginInfo`: `PROJECTED_COSTS`, `ACTUAL_COSTS`, `PRICING_SPEC`, `ESTIMATE_COST`, and `BATCH_COST`.

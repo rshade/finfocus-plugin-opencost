@@ -2,7 +2,14 @@
   "name": "opencost",
   "version": "0.1.0",
   "type": "costsource",
-  "description": "Kubecost plugin for FinFocus - provides actual and projected cost for Kubernetes resources",
+  "description": "OpenCost plugin for FinFocus. Reports projected cost, actual cost, pricing, estimates, and batch cost for Kubernetes resources.",
+  "capabilities": [
+    "PROJECTED_COSTS",
+    "ACTUAL_COSTS",
+    "PRICING_SPEC",
+    "ESTIMATE_COST",
+    "BATCH_COST"
+  ],
   "executable": "finfocus-plugin-opencost",
   "protocol": "grpc",
   "supported_resources": [
@@ -23,13 +30,13 @@
   "configuration": {
     "baseUrl": {
       "type": "string",
-      "description": "Kubecost API base URL",
+      "description": "Allocation API base URL",
       "required": true,
       "env": "KUBECOST_BASE_URL"
     },
     "apiToken": {
       "type": "string",
-      "description": "Kubecost API token for authentication",
+      "description": "Ignored in YAML. Read only from the environment.",
       "required": false,
       "env": "KUBECOST_API_TOKEN"
     },
