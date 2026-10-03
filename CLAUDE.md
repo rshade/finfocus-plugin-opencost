@@ -38,7 +38,7 @@ The plugin maps resource IDs to Kubecost filters:
 
 ### Cost Projections
 
-`GetProjectedCost` calculates a 30-day average from historical data and extrapolates monthly costs. This is a simple MVP approach that can be enhanced with more sophisticated forecasting.
+`GetProjectedCost` queries window `30d` for the requested object, not the cluster. Monthly cost is `totalCost / (minutes / 60) * 730`. `billing_detail` states that 30-day trailing average. `cost_breakdown` sums to `cost_per_month`. A namespace id is the namespace name. Currency is not assumed here.
 
 ### Cost Prediction API
 
@@ -279,3 +279,4 @@ make lint
 - HTTP 400 bodies in that directory are plain text, not JSON.
 - Cost RPCs use `finfocus-spec` v0.7.1. `Supports` accepts the Pulumi tokens documented in `docs/resource-mapping.md`.
 - `GetActualCost` maps `namespace/<name>`, `controller/<namespace>/<name>`, `pod/<namespace>/<name>`, and `node/<name>` to a sorted OpenCost filter. It returns typed `totalCost` for matching rows only, including a real zero. A node request matches `properties.node` because there is no node-aggregated recording.
+- `GetProjectedCost` uses the descriptor id with the Pulumi type. It queries `window=30d` and projects `totalCost / (minutes / 60) * 730`. An empty id is `InvalidArgument`. Do not assume USD.

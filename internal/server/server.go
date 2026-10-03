@@ -64,16 +64,33 @@ func itemTime(start string) time.Time {
 	return parsed
 }
 
-// GetProjectedCost is completed in OC-3.4. Unsupported types fail here.
+// GetProjectedCost projects one resource from its trailing allocation, not the cluster.
 func (s *Server) GetProjectedCost(
-	_ context.Context,
+	ctx context.Context,
 	req *pbc.GetProjectedCostRequest,
 ) (*pbc.GetProjectedCostResponse, error) {
-	resourceType := req.GetResource().GetResourceType()
+	resource := req.GetResource()
+	resourceType := resource.GetResourceType()
 	if _, ok := supportedTypes[resourceType]; !ok {
 		return nil, status.Errorf(codes.InvalidArgument, "resource type %q is not supported", resourceType)
 	}
-	return nil, status.Error(codes.Unimplemented, "OC-3.4")
+	ref, err := refForDescriptor(resource)
+	if err != nil {
+		return nil, err
+	}
+	detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
+		Window:      projectionWindow,
+		Filter:      ref.filter(),
+		AggregateBy: ref.aggregate(),
+	})
+	if err != nil {
+		return nil, mapBackendError(err)
+	}
+	parts := partsFor(detailed, ref)
+	if parts.samples == 0 {
+		return nil, noCostData(ref.id())
+	}
+	return projectedResponse(parts)
 }
 
 // GetPricingSpec reports that this plugin prices from allocation, not a price catalog.
