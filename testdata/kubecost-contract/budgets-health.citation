@@ -1,0 +1,16 @@
+source: https://www.ibm.com/docs/en/SSW0JQG_1.x/apis/apis-overview/budget-api.html
+checked: 2026-10-03
+method: GET
+path: /model/budgets
+response fields: code, data, name, id, values, kind, interval, intervalDay, spendLimit, actions, percentage, window, start, end, currentSpend
+documented numbers: spendLimit 400 and 100, percentage 25 and 75, currentSpend 100, 10, and 400
+ok: namespace, spendLimit 100, percentage 75, currentSpend 10
+warning: namespace, spendLimit 400, percentages 75 then 25, currentSpend 100
+critical: namespace, spendLimit 100, percentage 75, currentSpend 100
+exceeded: namespace, spendLimit 100, percentage 25, currentSpend 400
+cluster: cluster test, weekly, intervalDay 3, spendLimit 100, percentage 75, currentSpend 10
+ids and namespace names stand in for generated values
+window timestamps are RFC3339 placeholders
+health priority: exceeded, then critical, then warning, then ok
+summary keeps critical as its own count
+not verified against live Kubecost
