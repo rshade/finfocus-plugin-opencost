@@ -1,6 +1,7 @@
 package allocation
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -167,20 +168,27 @@ func (c *Client) GetDetailedAllocation(ctx context.Context, q AllocationQuery) (
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= httpClientErrorStatus {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("kubecost API error: status=%d, body=%s", resp.StatusCode, string(body))
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response: %w", err)
 	}
+	return DecodeAllocationBody(resp.StatusCode, body)
+}
 
+// DecodeAllocationBody decodes an allocation envelope.
+// HTTP errors and plain-text bodies are returned as errors that include the body.
+func DecodeAllocationBody(statusCode int, body []byte) (*DetailedAllocationResponse, error) {
+	trimmed := bytes.TrimSpace(body)
+	if statusCode >= httpClientErrorStatus || (len(trimmed) > 0 && trimmed[0] != '{') {
+		return nil, fmt.Errorf("allocation API error: status=%d, body=%s", statusCode, string(trimmed))
+	}
 	var result DetailedAllocationResponse
-	if decodeErr := json.NewDecoder(resp.Body).Decode(&result); decodeErr != nil {
-		return nil, fmt.Errorf("decoding response: %w", decodeErr)
+	if err := json.Unmarshal(trimmed, &result); err != nil {
+		return nil, fmt.Errorf("decoding response: %w", err)
 	}
-
 	if result.Code != httpSuccessStatus {
-		return nil, fmt.Errorf("kubecost API returned error code %d: %s", result.Code, result.Message)
+		return nil, fmt.Errorf("allocation API returned error code %d: %s", result.Code, result.Message)
 	}
-
 	return &result, nil
 }
 
