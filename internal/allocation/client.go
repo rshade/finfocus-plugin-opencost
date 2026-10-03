@@ -75,9 +75,7 @@ func (c *Client) Allocation(ctx context.Context, q AllocationQuery) (AllocationR
 		return AllocationResponse{}, err
 	}
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if c.cfg.APIToken != "" {
-		req.Header.Set("Authorization", "Bearer "+c.cfg.APIToken)
-	}
+	c.setAuth(req)
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return AllocationResponse{}, err

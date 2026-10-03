@@ -112,6 +112,7 @@ func TestClientAllocation(t *testing.T) {
 	cfg := Config{
 		BaseURL:  server.URL,
 		APIToken: "test-token",
+		Profile:  ProfileKubecost,
 		Timeout:  30 * time.Second,
 	}
 

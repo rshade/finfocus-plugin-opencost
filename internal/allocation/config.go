@@ -2,6 +2,7 @@ package allocation
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -10,9 +11,17 @@ import (
 
 const defaultTimeoutDuration = 15 * time.Second
 
+const (
+	// ProfileOpenCost calls GET /allocation and does not require a token.
+	ProfileOpenCost = "opencost"
+	// ProfileKubecost calls GET /model/allocation and sends a bearer token.
+	ProfileKubecost = "kubecost"
+)
+
 type Config struct {
 	BaseURL       string        `yaml:"baseUrl"`
 	APIToken      string        `yaml:"apiToken"`
+	Profile       string        `yaml:"profile"`
 	DefaultWindow string        `yaml:"defaultWindow"` // e.g. "30d"
 	Timeout       time.Duration `yaml:"timeout"`
 	TLSSkipVerify bool          `yaml:"tlsSkipVerify"`
@@ -26,6 +35,7 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	cfg := Config{
 		BaseURL:          os.Getenv("KUBECOST_BASE_URL"),
 		APIToken:         os.Getenv("KUBECOST_API_TOKEN"),
+		Profile:          os.Getenv("OPENCOST_PROFILE"),
 		DefaultWindow:    getenvDefault("KUBECOST_DEFAULT_WINDOW", "30d"),
 		Timeout:          getenvDuration("KUBECOST_TIMEOUT", defaultTimeoutDuration),
 		TLSSkipVerify:    os.Getenv("KUBECOST_TLS_SKIP_VERIFY") == "true",
@@ -44,7 +54,21 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 			_ = yaml.Unmarshal(b, &cfg)
 		}
 	}
+	if profile := os.Getenv("OPENCOST_PROFILE"); profile != "" {
+		cfg.Profile = profile
+	}
 	return cfg, nil
+}
+
+func (c Config) resolvedProfile() (string, error) {
+	switch c.Profile {
+	case "", ProfileOpenCost:
+		return ProfileOpenCost, nil
+	case ProfileKubecost:
+		return ProfileKubecost, nil
+	default:
+		return "", fmt.Errorf("unknown allocation profile %q", c.Profile)
+	}
 }
 
 func getenvDefault(k, def string) string {
