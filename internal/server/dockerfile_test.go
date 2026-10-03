@@ -24,14 +24,14 @@ func TestGoReleaserDockerfileCopiesBuiltBinary(t *testing.T) {
 	var config struct {
 		Dockers []struct {
 			Dockerfile string `yaml:"dockerfile"`
-		} `yaml:"dockers"`
+		} `yaml:"dockers_v2"`
 	}
 	require.NoError(t, yaml.Unmarshal(readRepoFile(t, ".goreleaser.yaml"), &config))
 	require.NotEmpty(t, config.Dockers)
 	name := config.Dockers[0].Dockerfile
 	require.NotEmpty(t, name)
 	text := string(readRepoFile(t, name))
-	require.Contains(t, text, "COPY finfocus-plugin-opencost /finfocus-plugin-opencost")
+	require.Contains(t, text, "COPY $TARGETPLATFORM/finfocus-plugin-opencost /finfocus-plugin-opencost")
 	require.Contains(t, text, `ENTRYPOINT ["/finfocus-plugin-opencost"]`)
 }
 

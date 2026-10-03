@@ -421,7 +421,7 @@ func fetchMinutes(baseURL, window string) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	rawURL, err := cli.BuildAllocationURL(allocation.AllocationQuery{
+	rawURL, err := cli.BuildAllocationURL(allocation.Query{
 		Window:      window,
 		Filter:      map[string]string{"namespace": e2eNamespace},
 		AggregateBy: []string{"namespace"},

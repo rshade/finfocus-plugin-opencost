@@ -34,7 +34,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestAllocationQuery(t *testing.T) {
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 		Filter: map[string]string{
 			"namespace": "default",
@@ -57,7 +57,7 @@ func TestAllocationQuery(t *testing.T) {
 }
 
 func TestAllocationPoint(t *testing.T) {
-	point := AllocationPoint{
+	point := Point{
 		Cost:        100.50,
 		CPUCost:     50.25,
 		RAMCost:     30.15,
@@ -122,7 +122,7 @@ func TestClientAllocation(t *testing.T) {
 	}
 
 	// Test allocation query
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 		Filter: map[string]string{
 			"namespace": "default",
@@ -163,7 +163,7 @@ func TestClientAllocationError(t *testing.T) {
 		t.Fatalf("NewClient failed: %v", err)
 	}
 
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 	}
 
@@ -186,7 +186,7 @@ func TestClientAllocationNetworkError(t *testing.T) {
 		t.Fatalf("NewClient failed: %v", err)
 	}
 
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 	}
 
@@ -197,8 +197,8 @@ func TestClientAllocationNetworkError(t *testing.T) {
 }
 
 func TestAllocationResponse(t *testing.T) {
-	resp := AllocationResponse{
-		Items: []AllocationPoint{
+	resp := Response{
+		Items: []Point{
 			{
 				Start: "2024-01-01T00:00:00Z",
 				End:   "2024-01-01T23:59:59Z",

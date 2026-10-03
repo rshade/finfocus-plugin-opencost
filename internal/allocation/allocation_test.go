@@ -9,9 +9,9 @@ import (
 )
 
 func TestAllocationEntry(t *testing.T) {
-	entry := AllocationEntry{
+	entry := Entry{
 		Name: "test-allocation",
-		Properties: AllocationProperties{
+		Properties: Properties{
 			Cluster:        "test-cluster",
 			Node:           "test-node",
 			Container:      "test-container",
@@ -23,7 +23,7 @@ func TestAllocationEntry(t *testing.T) {
 			Labels:         map[string]string{"app": "test"},
 			Annotations:    map[string]string{"version": "v1"},
 		},
-		Window: AllocationWindow{
+		Window: Window{
 			Start: "2024-01-01T00:00:00Z",
 			End:   "2024-01-01T23:59:59Z",
 		},
@@ -57,7 +57,7 @@ func TestAllocationEntry(t *testing.T) {
 }
 
 func TestAllocationProperties(t *testing.T) {
-	props := AllocationProperties{
+	props := Properties{
 		Cluster:     "test-cluster",
 		Services:    []string{"service1", "service2"},
 		Labels:      map[string]string{"app": "test", "env": "prod"},
@@ -89,7 +89,7 @@ func TestBuildAllocationURL(t *testing.T) {
 		},
 	}
 
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 		Filter: map[string]string{
 			"namespace": "default",
@@ -129,7 +129,7 @@ func TestBuildAllocationURL_InvalidBaseURL(t *testing.T) {
 		},
 	}
 
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 	}
 
@@ -192,7 +192,7 @@ func TestGetDetailedAllocation(t *testing.T) {
 		http: &http.Client{},
 	}
 
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 		Filter: map[string]string{
 			"namespace": "default",
@@ -243,7 +243,7 @@ func TestGetDetailedAllocation_Error(t *testing.T) {
 		http: &http.Client{},
 	}
 
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 	}
 
@@ -257,11 +257,11 @@ func TestConvertToSimpleResponse(t *testing.T) {
 	detailed := &DetailedAllocationResponse{
 		Code:   200,
 		Status: "success",
-		Data: []map[string]AllocationEntry{
+		Data: []map[string]Entry{
 			{
 				"test-allocation": {
 					Name: "test-allocation",
-					Window: AllocationWindow{
+					Window: Window{
 						Start: "2024-01-01T00:00:00Z",
 						End:   "2024-01-01T23:59:59Z",
 					},
@@ -390,7 +390,7 @@ func TestEnhancedAllocation(t *testing.T) {
 		http: &http.Client{},
 	}
 
-	query := AllocationQuery{
+	query := Query{
 		Window: "30d",
 	}
 

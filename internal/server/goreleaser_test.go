@@ -1,4 +1,4 @@
-package server
+package server_test
 
 import (
 	"fmt"
@@ -11,6 +11,13 @@ import (
 
 	"gopkg.in/yaml.v3"
 )
+
+func titleWord(value string) string {
+	if value == "" {
+		return ""
+	}
+	return strings.ToUpper(value[:1]) + value[1:]
+}
 
 // GoReleaserConfig represents the minimal goreleaser configuration structure needed for testing.
 type GoReleaserConfig struct {
@@ -40,7 +47,7 @@ func TestGoReleaserAssetNaming(t *testing.T) {
 	}
 
 	var config GoReleaserConfig
-	if err := yaml.Unmarshal(data, &config); err != nil {
+	if err = yaml.Unmarshal(data, &config); err != nil {
 		t.Fatalf("Failed to parse .goreleaser.yaml: %v", err)
 	}
 
@@ -59,7 +66,7 @@ func TestGoReleaserAssetNaming(t *testing.T) {
 
 	// Parse template with title function
 	tmpl, err := template.New("asset").Funcs(template.FuncMap{
-		"title": strings.Title,
+		"title": titleWord,
 	}).Parse(nameTemplate)
 	if err != nil {
 		t.Fatalf("Failed to parse name_template: %v", err)
@@ -99,8 +106,8 @@ func TestGoReleaserAssetNaming(t *testing.T) {
 			}
 
 			var buf strings.Builder
-			if err := tmpl.Execute(&buf, values); err != nil {
-				t.Fatalf("Failed to render template: %v", err)
+			if execErr := tmpl.Execute(&buf, values); execErr != nil {
+				t.Fatalf("Failed to render template: %v", execErr)
 			}
 
 			renderedName := buf.String() + ext
@@ -119,7 +126,7 @@ func TestGoReleaserAssetNaming(t *testing.T) {
 // github.com/rshade/finfocus/internal/registry/github.go (lines 491-560).
 func matchesInstallerPattern(assetName, projectName, version, goos, goarch string) bool {
 	// Possible OS names per installer
-	osNames := []string{goos, strings.Title(goos)}
+	osNames := []string{goos, titleWord(goos)}
 	if goos == "darwin" {
 		osNames = append(osNames, "Darwin", "macos", "macOS", "MacOS")
 	}

@@ -36,7 +36,7 @@ func (s *Server) EstimateCost(
 		if err != nil {
 			return nil, err
 		}
-		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
+		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.Query{
 			Window:      projectionWindow,
 			AggregateBy: ref.aggregate(),
 		})
@@ -75,7 +75,7 @@ func (s *Server) BatchCost(ctx context.Context, req *pbc.BatchCostRequest) (*pbc
 		var detailed *allocation.DetailedAllocationResponse
 		var backendErr error
 		if len(valid) > 0 {
-			detailed, backendErr = s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
+			detailed, backendErr = s.cli.GetDetailedAllocation(ctx, allocation.Query{
 				Window:      window,
 				AggregateBy: aggregateFor(valid),
 			})
@@ -125,7 +125,7 @@ func refForBatchResource(resource *pbc.ResourceDescriptor) (resourceRef, itemFai
 		return resourceRef{}, itemFailure{err: status.Error(codes.InvalidArgument, "missing resource")}
 	}
 	resourceType := resource.GetResourceType()
-	if _, ok := supportedTypes[resourceType]; !ok {
+	if !knownType(resourceType) {
 		return resourceRef{}, itemFailure{
 			err:         status.Errorf(codes.InvalidArgument, "resource type %q is not supported", resourceType),
 			unsupported: true,
@@ -271,7 +271,7 @@ func estimateFromParts(parts costParts, currency string, until time.Time) (*pbc.
 }
 
 func refForEstimate(resourceType string, attrs *structpb.Struct) (resourceRef, error) {
-	if _, ok := supportedTypes[resourceType]; !ok {
+	if !knownType(resourceType) {
 		return resourceRef{}, status.Errorf(codes.InvalidArgument, "resource type %q is not supported", resourceType)
 	}
 	name, namespace := attributeNames(attrs)

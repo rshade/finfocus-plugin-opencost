@@ -66,7 +66,7 @@ func (r resourceRef) aggregate() []string {
 	}
 }
 
-func (r resourceRef) matches(key string, entry allocation.AllocationEntry) bool {
+func (r resourceRef) matches(key string, entry allocation.Entry) bool {
 	switch r.kind {
 	case kindNamespace:
 		if entry.Properties.Namespace != "" {
@@ -115,7 +115,7 @@ func resultsFor(resp *allocation.DetailedAllocationResponse, ref resourceRef) []
 // result. ActualCostResult has no metadata map. FOCUS tags are the label map.
 // Controller kind and annotations use extended columns, which the spec defines
 // as provider-specific extensions. Billing currency is applied after this copy.
-func focusFor(props allocation.AllocationProperties) *pbc.FocusCostRecord {
+func focusFor(props allocation.Properties) *pbc.FocusCostRecord {
 	if len(props.Labels) == 0 && props.ControllerKind == "" && len(props.Annotations) == 0 {
 		return nil
 	}

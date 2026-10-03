@@ -6,6 +6,8 @@ import (
 )
 
 // Version identifies the plugin build. GoReleaser and the Makefile override it with ldflags.
+//
+//nolint:gochecknoglobals // ldflags -X can only set package-level variables
 var (
 	Version   = "0.1.0"
 	BuildDate = "unknown"
