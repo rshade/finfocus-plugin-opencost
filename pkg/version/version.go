@@ -5,15 +5,18 @@ import (
 	"runtime"
 )
 
-const (
-	defaultVersion = "1.0.0"
-	unknownValue   = "unknown"
+// Version identifies the plugin build. GoReleaser and the Makefile override it with ldflags.
+var (
+	Version   = "0.1.0"
+	BuildDate = "unknown"
+	GitCommit = "unknown"
+	GitBranch = "unknown"
+	GitState  = "unknown"
 )
 
 // defaultVersionInfo provides default version information.
 func defaultVersionInfo() (string, string, string, string, string) {
-	// These values can be overridden at build time using ldflags
-	return defaultVersion, unknownValue, unknownValue, unknownValue, unknownValue
+	return Version, BuildDate, GitCommit, GitBranch, GitState
 }
 
 // Info contains version information.

@@ -58,10 +58,12 @@ func run() int {
 		port = pluginsdk.GetPort()
 	}
 
+	plugin := server.New(cli)
 	serveErr := pluginsdk.Serve(ctx, pluginsdk.ServeConfig{
-		Plugin: server.New(cli),
-		Port:   port,
-		Logger: &logger,
+		Plugin:     plugin,
+		PluginInfo: server.Info(),
+		Port:       port,
+		Logger:     &logger,
 	})
 	if serveErr != nil {
 		logger.Error().Err(serveErr).Msg("serve")
