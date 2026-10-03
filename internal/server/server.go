@@ -112,12 +112,55 @@ func (s *Server) GetProjectedCost(
 	})
 }
 
-// GetPricingSpec reports that this plugin prices from allocation, not a price catalog.
+// GetPricingSpec reports the observed hourly rate for one supported Kubernetes resource.
+// An unsupported type, including aws/ec2, is InvalidArgument. This is not an AWS price catalog.
 func (s *Server) GetPricingSpec(
 	ctx context.Context,
-	_ *pbc.GetPricingSpecRequest,
+	req *pbc.GetPricingSpecRequest,
 ) (*pbc.GetPricingSpecResponse, error) {
 	return observeResult(ctx, s, "GetPricingSpec", func() (*pbc.GetPricingSpecResponse, error) {
-		return nil, status.Error(codes.Unimplemented, "OC-2.1")
+		resource := req.GetResource()
+		resourceType := resource.GetResourceType()
+		if _, ok := supportedTypes[resourceType]; !ok {
+			return nil, status.Errorf(codes.InvalidArgument, "resource type %q is not supported", resourceType)
+		}
+		ref, err := refForDescriptor(resource)
+		if err != nil {
+			return nil, err
+		}
+		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
+			Window:      projectionWindow,
+			Filter:      ref.filter(),
+			AggregateBy: ref.aggregate(),
+		})
+		if err != nil {
+			return nil, mapBackendError(err)
+		}
+		parts := partsFor(detailed, ref)
+		if parts.samples == 0 {
+			return nil, noCostData(ref.id())
+		}
+		currency, err := s.costCurrency(detailed)
+		if err != nil {
+			return nil, err
+		}
+		hourly, _, _, err := projectMonth(parts)
+		if err != nil {
+			return nil, err
+		}
+		return &pbc.GetPricingSpecResponse{
+			Spec: &pbc.PricingSpec{
+				Provider:     "kubernetes",
+				ResourceType: resourceType,
+				Sku:          resource.GetId(),
+				BillingMode:  "per_hour",
+				RatePerUnit:  hourly,
+				Currency:     currency,
+				Unit:         "hour",
+				Source:       "opencost",
+				Description:  "observed hourly cost from the trailing allocation window",
+				Assumptions:  []string{projectedBillingDetail},
+			},
+		}, nil
 	})
 }
