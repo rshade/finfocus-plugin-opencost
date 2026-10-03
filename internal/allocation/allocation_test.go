@@ -85,6 +85,7 @@ func TestBuildAllocationURL(t *testing.T) {
 	client := &Client{
 		cfg: Config{
 			BaseURL: "http://localhost:9090",
+			Profile: ProfileKubecost,
 		},
 	}
 
@@ -185,6 +186,7 @@ func TestGetDetailedAllocation(t *testing.T) {
 		cfg: Config{
 			BaseURL:  server.URL,
 			APIToken: "test-token",
+			Profile:  ProfileKubecost,
 			Timeout:  30 * time.Second,
 		},
 		http: &http.Client{},

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 )
@@ -74,38 +75,63 @@ type AllocationWindow struct {
 	End   string `json:"end"`
 }
 
-// BuildAllocationURL constructs the URL for the Kubecost allocation API.
+// BuildAllocationURL constructs the allocation URL for the configured profile.
 func (c *Client) BuildAllocationURL(q AllocationQuery) (string, error) {
+	profile, err := c.cfg.resolvedProfile()
+	if err != nil {
+		return "", err
+	}
 	u, err := url.Parse(c.cfg.BaseURL)
 	if err != nil {
 		return "", fmt.Errorf("invalid base URL: %w", err)
 	}
-	u.Path = "/model/allocation"
-
 	params := url.Values{}
 	params.Set("window", q.Window)
-
-	// Build filter string from map
-	if len(q.Filter) > 0 {
-		var filters []string
-		for k, v := range q.Filter {
-			filters = append(filters, fmt.Sprintf(`%s:"%s"`, k, v))
-		}
-		params.Set("filter", strings.Join(filters, "+"))
+	if filter := filterValue(q.Filter); filter != "" {
+		params.Set("filter", filter)
 	}
-
-	// Add aggregation if specified
 	if len(q.AggregateBy) > 0 {
 		params.Set("aggregate", strings.Join(q.AggregateBy, ","))
 	}
-
-	// Default to daily granularity for better data points
-	params.Set("accumulate", "false")
-	params.Set("idle", "false")
-	params.Set("shareIdle", "false")
-
+	switch profile {
+	case ProfileOpenCost:
+		u.Path = "/allocation"
+		params.Set("includeIdle", "false")
+		params.Set("shareIdle", "false")
+	case ProfileKubecost:
+		u.Path = "/model/allocation"
+		params.Set("accumulate", "false")
+		params.Set("idle", "false")
+		params.Set("shareIdle", "false")
+	default:
+		return "", fmt.Errorf("unknown allocation profile %q", profile)
+	}
 	u.RawQuery = params.Encode()
 	return u.String(), nil
+}
+
+func filterValue(filter map[string]string) string {
+	if len(filter) == 0 {
+		return ""
+	}
+	keys := make([]string, 0, len(filter))
+	for key := range filter {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, key := range keys {
+		parts = append(parts, fmt.Sprintf(`%s:"%s"`, key, filter[key]))
+	}
+	return strings.Join(parts, "+")
+}
+
+func (c *Client) setAuth(req *http.Request) {
+	profile, err := c.cfg.resolvedProfile()
+	if err != nil || profile != ProfileKubecost || c.cfg.APIToken == "" {
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+c.cfg.APIToken)
 }
 
 // GetDetailedAllocation retrieves detailed allocation data from Kubecost.
@@ -120,9 +146,7 @@ func (c *Client) GetDetailedAllocation(ctx context.Context, q AllocationQuery) (
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
-	if c.cfg.APIToken != "" {
-		req.Header.Set("Authorization", "Bearer "+c.cfg.APIToken)
-	}
+	c.setAuth(req)
 	req.Header.Set("Accept", "application/json")
 
 	// Configure HTTP client with TLS settings
