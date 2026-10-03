@@ -51,6 +51,8 @@ jobs:
           grep -F -- '-port' "${RUNNER_TEMP}/plugin-help.txt"
 
       - name: Run kind e2e
+        env:
+          OC_KEEP_FAILED_CLUSTER: "1"
         run: make e2e-kind
 
       - name: Export cluster logs
