@@ -9,8 +9,8 @@ import (
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	"github.com/rshade/finfocus-plugin-opencost/internal/server"
 	"github.com/rshade/finfocus-plugin-opencost/pkg/version"
-	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 func TestGetPluginInfoReportsSpecAndCapabilities(t *testing.T) {
