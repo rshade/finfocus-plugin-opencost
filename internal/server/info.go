@@ -30,19 +30,24 @@ func Info() *pluginsdk.PluginInfo {
 }
 
 // GetPluginInfo returns the name, the pkg/version value, and a v-prefixed spec version.
-func (s *Server) GetPluginInfo(ctx context.Context, _ *pbc.GetPluginInfoRequest) (*pbc.GetPluginInfoResponse, error) {
-	log := s.requestLogger(ctx)
-	log.Info().Msg("plugin info")
-	info := Info()
-	if err := info.Validate(); err != nil {
-		return nil, status.Errorf(codes.Internal, "plugin info: %v", err)
-	}
-	return &pbc.GetPluginInfoResponse{
-		Name:         info.Name,
-		Version:      info.Version,
-		SpecVersion:  info.SpecVersion,
-		Providers:    append([]string{}, info.Providers...),
-		Metadata:     info.Metadata,
-		Capabilities: append([]pbc.PluginCapability{}, info.Capabilities...),
-	}, nil
+func (s *Server) GetPluginInfo(
+	ctx context.Context,
+	_ *pbc.GetPluginInfoRequest,
+) (*pbc.GetPluginInfoResponse, error) {
+	return observeResult(ctx, s, "GetPluginInfo", func() (*pbc.GetPluginInfoResponse, error) {
+		log := s.requestLogger(ctx)
+		log.Info().Msg("plugin info")
+		info := Info()
+		if validateErr := info.Validate(); validateErr != nil {
+			return nil, status.Errorf(codes.Internal, "plugin info: %v", validateErr)
+		}
+		return &pbc.GetPluginInfoResponse{
+			Name:         info.Name,
+			Version:      info.Version,
+			SpecVersion:  info.SpecVersion,
+			Providers:    append([]string{}, info.Providers...),
+			Metadata:     info.Metadata,
+			Capabilities: append([]pbc.PluginCapability{}, info.Capabilities...),
+		}, nil
+	})
 }

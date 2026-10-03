@@ -35,14 +35,16 @@ var supportedTypes = map[string]struct{}{
 
 // Supports reports whether this cost source can price the resource.
 func (s *Server) Supports(ctx context.Context, req *pbc.SupportsRequest) (*pbc.SupportsResponse, error) {
-	resourceType := req.GetResource().GetResourceType()
-	log := s.requestLogger(ctx)
-	log.Info().Str("resource_type", resourceType).Msg("supports")
-	if _, ok := supportedTypes[resourceType]; ok {
-		return &pbc.SupportsResponse{Supported: true}, nil
-	}
-	return &pbc.SupportsResponse{
-		Supported: false,
-		Reason:    fmt.Sprintf("resource type %q is not a Kubernetes workload this plugin prices", resourceType),
-	}, nil
+	return observeResult(ctx, s, "Supports", func() (*pbc.SupportsResponse, error) {
+		resourceType := req.GetResource().GetResourceType()
+		log := s.requestLogger(ctx)
+		log.Info().Str("resource_type", resourceType).Msg("supports")
+		if _, ok := supportedTypes[resourceType]; ok {
+			return &pbc.SupportsResponse{Supported: true}, nil
+		}
+		return &pbc.SupportsResponse{
+			Supported: false,
+			Reason:    fmt.Sprintf("resource type %q is not a Kubernetes workload this plugin prices", resourceType),
+		}, nil
+	})
 }
