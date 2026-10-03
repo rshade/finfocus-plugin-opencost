@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,28 +20,11 @@ func validateWindow(start, end *timestamppb.Timestamp) error {
 }
 
 func queryForResourceID(resourceID, window string) (allocation.AllocationQuery, error) {
-	kind, rest, ok := strings.Cut(resourceID, "/")
-	if !ok || rest == "" {
-		return allocation.AllocationQuery{}, unsupportedResourceID(resourceID)
+	ref, err := parseResourceID(resourceID)
+	if err != nil {
+		return allocation.AllocationQuery{}, err
 	}
-	filter := map[string]string{}
-	switch kind {
-	case "namespace", "node":
-		if strings.Contains(rest, "/") {
-			return allocation.AllocationQuery{}, unsupportedResourceID(resourceID)
-		}
-		filter[kind] = rest
-	case "pod", "controller":
-		ns, object, found := strings.Cut(rest, "/")
-		if !found || ns == "" || object == "" || strings.Contains(object, "/") {
-			return allocation.AllocationQuery{}, unsupportedResourceID(resourceID)
-		}
-		filter["namespace"] = ns
-		filter[kind] = object
-	default:
-		return allocation.AllocationQuery{}, unsupportedResourceID(resourceID)
-	}
-	return allocation.AllocationQuery{Window: window, Filter: filter, AggregateBy: []string{kind}}, nil
+	return allocation.AllocationQuery{Window: window, Filter: ref.filter(), AggregateBy: ref.aggregate()}, nil
 }
 
 func unsupportedResourceID(resourceID string) error {

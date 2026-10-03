@@ -278,3 +278,4 @@ make lint
 - `DecodeAllocationBody` reads typed cost fields. `ConsumedFields` and `IgnoredFields` together cover every key of the recorded allocations. Those objects have 53 keys. `allocation-namespace-idle.json` also has `proportionalAssetResourceCosts` and `sharedCostBreakdown`. Do not edit `testdata/opencost-real/`.
 - HTTP 400 bodies in that directory are plain text, not JSON.
 - Cost RPCs use `finfocus-spec` v0.7.1. `Supports` accepts the Pulumi tokens documented in `docs/resource-mapping.md`.
+- `GetActualCost` maps `namespace/<name>`, `controller/<namespace>/<name>`, `pod/<namespace>/<name>`, and `node/<name>` to a sorted OpenCost filter. It returns typed `totalCost` for matching rows only, including a real zero. A node request matches `properties.node` because there is no node-aggregated recording.
