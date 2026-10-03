@@ -34,11 +34,14 @@ func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
 // oc-example/fixed is accepted when the resource type is known. Otherwise the
 // name comes from metadata.name and metadata.namespace tags.
 func resolveRef(resourceType, id string, tags map[string]string) (resourceRef, error) {
-	if ref, ok, err := kindPrefixedRef(resourceType, id); ok || err != nil {
-		return ref, err
+	if strings.TrimSpace(id) == "" {
+		return resourceRef{}, status.Error(codes.InvalidArgument, "empty resource id")
 	}
 	if resourceType == "" {
 		resourceType = tags["resource_type"]
+	}
+	if ref, ok, err := kindPrefixedRef(resourceType, id); ok || err != nil {
+		return ref, err
 	}
 	if !knownType(resourceType) {
 		return resourceRef{}, unknownTypeError(resourceType, id)

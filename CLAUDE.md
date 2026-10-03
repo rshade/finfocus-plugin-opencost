@@ -45,7 +45,7 @@ This is a gRPC plugin that implements the CostSource service from `finfocus-spec
 - `controller/<namespace>/<name>` → filter by namespace and controller
 - `node/<name>` → filter by node
 
-A cloud id such as `oc-example` or `oc-example/fixed` is accepted when the `resource_type` tag names a supported namespace, node, pod, or controller. A kind-prefixed id that disagrees with the resource type is `InvalidArgument`.
+A bare cloud id such as `oc-example` is a namespace or node when `resource_type` says so. `oc-example/fixed` is a pod or controller. A kind-prefixed id that disagrees with the resource type, including a `resource_type` tag on `GetActualCost`, is `InvalidArgument`. An empty id stays `InvalidArgument` even when `metadata.name` is set.
 
 ### Cost Projections
 

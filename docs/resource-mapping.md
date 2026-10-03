@@ -48,7 +48,7 @@ This cost source does not support those `aws:*`, `gcp:*`, or `azure-native:*` to
 
 ## How an id becomes an OpenCost filter
 
-`ResourceDescriptor.id` stays an opaque correlation token. A Pulumi URN is not split on `/`. The OpenCost object name comes from `metadata.name` and `metadata.namespace` tags, which core flattens onto projected-cost descriptors. `GetActualCost` still accepts `namespace/<name>`, `pod/<namespace>/<name>`, `controller/<namespace>/<name>`, and `node/<name>`. A cloud id such as `oc-example/fixed` is accepted when the `resource_type` tag names a supported controller, pod, namespace, or node.
+`ResourceDescriptor.id` stays an opaque correlation token. A Pulumi URN is not split on `/`. The OpenCost object name comes from `metadata.name` and `metadata.namespace` tags, which core flattens onto projected-cost descriptors. `GetActualCost` still accepts `namespace/<name>`, `pod/<namespace>/<name>`, `controller/<namespace>/<name>`, and `node/<name>`. A bare cloud id such as `oc-example` is a namespace or node when `resource_type` says so. `oc-example/fixed` is a pod or controller. A slash is not a namespace or node name. A kind-prefixed id that disagrees with `resource_type` is `InvalidArgument`. An empty id stays `InvalidArgument` even when `metadata.name` is set.
 
 `Supports` is true for the Pulumi tokens core forwards for objects OpenCost can filter:
 
