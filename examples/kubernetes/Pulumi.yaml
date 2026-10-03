@@ -1,0 +1,87 @@
+name: finfocus-plugin-opencost-example
+runtime: yaml
+description: Kubernetes resources whose allocation the OpenCost plugin can price
+
+resources:
+  render:
+    type: pulumi:providers:kubernetes
+    properties:
+      renderYamlToDirectory: rendered
+  appNamespace:
+    type: kubernetes:core/v1:Namespace
+    options:
+      provider: ${render}
+    properties:
+      metadata:
+        name: oc-example
+        labels:
+          app: fixed
+  app:
+    type: kubernetes:apps/v1:Deployment
+    options:
+      provider: ${render}
+    properties:
+      metadata:
+        namespace: ${appNamespace.metadata.name}
+        name: fixed
+        labels:
+          app: fixed
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: fixed
+        template:
+          metadata:
+            labels:
+              app: fixed
+          spec:
+            containers:
+              - name: pause
+                image: registry.k8s.io/pause:3.10
+  appService:
+    type: kubernetes:core/v1:Service
+    options:
+      provider: ${render}
+    properties:
+      metadata:
+        namespace: ${appNamespace.metadata.name}
+        name: fixed
+      spec:
+        selector:
+          app: fixed
+        ports:
+          - name: http
+            port: 80
+            targetPort: 80
+  nodeAgent:
+    type: kubernetes:apps/v1:DaemonSet
+    options:
+      provider: ${render}
+    properties:
+      metadata:
+        namespace: ${appNamespace.metadata.name}
+        name: node-agent
+        labels:
+          app: node-agent
+      spec:
+        selector:
+          matchLabels:
+            app: node-agent
+        template:
+          metadata:
+            labels:
+              app: node-agent
+          spec:
+            containers:
+              - name: pause
+                image: registry.k8s.io/pause:3.10
+outputs:
+  namespace:
+    value: ${appNamespace.metadata.name}
+  deployment:
+    value: ${app.metadata.name}
+  service:
+    value: ${appService.metadata.name}
+  daemonSet:
+    value: ${nodeAgent.metadata.name}

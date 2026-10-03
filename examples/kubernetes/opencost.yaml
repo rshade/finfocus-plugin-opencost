@@ -1,0 +1,9 @@
+baseUrl: https://opencost.example.com
+profile: opencost
+currency: EUR
+defaultWindow: 30d
+timeout: 15s
+tlsSkipVerify: false
+cacheTTL: 30s
+requestsPerSecond: 10
+rateBurst: 20
