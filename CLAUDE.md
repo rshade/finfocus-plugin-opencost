@@ -29,6 +29,7 @@ This is a gRPC plugin that implements the CostSource service from `finfocus-spec
 ## Key Implementation Details
 
 ### Resource ID Mapping
+
 The plugin maps resource IDs to Kubecost filters:
 - `namespace/<name>` → filter by namespace
 - `pod/<namespace>/<name>` → filter by namespace and pod
@@ -36,9 +37,11 @@ The plugin maps resource IDs to Kubecost filters:
 - `node/<name>` → filter by node
 
 ### Cost Projections
+
 `GetProjectedCost` calculates a 30-day average from historical data and extrapolates monthly costs. This is a simple MVP approach that can be enhanced with more sophisticated forecasting.
 
 ### Cost Prediction API
+
 The plugin supports IBM Kubecost Cost Prediction API for proactive cost forecasting:
 - **Endpoint**: `POST /model/prediction/speccost`
 - **Purpose**: Predict cost impact for Kubernetes workloads before deployment
@@ -46,6 +49,7 @@ The plugin supports IBM Kubecost Cost Prediction API for proactive cost forecast
 - **Parameters**: cluster ID, namespace, prediction window, usage data options
 
 ### Error Handling
+
 - HTTP client includes timeout support via context
 - TLS certificate verification can be disabled for development
 - All errors are propagated with context
@@ -66,11 +70,13 @@ The plugin depends on:
 ## Common Development Tasks
 
 ### Adding New Resource Types
+
 1. Update the `Supports()` method in `kubecost_server.go`
 2. Add mapping logic in `GetActualCost()` for the new resource ID format
 3. Update `plugin.manifest.json` with the new resource type
 
 ### Using Cost Prediction API
+
 The prediction API allows forecasting costs before deployment:
 
 ```go
@@ -100,6 +106,7 @@ resp, err := client.PredictSpecCost(ctx, req)
 ```
 
 ### Environment Variables for Prediction
+
 ```bash
 export KUBECOST_CLUSTER_ID="production-cluster"
 export KUBECOST_DEFAULT_NAMESPACE="default"
@@ -107,13 +114,16 @@ export KUBECOST_PREDICTION_WINDOW="7d"
 ```
 
 ### Debugging the gRPC Server
+
 The server includes reflection support, so you can use tools like `grpcurl`:
+
 ```bash
 grpcurl -plaintext localhost:50051 list
 grpcurl -plaintext localhost:50051 describe CostSource
 ```
 
 ### Modifying Kubecost API Calls
+
 The HTTP client in `client.go` handles the Kubecost API interaction. To add new endpoints:
 1. Add new methods to the Client struct
 2. Define request/response types
@@ -122,13 +132,16 @@ The HTTP client in `client.go` handles the Kubecost API interaction. To add new 
 ## Go-Specific Development Patterns
 
 ### Struct Field Consistency
+
 - **Critical**: Field names must be consistent across related structs
 - Example issue: `PVCost` vs `PVCCost` caused compilation failures
 - Always verify field names when copying/adapting struct definitions
 
 ### URL Parameter Handling
+
 - Map iteration order is random in Go, affecting URL parameter order
 - Use flexible testing patterns that accept multiple valid orders:
+
   ```go
   if !contains(url, "order1") && !contains(url, "order2") {
       t.Errorf("Expected URL to contain parameters in either order")
@@ -136,28 +149,33 @@ The HTTP client in `client.go` handles the Kubecost API interaction. To add new 
   ```
 
 ### Error Handling Best Practices
+
 - Use `errors.Is(err, os.ErrNotExist)` for file existence checks
 - Graceful degradation: missing config files should not fail hard
 - Always check for unused variables in strict builds (`_ = variable`)
 
 ### Protobuf and Timestamp Handling
+
 - Use `timestamppb.New(time)` instead of manual timestamp construction
 - Avoid duplicate helper functions when standard library provides them
 
 ## Project-Specific Architecture Insights
 
 ### Allocation API Methods
+
 The project has two allocation methods with different capabilities:
 - **Basic `Allocation`**: Simple method, was incomplete (fixed in recent update)
 - **Enhanced `EnhancedAllocation`**: Full-featured method using `GetDetailedAllocation` + `ConvertToSimpleResponse`
 - **Recommendation**: Use `EnhancedAllocation` for new implementations
 
 ### Testing Architecture
+
 - Uses mock HTTP servers (`httptest.NewServer`) for integration testing
 - Mock protobuf types defined locally due to missing `finfocus-spec` dependency
 - Integration tests validate end-to-end functionality including URL building and response parsing
 
 ### Configuration Handling
+
 - Supports both environment variables and YAML files
 - Environment variables take precedence
 - Config loading gracefully handles missing files with `os.ErrNotExist`
@@ -165,21 +183,25 @@ The project has two allocation methods with different capabilities:
 ## Common Development Issues & Solutions
 
 ### Dependency Management
+
 - Issue: Missing `go.sum` entries cause build failures
 - Solution: Run `go mod tidy` when adding new imports or after git operations
 - Symptom: "missing go.sum entry for module" errors
 
 ### Linting Configuration
+
 - Issue: `embeddedstructfieldcheck` linter requires golangci-lint v2.3+
 - Solution: Disable incompatible linters in `.golangci.yml` for older versions
 - Check version compatibility before enabling new linters
 
 ### URL Building and Testing
+
 - Issue: Go's map iteration randomness affects URL parameter order
 - Solution: Test for multiple valid parameter orders or use URL parsing
 - Debug tip: Create temporary debug files to inspect generated URLs
 
 ### Parallel Process Conflicts
+
 - Issue: "parallel golangci-lint is running" errors
 - Solution: Wait between runs or use direct `golangci-lint run` command
 - Alternative: Use `--timeout` flag to prevent hanging processes
@@ -187,6 +209,7 @@ The project has two allocation methods with different capabilities:
 ## Testing Strategies
 
 ### Integration Testing with Mock Servers
+
 ```go
 // Effective pattern for testing HTTP API clients
 mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -200,11 +223,13 @@ client := NewClient(Config{BaseURL: mockServer.URL})
 ```
 
 ### URL Parameter Testing
+
 - Test both parameter presence and proper encoding
 - Account for random map iteration order in Go
 - Use helper functions to reduce test code duplication
 
 ### Error Scenario Testing
+
 - Test missing configuration files
 - Test network timeouts and failures  
 - Test malformed API responses
@@ -213,6 +238,7 @@ client := NewClient(Config{BaseURL: mockServer.URL})
 ## Tool Usage and Workflow Optimizations
 
 ### Go Testing Commands
+
 ```bash
 # Test specific package with verbose output
 go test ./internal/allocation -v
@@ -225,11 +251,13 @@ go test -race ./...
 ```
 
 ### Debugging Techniques
+
 - Create temporary debug files for URL inspection
 - Use `fmt.Printf` debugging in tests (remove before commit)
 - Check HTTP request/response details in mock server handlers
 
 ### Build and Validation Workflow
+
 ```bash
 # Complete validation sequence
 go mod tidy
@@ -239,6 +267,14 @@ make lint
 ```
 
 ### golangci-lint Best Practices
+
 - Check version compatibility before updating config
 - Use `--timeout=60s` flag for slow systems
 - Disable strict linters during development, enable for production
+
+## Allocation profiles and recorded responses
+
+- The client package is `internal/allocation`. Profile `opencost` (the default) calls `GET /allocation` with `includeIdle` and `shareIdle` and does not send a token. Profile `kubecost` calls `GET /model/allocation` with `idle`, `accumulate`, and `shareIdle`, and sends a bearer token. Set `OPENCOST_PROFILE` or `profile` in the config. Filter keys are sorted.
+- `DecodeAllocationBody` reads typed cost fields. `ConsumedFields` and `IgnoredFields` together cover every key of the recorded allocations. Those objects have 53 keys. `allocation-namespace-idle.json` also has `proportionalAssetResourceCosts` and `sharedCostBreakdown`. Do not edit `testdata/opencost-real/`.
+- HTTP 400 bodies in that directory are plain text, not JSON.
+- Cost RPCs use `finfocus-spec` v0.7.1. `Supports` accepts the Pulumi tokens documented in `docs/resource-mapping.md`.
