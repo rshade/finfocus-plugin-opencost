@@ -7,6 +7,8 @@ GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unkno
 GIT_STATE := $(shell if git diff --quiet 2>/dev/null; then echo "clean"; else echo "dirty"; fi)
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S_UTC')
 
+.PHONY: all build test test-race vet lint fmt govulncheck drift e2e-kind e2e-kind-up e2e-kind-wait e2e-kind-down goreleaser-check
+
 all: build
 
 build:

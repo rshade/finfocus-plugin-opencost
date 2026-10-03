@@ -24,6 +24,8 @@ docker build -t finfocus-plugin-opencost:dev .
 docker run --rm finfocus-plugin-opencost:dev --help
 ```
 
+`make` goals are `.PHONY`. A directory named `test` would otherwise make `make test` report that it is up to date and skip the recipe.
+
 ## Project Architecture
 
 This is a gRPC plugin that implements the CostSource service from `finfocus-spec`. The plugin name is `opencost`. `GetPluginInfo` reports `PROJECTED_COSTS`, `ACTUAL_COSTS`, `PRICING_SPEC`, `ESTIMATE_COST`, `BATCH_COST`, and `BUDGETS`. It does not report `ALLOCATION`. Key components:
@@ -60,7 +62,7 @@ Profile `opencost` `EstimateCost` reads `metadata.name` as a namespace and queri
 
 The plugin depends on:
 - `github.com/rshade/finfocus-spec/sdk/go/proto` - Protocol buffer definitions
-- Standard gRPC and protobuf libraries
+- `google.golang.org/grpc` v1.86.0-dev. `govulncheck` reports GO-2026-6443 for v1.84.0, and no stable tag newer than v1.84.0 is published. The plugin server does not call `xds.NewGRPCServer`.
 - `gopkg.in/yaml.v3` for configuration parsing
 
 ## Testing Approach
@@ -98,7 +100,7 @@ grpcurl -plaintext localhost:50051 describe CostSource
 
 ### Modifying allocation API calls
 
-The HTTP client in `internal/allocation/client.go` queries the allocation API. To add new endpoints:
+The HTTP client in `internal/allocation/client.go` queries the allocation API. Exported allocation types are `Entry`, `Properties`, `Window`, `Query`, `Point`, and `Response`. `DetailedAllocationResponse` keeps its name. To add new endpoints:
 
 1. Add new methods to the Client struct
 2. Define request/response types

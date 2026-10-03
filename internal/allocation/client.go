@@ -104,13 +104,13 @@ func (c *Client) GetConfig() Config {
 	return c.cfg
 }
 
-type AllocationQuery struct {
+type Query struct {
 	Window      string            // "2025-07-01T00:00:00Z,2025-07-31T23:59:59Z" or "30d"
 	Filter      map[string]string // namespace, controller, pod, cluster, label:app, node, etc.
 	AggregateBy []string          // e.g., ["namespace", "controller"]
 }
 
-type AllocationPoint struct {
+type Point struct {
 	Start       string  `json:"start"`
 	End         string  `json:"end"`
 	Cost        float64 `json:"cost"`
@@ -122,8 +122,8 @@ type AllocationPoint struct {
 	// ... add fields as needed
 }
 
-type AllocationResponse struct {
-	Items []AllocationPoint `json:"items"`
+type Response struct {
+	Items []Point `json:"items"`
 }
 
 // SpecCostWindowResourceCost is the kubectl-cost --window-cost default.
@@ -165,22 +165,22 @@ type SpecCostDiff struct {
 	CostChange     CostPrediction `json:"costChange"`
 }
 
-func (c *Client) Allocation(ctx context.Context, q AllocationQuery) (AllocationResponse, error) {
+func (c *Client) Allocation(ctx context.Context, q Query) (Response, error) {
 	url, err := c.BuildAllocationURL(q)
 	if err != nil {
-		return AllocationResponse{}, err
+		return Response{}, err
 	}
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	c.setAuth(req)
 	resp, err := c.do(req)
 	if err != nil {
-		return AllocationResponse{}, err
+		return Response{}, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= httpRedirectStatus {
-		return AllocationResponse{}, fmt.Errorf("kubecost %d", resp.StatusCode)
+		return Response{}, fmt.Errorf("kubecost %d", resp.StatusCode)
 	}
-	var out AllocationResponse
+	var out Response
 	if decodeErr := json.NewDecoder(resp.Body).Decode(&out); decodeErr != nil {
 		return out, decodeErr
 	}

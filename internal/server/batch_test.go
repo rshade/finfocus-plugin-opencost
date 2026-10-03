@@ -44,7 +44,10 @@ func TestBatchCostKeepsOrderAndPartialFailure(t *testing.T) {
 	require.Len(t, resp.GetResults(), 3)
 
 	require.Equal(t, left.name, resp.GetResults()[0].GetResource().GetId())
-	require.InDelta(t, monthFromEntry(left.entry), resp.GetResults()[0].GetCostData().GetEstimate().GetCostMonthly(), 1e-6)
+	require.InDelta(t,
+		monthFromEntry(left.entry),
+		resp.GetResults()[0].GetCostData().GetEstimate().GetCostMonthly(),
+		1e-6)
 	require.Nil(t, resp.GetResults()[0].GetError())
 
 	require.Equal(t, missing, resp.GetResults()[1].GetResource().GetId())
@@ -53,7 +56,10 @@ func TestBatchCostKeepsOrderAndPartialFailure(t *testing.T) {
 	require.Contains(t, resp.GetResults()[1].GetError().GetMessage(), "NO_COST_DATA")
 
 	require.Equal(t, right.name, resp.GetResults()[2].GetResource().GetId())
-	require.InDelta(t, monthFromEntry(right.entry), resp.GetResults()[2].GetCostData().GetEstimate().GetCostMonthly(), 1e-6)
+	require.InDelta(t,
+		monthFromEntry(right.entry),
+		resp.GetResults()[2].GetCostData().GetEstimate().GetCostMonthly(),
+		1e-6)
 }
 
 func TestEstimateCostUsesRecordedNamespace(t *testing.T) {

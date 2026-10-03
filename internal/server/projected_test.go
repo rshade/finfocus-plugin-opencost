@@ -40,10 +40,10 @@ func TestGetProjectedCostUsesRequestedResource(t *testing.T) {
 
 type namedEntry struct {
 	name  string
-	entry allocation.AllocationEntry
+	entry allocation.Entry
 }
 
-func twoNamespaces(t *testing.T, step map[string]allocation.AllocationEntry) (namedEntry, namedEntry) {
+func twoNamespaces(t *testing.T, step map[string]allocation.Entry) (namedEntry, namedEntry) {
 	t.Helper()
 	var found []namedEntry
 	for name, entry := range step {
@@ -97,7 +97,7 @@ func serverForProjection(t *testing.T, body []byte) *server.Server {
 	return server.New(cli)
 }
 
-func monthFromEntry(entry allocation.AllocationEntry) float64 {
+func monthFromEntry(entry allocation.Entry) float64 {
 	hours := entry.Minutes / 60
 	return entry.TotalCost / hours * 730
 }

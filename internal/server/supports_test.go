@@ -35,10 +35,10 @@ func TestSupportsKubernetesTypesCoreSends(t *testing.T) {
 	for _, resourceType := range supported {
 		t.Run(resourceType, func(t *testing.T) {
 			t.Parallel()
-			resp, err := srv.Supports(t.Context(), &pbc.SupportsRequest{
+			resp, supportErr := srv.Supports(t.Context(), &pbc.SupportsRequest{
 				Resource: &pbc.ResourceDescriptor{Provider: "kubernetes", ResourceType: resourceType},
 			})
-			require.NoError(t, err)
+			require.NoError(t, supportErr)
 			require.True(t, resp.GetSupported(), resp.GetReason())
 		})
 	}

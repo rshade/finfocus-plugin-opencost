@@ -21,7 +21,7 @@ func BenchmarkCachedAllocation(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	query := AllocationQuery{Window: "60m"}
+	query := Query{Window: "60m"}
 	if _, err = client.GetDetailedAllocation(context.Background(), query); err != nil {
 		b.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestAllocationCacheExpires(t *testing.T) {
 		t.Fatal(err)
 	}
 	client.now = func() time.Time { return now }
-	query := AllocationQuery{Window: "60m"}
+	query := Query{Window: "60m"}
 
 	if _, err = client.GetDetailedAllocation(context.Background(), query); err != nil {
 		t.Fatal(err)
@@ -90,7 +90,7 @@ func TestPooledClientReusesOneConnection(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, window := range []string{"60m", "30d"} {
-		if _, err = client.GetDetailedAllocation(context.Background(), AllocationQuery{Window: window}); err != nil {
+		if _, err = client.GetDetailedAllocation(context.Background(), Query{Window: window}); err != nil {
 			t.Fatal(err)
 		}
 	}

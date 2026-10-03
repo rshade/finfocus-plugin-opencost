@@ -19,12 +19,12 @@ func validateWindow(start, end *timestamppb.Timestamp) error {
 	return nil
 }
 
-func queryForResourceID(resourceID, window string) (allocation.AllocationQuery, error) {
+func queryForResourceID(resourceID, window string) (allocation.Query, error) {
 	ref, err := parseResourceID(resourceID)
 	if err != nil {
-		return allocation.AllocationQuery{}, err
+		return allocation.Query{}, err
 	}
-	return allocation.AllocationQuery{Window: window, Filter: ref.filter(), AggregateBy: ref.aggregate()}, nil
+	return allocation.Query{Window: window, Filter: ref.filter(), AggregateBy: ref.aggregate()}, nil
 }
 
 func unsupportedResourceID(resourceID string) error {

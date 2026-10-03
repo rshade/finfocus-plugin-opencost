@@ -85,14 +85,14 @@ func (s *Server) GetProjectedCost(
 	return observeResult(ctx, s, "GetProjectedCost", func() (*pbc.GetProjectedCostResponse, error) {
 		resource := req.GetResource()
 		resourceType := resource.GetResourceType()
-		if _, ok := supportedTypes[resourceType]; !ok {
+		if !knownType(resourceType) {
 			return nil, status.Errorf(codes.InvalidArgument, "resource type %q is not supported", resourceType)
 		}
 		ref, err := refForDescriptor(resource)
 		if err != nil {
 			return nil, err
 		}
-		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
+		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.Query{
 			Window:      projectionWindow,
 			Filter:      ref.filter(),
 			AggregateBy: ref.aggregate(),
@@ -121,14 +121,14 @@ func (s *Server) GetPricingSpec(
 	return observeResult(ctx, s, "GetPricingSpec", func() (*pbc.GetPricingSpecResponse, error) {
 		resource := req.GetResource()
 		resourceType := resource.GetResourceType()
-		if _, ok := supportedTypes[resourceType]; !ok {
+		if !knownType(resourceType) {
 			return nil, status.Errorf(codes.InvalidArgument, "resource type %q is not supported", resourceType)
 		}
 		ref, err := refForDescriptor(resource)
 		if err != nil {
 			return nil, err
 		}
-		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.AllocationQuery{
+		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.Query{
 			Window:      projectionWindow,
 			Filter:      ref.filter(),
 			AggregateBy: ref.aggregate(),

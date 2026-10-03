@@ -14,23 +14,20 @@ const (
 	aliasNode      = "k8s-node"
 )
 
-// supportedTypes are the resource types core forwards and this plugin can filter.
+// knownType reports the resource types core forwards and this plugin can filter.
 // Pulumi tokens are copied through by finfocus (see docs/resource-mapping.md).
 // The k8s-* names are the examples in costsource.proto ResourceDescriptor.resource_type.
-var supportedTypes = map[string]struct{}{
-	typeNamespace:                    {},
-	"kubernetes:core/v1:Pod":         {},
-	typeNode:                         {},
-	"kubernetes:apps/v1:Deployment":  {},
-	"kubernetes:apps/v1:StatefulSet": {},
-	"kubernetes:apps/v1:DaemonSet":   {},
-	"kubernetes:apps/v1:ReplicaSet":  {},
-	"kubernetes:batch/v1:Job":        {},
-	"kubernetes:batch/v1:CronJob":    {},
-	aliasNamespace:                   {},
-	"k8s-pod":                        {},
-	"k8s-controller":                 {},
-	aliasNode:                        {},
+func knownType(resourceType string) bool {
+	switch resourceType {
+	case typeNamespace, "kubernetes:core/v1:Pod", typeNode,
+		"kubernetes:apps/v1:Deployment", "kubernetes:apps/v1:StatefulSet",
+		"kubernetes:apps/v1:DaemonSet", "kubernetes:apps/v1:ReplicaSet",
+		"kubernetes:batch/v1:Job", "kubernetes:batch/v1:CronJob",
+		aliasNamespace, "k8s-pod", "k8s-controller", aliasNode:
+		return true
+	default:
+		return false
+	}
 }
 
 // Supports reports whether this cost source can price the resource.
@@ -39,7 +36,7 @@ func (s *Server) Supports(ctx context.Context, req *pbc.SupportsRequest) (*pbc.S
 		resourceType := req.GetResource().GetResourceType()
 		log := s.requestLogger(ctx)
 		log.Info().Str("resource_type", resourceType).Msg("supports")
-		if _, ok := supportedTypes[resourceType]; ok {
+		if knownType(resourceType) {
 			return &pbc.SupportsResponse{Supported: true}, nil
 		}
 		return &pbc.SupportsResponse{

@@ -22,20 +22,20 @@ const (
 
 // DetailedAllocationResponse represents the full response from Kubecost allocation API.
 type DetailedAllocationResponse struct {
-	Code     int                          `json:"code"`
-	Status   string                       `json:"status"`
-	Message  string                       `json:"message,omitempty"`
-	Currency string                       `json:"currency,omitempty"`
-	Data     []map[string]AllocationEntry `json:"data"`
+	Code     int                `json:"code"`
+	Status   string             `json:"status"`
+	Message  string             `json:"message,omitempty"`
+	Currency string             `json:"currency,omitempty"`
+	Data     []map[string]Entry `json:"data"`
 	// FetchedUntil is when a cached copy of this body becomes stale. It is not a wire field.
 	FetchedUntil time.Time `json:"-"`
 }
 
-// AllocationEntry represents a single allocation entry from Kubecost.
-type AllocationEntry struct {
+// Entry represents a single allocation entry from Kubecost.
+type Entry struct {
 	Name              string                 `json:"name"`
-	Properties        AllocationProperties   `json:"properties"`
-	Window            AllocationWindow       `json:"window"`
+	Properties        Properties             `json:"properties"`
+	Window            Window                 `json:"window"`
 	Start             string                 `json:"start"`
 	End               string                 `json:"end"`
 	Minutes           float64                `json:"minutes"`
@@ -92,8 +92,8 @@ func ResponseCurrency(resp *DetailedAllocationResponse) (string, error) {
 	return found, nil
 }
 
-// AllocationProperties contains metadata about the allocation.
-type AllocationProperties struct {
+// Properties contains metadata about the allocation.
+type Properties struct {
 	Cluster        string            `json:"cluster,omitempty"`
 	Node           string            `json:"node,omitempty"`
 	Container      string            `json:"container,omitempty"`
@@ -106,14 +106,14 @@ type AllocationProperties struct {
 	Annotations    map[string]string `json:"annotations,omitempty"`
 }
 
-// AllocationWindow represents the time window for the allocation.
-type AllocationWindow struct {
+// Window represents the time window for the allocation.
+type Window struct {
 	Start string `json:"start"`
 	End   string `json:"end"`
 }
 
 // BuildAllocationURL constructs the allocation URL for the configured profile.
-func (c *Client) BuildAllocationURL(q AllocationQuery) (string, error) {
+func (c *Client) BuildAllocationURL(q Query) (string, error) {
 	profile, err := c.cfg.resolvedProfile()
 	if err != nil {
 		return "", err
@@ -200,7 +200,7 @@ func (c *Client) setAuth(req *http.Request) {
 }
 
 // GetDetailedAllocation retrieves detailed allocation data from Kubecost.
-func (c *Client) GetDetailedAllocation(ctx context.Context, q AllocationQuery) (*DetailedAllocationResponse, error) {
+func (c *Client) GetDetailedAllocation(ctx context.Context, q Query) (*DetailedAllocationResponse, error) {
 	endpoint, err := c.BuildAllocationURL(q)
 	if err != nil {
 		return nil, err
@@ -265,8 +265,8 @@ func DecodeAllocationBody(statusCode int, body []byte) (*DetailedAllocationRespo
 }
 
 // ConvertToSimpleResponse converts detailed allocation to the simple response format.
-func ConvertToSimpleResponse(detailed *DetailedAllocationResponse) AllocationResponse {
-	var items []AllocationPoint
+func ConvertToSimpleResponse(detailed *DetailedAllocationResponse) Response {
+	var items []Point
 
 	for _, dayData := range detailed.Data {
 		for _, entry := range dayData {
@@ -280,7 +280,7 @@ func ConvertToSimpleResponse(detailed *DetailedAllocationResponse) AllocationRes
 				end = entry.Window.End
 			}
 
-			items = append(items, AllocationPoint{
+			items = append(items, Point{
 				Start:       start,
 				End:         end,
 				Cost:        entry.TotalCost,
@@ -293,14 +293,14 @@ func ConvertToSimpleResponse(detailed *DetailedAllocationResponse) AllocationRes
 		}
 	}
 
-	return AllocationResponse{Items: items}
+	return Response{Items: items}
 }
 
 // EnhancedAllocation method that uses detailed allocation API to retrieve allocation data.
-func (c *Client) EnhancedAllocation(ctx context.Context, q AllocationQuery) (AllocationResponse, error) {
+func (c *Client) EnhancedAllocation(ctx context.Context, q Query) (Response, error) {
 	detailed, err := c.GetDetailedAllocation(ctx, q)
 	if err != nil {
-		return AllocationResponse{}, err
+		return Response{}, err
 	}
 
 	return ConvertToSimpleResponse(detailed), nil

@@ -13,7 +13,7 @@ import (
 func TestAllocationURLProfilesAreStable(t *testing.T) {
 	t.Parallel()
 
-	query := allocation.AllocationQuery{
+	query := allocation.Query{
 		Window: "60m",
 		Filter: map[string]string{
 			"namespace": "oc-test",
@@ -63,7 +63,7 @@ func TestProfileSendsTokenOnlyForKubecost(t *testing.T) {
 	}))
 	t.Cleanup(backend.Close)
 
-	query := allocation.AllocationQuery{Window: "60m"}
+	query := allocation.Query{Window: "60m"}
 	opencost, err := allocation.NewClient(t.Context(), allocation.Config{
 		BaseURL:  backend.URL,
 		APIToken: "secret",

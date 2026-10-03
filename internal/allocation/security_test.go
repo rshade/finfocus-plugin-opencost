@@ -24,7 +24,7 @@ func TestTLSVerifyIsOnUnlessSkipped(t *testing.T) {
 
 	verified, err := allocation.NewClient(t.Context(), allocation.Config{BaseURL: backend.URL})
 	require.NoError(t, err)
-	_, err = verified.GetDetailedAllocation(t.Context(), allocation.AllocationQuery{Window: "60m"})
+	_, err = verified.GetDetailedAllocation(t.Context(), allocation.Query{Window: "60m"})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "certificate")
 
@@ -33,7 +33,7 @@ func TestTLSVerifyIsOnUnlessSkipped(t *testing.T) {
 		TLSSkipVerify: true,
 	})
 	require.NoError(t, err)
-	_, err = skipped.GetDetailedAllocation(t.Context(), allocation.AllocationQuery{Window: "60m"})
+	_, err = skipped.GetDetailedAllocation(t.Context(), allocation.Query{Window: "60m"})
 	require.NoError(t, err)
 }
 
@@ -67,7 +67,7 @@ func TestTokenIsEnvOnlyAndAbsentFromLogs(t *testing.T) {
 	cli, err := allocation.NewClient(t.Context(), fromEnv)
 	require.NoError(t, err)
 	cli.SetLogger(zerolog.New(&buf))
-	_, err = cli.GetDetailedAllocation(t.Context(), allocation.AllocationQuery{Window: "60m"})
+	_, err = cli.GetDetailedAllocation(t.Context(), allocation.Query{Window: "60m"})
 	require.NoError(t, err)
 	require.Equal(t, "Bearer "+envToken, gotAuth)
 	require.Contains(t, buf.String(), "allocation request")
@@ -81,7 +81,7 @@ func TestTokenIsEnvOnlyAndAbsentFromLogs(t *testing.T) {
 	fromEnv.BaseURL = failing.URL
 	failingClient, err := allocation.NewClient(t.Context(), fromEnv)
 	require.NoError(t, err)
-	_, err = failingClient.GetDetailedAllocation(t.Context(), allocation.AllocationQuery{Window: "60m"})
+	_, err = failingClient.GetDetailedAllocation(t.Context(), allocation.Query{Window: "60m"})
 	require.Error(t, err)
 	require.NotContains(t, err.Error(), envToken)
 	require.NotContains(t, err.Error(), yamlToken)
