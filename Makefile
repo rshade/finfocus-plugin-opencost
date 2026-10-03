@@ -44,16 +44,16 @@ drift:
 	cd test/drift && go test -count=1 ./...
 
 e2e-kind-up:
-	hack/kind/e2e-up.sh
+	bash hack/kind/e2e-up.sh
 
 e2e-kind-wait:
-	hack/kind/e2e-wait.sh
+	bash hack/kind/e2e-wait.sh
 
 e2e-kind:
-	hack/kind/e2e-kind.sh
+	bash hack/kind/e2e-kind.sh
 
 e2e-kind-down:
-	hack/kind/e2e-down.sh
+	bash hack/kind/e2e-down.sh
 
 goreleaser-check:
 	goreleaser check

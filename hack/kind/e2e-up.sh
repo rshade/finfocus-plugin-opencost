@@ -21,7 +21,7 @@ stop_forward() {
 on_exit() {
   status=$?
   stop_forward
-  if [[ "${status}" -ne 0 ]]; then
+  if [[ "${status}" -ne 0 && "${OC_KEEP_FAILED_CLUSTER:-}" != "1" ]]; then
     kind delete cluster --name "${cluster}" --kubeconfig "${KUBECONFIG}" >/dev/null 2>&1 || true
   fi
 }

@@ -31,6 +31,8 @@ jobs:
           install_only: true
 
       - name: Install the latest OpenCost chart
+        env:
+          OC_KEEP_FAILED_CLUSTER: "1"
         run: |
           export KUBECONFIG="${RUNNER_TEMP}/oc-drift.kubeconfig"
           echo "KUBECONFIG=${KUBECONFIG}" >> "${GITHUB_ENV}"
