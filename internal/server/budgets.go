@@ -52,17 +52,32 @@ func (s *Server) GetBudgets(
 func namespaceBudgets(rules []allocation.BudgetRule, currency string, includeStatus bool) ([]*pbc.Budget, error) {
 	budgets := make([]*pbc.Budget, 0, len(rules))
 	for _, rule := range rules {
-		names := rule.Values["namespace"]
-		if len(names) == 0 || names[0] == "" {
+		names := nonemptyNames(rule.Values["namespace"])
+		if len(names) == 0 {
 			continue
 		}
-		budget, err := budgetFromRule(rule, names[0], currency, includeStatus)
-		if err != nil {
-			return nil, err
+		for _, name := range names {
+			budget, err := budgetFromRule(rule, name, currency, includeStatus)
+			if err != nil {
+				return nil, err
+			}
+			if len(names) > 1 {
+				budget.Id = rule.ID + "/" + name
+			}
+			budgets = append(budgets, budget)
 		}
-		budgets = append(budgets, budget)
 	}
 	return budgets, nil
+}
+
+func nonemptyNames(names []string) []string {
+	out := make([]string, 0, len(names))
+	for _, name := range names {
+		if name != "" {
+			out = append(out, name)
+		}
+	}
+	return out
 }
 
 func budgetFromRule(rule allocation.BudgetRule, namespace, currency string, includeStatus bool) (*pbc.Budget, error) {
