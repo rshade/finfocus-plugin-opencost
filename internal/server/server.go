@@ -43,15 +43,15 @@ func (s *Server) GetActualCost(
 			return nil, err
 		}
 		window := allocation.FormatTimeWindow(req.GetStart().AsTime(), req.GetEnd().AsTime())
-		query, err := queryForResourceID(req.GetResourceId(), window)
+		ref, err := resolveRef("", req.GetResourceId(), req.GetTags())
 		if err != nil {
 			return nil, err
 		}
-		ref, err := parseResourceID(req.GetResourceId())
-		if err != nil {
-			return nil, err
-		}
-		detailed, err := s.cli.GetDetailedAllocation(ctx, query)
+		detailed, err := s.cli.GetDetailedAllocation(ctx, allocation.Query{
+			Window:      window,
+			Filter:      ref.filter(),
+			AggregateBy: ref.aggregate(),
+		})
 		if err != nil {
 			return nil, mapBackendError(err)
 		}
@@ -102,7 +102,7 @@ func (s *Server) GetProjectedCost(
 		}
 		parts := partsFor(detailed, ref)
 		if parts.samples == 0 {
-			return nil, noCostData(ref.id())
+			return nil, noCostData(correlationID(resource, ref))
 		}
 		currency, err := s.costCurrency(detailed)
 		if err != nil {
@@ -138,7 +138,7 @@ func (s *Server) GetPricingSpec(
 		}
 		parts := partsFor(detailed, ref)
 		if parts.samples == 0 {
-			return nil, noCostData(ref.id())
+			return nil, noCostData(correlationID(resource, ref))
 		}
 		currency, err := s.costCurrency(detailed)
 		if err != nil {

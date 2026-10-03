@@ -10,6 +10,7 @@ import (
 
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
+	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
 func validateWindow(start, end *timestamppb.Timestamp) error {
@@ -19,12 +20,11 @@ func validateWindow(start, end *timestamppb.Timestamp) error {
 	return nil
 }
 
-func queryForResourceID(resourceID, window string) (allocation.Query, error) {
-	ref, err := parseResourceID(resourceID)
-	if err != nil {
-		return allocation.Query{}, err
+func correlationID(resource *pbc.ResourceDescriptor, ref resourceRef) string {
+	if resource != nil && resource.GetId() != "" {
+		return resource.GetId()
 	}
-	return allocation.Query{Window: window, Filter: ref.filter(), AggregateBy: ref.aggregate()}, nil
+	return ref.id()
 }
 
 func unsupportedResourceID(resourceID string) error {

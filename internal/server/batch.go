@@ -170,7 +170,7 @@ func (s *Server) resourceResult(
 	}
 	parts := partsFor(detailed, ref)
 	if parts.samples == 0 {
-		result.Result = itemError(noCostData(ref.id()), false)
+		result.Result = itemError(noCostData(correlationID(resource, ref)), false)
 		return result
 	}
 	currency, err := s.costCurrency(detailed)
@@ -195,7 +195,7 @@ func (s *Server) actualItem(
 ) *pbc.ResourceCostResult {
 	rows := resultsFor(detailed, ref)
 	if len(rows) == 0 {
-		result.Result = itemError(noCostData(ref.id()), false)
+		result.Result = itemError(noCostData(correlationID(result.GetResource(), ref)), false)
 		return result
 	}
 	currency, err := s.costCurrency(detailed)

@@ -46,7 +46,9 @@ When that plugin builds a descriptor for a node, `ResourceType` is a cloud token
 
 This cost source does not support those `aws:*`, `gcp:*`, or `azure-native:*` tokens. The Kubernetes plugin is the usage source for them. This plugin prices allocation rows for Kubernetes objects.
 
-## Names this plugin accepts
+## How an id becomes an OpenCost filter
+
+`ResourceDescriptor.id` stays an opaque correlation token. A Pulumi URN is not split on `/`. The OpenCost object name comes from `metadata.name` and `metadata.namespace` tags, which core flattens onto projected-cost descriptors. `GetActualCost` still accepts `namespace/<name>`, `pod/<namespace>/<name>`, `controller/<namespace>/<name>`, and `node/<name>`. A cloud id such as `oc-example/fixed` is accepted when the `resource_type` tag names a supported controller, pod, namespace, or node.
 
 `Supports` is true for the Pulumi tokens core forwards for objects OpenCost can filter:
 

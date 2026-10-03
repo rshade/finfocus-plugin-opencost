@@ -20,17 +20,133 @@ const (
 )
 
 func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
-	if resource == nil || strings.TrimSpace(resource.GetId()) == "" {
+	if resource == nil {
 		return resourceRef{}, status.Error(codes.InvalidArgument, "empty resource id")
 	}
-	id := resource.GetId()
-	switch resource.GetResourceType() {
+	return resolveRef(resource.GetResourceType(), resource.GetId(), resource.GetTags())
+}
+
+// resolveRef finds the OpenCost object for a cost request.
+// ResourceDescriptor.id is an opaque correlation token. A Pulumi URN is not a
+// Kubernetes name. The plugin grammar (namespace/<name>, pod/<ns>/<name>,
+// controller/<ns>/<name>, node/<name>) is still accepted. A cloud id such as
+// oc-example/fixed is accepted when the resource type is known. Otherwise the
+// name comes from metadata.name and metadata.namespace tags.
+func resolveRef(resourceType, id string, tags map[string]string) (resourceRef, error) {
+	if ref, ok, err := kindPrefixedRef(resourceType, id); ok || err != nil {
+		return ref, err
+	}
+	if resourceType == "" {
+		resourceType = tags["resource_type"]
+	}
+	if !knownType(resourceType) {
+		return resourceRef{}, unknownTypeError(resourceType, id)
+	}
+	kind := kindForType(resourceType)
+	if !opaqueID(id) {
+		if ref, ok := shapedID(kind, id); ok {
+			return ref, nil
+		}
+	}
+	return refFromMetadata(kind, id, tags)
+}
+
+func kindPrefixedRef(resourceType, id string) (resourceRef, bool, error) {
+	ref, ok := explicitKindID(id)
+	if !ok {
+		return resourceRef{}, false, nil
+	}
+	want := kindForType(resourceType)
+	if resourceType == "" || want == ref.kind {
+		return ref, true, nil
+	}
+	if want == "" {
+		return resourceRef{}, false, nil
+	}
+	return resourceRef{}, true, status.Errorf(
+		codes.InvalidArgument,
+		"resource id %q does not match type %q",
+		id,
+		resourceType,
+	)
+}
+
+func unknownTypeError(resourceType, id string) error {
+	if strings.TrimSpace(id) == "" {
+		return status.Error(codes.InvalidArgument, "empty resource id")
+	}
+	if resourceType == "" {
+		return unsupportedResourceID(id)
+	}
+	return status.Errorf(codes.InvalidArgument, "resource type %q is not supported", resourceType)
+}
+
+func refFromMetadata(kind, id string, tags map[string]string) (resourceRef, error) {
+	name := tags["metadata.name"]
+	if name == "" {
+		if strings.TrimSpace(id) == "" {
+			return resourceRef{}, status.Error(codes.InvalidArgument, "empty resource id")
+		}
+		return resourceRef{}, status.Error(
+			codes.InvalidArgument,
+			"resource id is opaque and metadata.name is empty",
+		)
+	}
+	if kind == kindNamespace || kind == kindNode {
+		return resourceRef{kind: kind, name: name}, nil
+	}
+	namespace := tags["metadata.namespace"]
+	if namespace == "" {
+		return resourceRef{}, status.Error(
+			codes.InvalidArgument,
+			"resource id is opaque and metadata.namespace is empty",
+		)
+	}
+	return resourceRef{kind: kind, namespace: namespace, name: name}, nil
+}
+
+func explicitKindID(id string) (resourceRef, bool) {
+	ref, err := parseResourceID(id)
+	if err != nil {
+		return resourceRef{}, false
+	}
+	return ref, true
+}
+
+func opaqueID(id string) bool {
+	return strings.Contains(id, "urn:") || strings.Contains(id, "::")
+}
+
+func shapedID(kind, id string) (resourceRef, bool) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return resourceRef{}, false
+	}
+	switch kind {
+	case kindNamespace, kindNode:
+		if strings.Contains(id, "/") {
+			return resourceRef{}, false
+		}
+		return resourceRef{kind: kind, name: id}, true
+	case kindPod, kindController:
+		namespace, name, ok := strings.Cut(id, "/")
+		if !ok || namespace == "" || name == "" || strings.Contains(name, "/") {
+			return resourceRef{}, false
+		}
+		return resourceRef{kind: kind, namespace: namespace, name: name}, true
+	default:
+		return resourceRef{}, false
+	}
+}
+
+func kindForType(resourceType string) string {
+	switch resourceType {
 	case typeNamespace, aliasNamespace:
-		return singleName(kindNamespace, id)
+		return kindNamespace
 	case typeNode, aliasNode:
-		return singleName(kindNode, id)
+		return kindNode
 	case "kubernetes:core/v1:Pod", "k8s-pod":
-		return namespacedName(kindPod, id)
+		return kindPod
 	case "kubernetes:apps/v1:Deployment",
 		"kubernetes:apps/v1:StatefulSet",
 		"kubernetes:apps/v1:DaemonSet",
@@ -38,29 +154,10 @@ func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
 		"kubernetes:batch/v1:Job",
 		"kubernetes:batch/v1:CronJob",
 		"k8s-controller":
-		return namespacedName(kindController, id)
+		return kindController
 	default:
-		return resourceRef{}, status.Errorf(
-			codes.InvalidArgument,
-			"resource type %q is not supported",
-			resource.GetResourceType(),
-		)
+		return ""
 	}
-}
-
-func singleName(kind, id string) (resourceRef, error) {
-	if strings.Contains(id, "/") {
-		return resourceRef{}, unsupportedResourceID(id)
-	}
-	return resourceRef{kind: kind, name: id}, nil
-}
-
-func namespacedName(kind, id string) (resourceRef, error) {
-	namespace, name, ok := strings.Cut(id, "/")
-	if !ok || namespace == "" || name == "" || strings.Contains(name, "/") {
-		return resourceRef{}, unsupportedResourceID(id)
-	}
-	return resourceRef{kind: kind, namespace: namespace, name: name}, nil
 }
 
 func (r resourceRef) id() string {
