@@ -44,6 +44,9 @@ drift:
 e2e-kind-up:
 	hack/kind/e2e-up.sh
 
+e2e-kind-wait:
+	hack/kind/e2e-wait.sh
+
 e2e-kind-down:
 	hack/kind/e2e-down.sh
 
