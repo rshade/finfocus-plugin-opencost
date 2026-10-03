@@ -53,6 +53,11 @@ func (s *Server) GetActualCost(ctx context.Context, req *pbc.GetActualCostReques
 	if len(results) == 0 {
 		return nil, noCostData(req.GetResourceId())
 	}
+	currency, err := s.costCurrency(detailed)
+	if err != nil {
+		return nil, err
+	}
+	applyCurrency(results, currency)
 	return &pbc.GetActualCostResponse{Results: results}, nil
 }
 
@@ -90,7 +95,11 @@ func (s *Server) GetProjectedCost(
 	if parts.samples == 0 {
 		return nil, noCostData(ref.id())
 	}
-	return projectedResponse(parts)
+	currency, err := s.costCurrency(detailed)
+	if err != nil {
+		return nil, err
+	}
+	return projectedResponse(parts, currency)
 }
 
 // GetPricingSpec reports that this plugin prices from allocation, not a price catalog.

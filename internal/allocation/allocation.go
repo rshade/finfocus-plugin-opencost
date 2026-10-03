@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,10 +22,11 @@ const (
 
 // DetailedAllocationResponse represents the full response from Kubecost allocation API.
 type DetailedAllocationResponse struct {
-	Code    int                          `json:"code"`
-	Status  string                       `json:"status"`
-	Message string                       `json:"message,omitempty"`
-	Data    []map[string]AllocationEntry `json:"data"`
+	Code     int                          `json:"code"`
+	Status   string                       `json:"status"`
+	Message  string                       `json:"message,omitempty"`
+	Currency string                       `json:"currency,omitempty"`
+	Data     []map[string]AllocationEntry `json:"data"`
 }
 
 // AllocationEntry represents a single allocation entry from Kubecost.
@@ -53,7 +55,39 @@ type AllocationEntry struct {
 	ExternalCost      float64                `json:"externalCost"`
 	TotalCost         float64                `json:"totalCost"`
 	TotalEfficiency   float64                `json:"totalEfficiency"`
+	Currency          string                 `json:"currency,omitempty"`
 	RawAllocationOnly map[string]interface{} `json:"rawAllocationOnly,omitempty"`
+}
+
+// ResponseCurrency returns the single currency named by an allocation body.
+// An empty result means the body did not name one. Two different values is an error.
+func ResponseCurrency(resp *DetailedAllocationResponse) (string, error) {
+	if resp == nil {
+		return "", nil
+	}
+	var found string
+	consider := func(value string) error {
+		value = strings.TrimSpace(value)
+		if value == "" || value == found {
+			return nil
+		}
+		if found != "" {
+			return errors.New("allocation response has more than one currency")
+		}
+		found = value
+		return nil
+	}
+	if err := consider(resp.Currency); err != nil {
+		return "", err
+	}
+	for _, step := range resp.Data {
+		for _, entry := range step {
+			if err := consider(entry.Currency); err != nil {
+				return "", err
+			}
+		}
+	}
+	return found, nil
 }
 
 // AllocationProperties contains metadata about the allocation.

@@ -92,7 +92,7 @@ func serverForProjection(t *testing.T, body []byte) *server.Server {
 		_, _ = w.Write(body)
 	}))
 	t.Cleanup(backend.Close)
-	cli, err := allocation.NewClient(t.Context(), allocation.Config{BaseURL: backend.URL})
+	cli, err := allocation.NewClient(t.Context(), allocation.Config{BaseURL: backend.URL, Currency: "EUR"})
 	require.NoError(t, err)
 	return server.New(cli)
 }

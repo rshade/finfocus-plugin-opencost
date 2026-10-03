@@ -38,7 +38,11 @@ func (s *Server) EstimateCost(
 	if parts.samples == 0 {
 		return nil, noCostData(ref.id())
 	}
-	return estimateFromParts(parts)
+	currency, err := s.costCurrency(detailed)
+	if err != nil {
+		return nil, err
+	}
+	return estimateFromParts(parts, currency)
 }
 
 // BatchCost reads one allocation window and reports each resource in request order.
@@ -67,7 +71,7 @@ func (s *Server) BatchCost(ctx context.Context, req *pbc.BatchCostRequest) (*pbc
 	}
 	resp.Results = make([]*pbc.ResourceCostResult, 0, len(resources))
 	for i, resource := range resources {
-		resp.Results = append(resp.Results, resourceResult(
+		resp.Results = append(resp.Results, s.resourceResult(
 			resource, refs[i], failures[i], detailed, backendErr, queryType,
 		))
 	}
@@ -132,7 +136,7 @@ func aggregateFor(refs []resourceRef) []string {
 	return refs[0].aggregate()
 }
 
-func resourceResult(
+func (s *Server) resourceResult(
 	resource *pbc.ResourceDescriptor,
 	ref resourceRef,
 	failure itemFailure,
@@ -150,20 +154,25 @@ func resourceResult(
 		return result
 	}
 	if queryType == pbc.CostQueryType_COST_QUERY_TYPE_ACTUAL {
-		return actualItem(result, detailed, ref)
+		return s.actualItem(result, detailed, ref)
 	}
 	parts := partsFor(detailed, ref)
 	if parts.samples == 0 {
 		result.Result = itemError(noCostData(ref.id()), false)
 		return result
 	}
-	if queryType == pbc.CostQueryType_COST_QUERY_TYPE_PROJECTED {
-		return projectedItem(result, parts)
+	currency, err := s.costCurrency(detailed)
+	if err != nil {
+		result.Result = itemError(err, false)
+		return result
 	}
-	return estimateItem(result, parts)
+	if queryType == pbc.CostQueryType_COST_QUERY_TYPE_PROJECTED {
+		return projectedItem(result, parts, currency)
+	}
+	return estimateItem(result, parts, currency)
 }
 
-func actualItem(
+func (s *Server) actualItem(
 	result *pbc.ResourceCostResult,
 	detailed *allocation.DetailedAllocationResponse,
 	ref resourceRef,
@@ -173,6 +182,12 @@ func actualItem(
 		result.Result = itemError(noCostData(ref.id()), false)
 		return result
 	}
+	currency, err := s.costCurrency(detailed)
+	if err != nil {
+		result.Result = itemError(err, false)
+		return result
+	}
+	applyCurrency(rows, currency)
 	result.Result = &pbc.ResourceCostResult_CostData{
 		CostData: &pbc.CostData{
 			Data: &pbc.CostData_ActualCost{ActualCost: &pbc.ActualCostData{Results: rows}},
@@ -181,8 +196,8 @@ func actualItem(
 	return result
 }
 
-func projectedItem(result *pbc.ResourceCostResult, parts costParts) *pbc.ResourceCostResult {
-	projected, err := projectedResponse(parts)
+func projectedItem(result *pbc.ResourceCostResult, parts costParts, currency string) *pbc.ResourceCostResult {
+	projected, err := projectedResponse(parts, currency)
 	if err != nil {
 		result.Result = itemError(err, false)
 		return result
@@ -193,8 +208,8 @@ func projectedItem(result *pbc.ResourceCostResult, parts costParts) *pbc.Resourc
 	return result
 }
 
-func estimateItem(result *pbc.ResourceCostResult, parts costParts) *pbc.ResourceCostResult {
-	estimate, err := estimateFromParts(parts)
+func estimateItem(result *pbc.ResourceCostResult, parts costParts, currency string) *pbc.ResourceCostResult {
+	estimate, err := estimateFromParts(parts, currency)
 	if err != nil {
 		result.Result = itemError(err, false)
 		return result
@@ -216,12 +231,12 @@ func itemError(err error, unsupported bool) *pbc.ResourceCostResult_Error {
 	}
 }
 
-func estimateFromParts(parts costParts) (*pbc.EstimateCostResponse, error) {
+func estimateFromParts(parts costParts, currency string) (*pbc.EstimateCostResponse, error) {
 	_, monthly, _, err := projectMonth(parts)
 	if err != nil {
 		return nil, err
 	}
-	resp := &pbc.EstimateCostResponse{CostMonthly: monthly}
+	resp := &pbc.EstimateCostResponse{CostMonthly: monthly, Currency: currency}
 	if validateErr := pluginsdk.ValidateEstimateCostResponse(resp); validateErr != nil {
 		return nil, status.Errorf(codes.Internal, "estimate cost: %v", validateErr)
 	}

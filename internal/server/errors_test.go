@@ -100,7 +100,7 @@ func TestCostRPCErrorMapping(t *testing.T) {
 
 func newServer(t *testing.T, baseURL string) *server.Server {
 	t.Helper()
-	cli, err := allocation.NewClient(t.Context(), allocation.Config{BaseURL: baseURL})
+	cli, err := allocation.NewClient(t.Context(), allocation.Config{BaseURL: baseURL, Currency: "EUR"})
 	require.NoError(t, err)
 	return server.New(cli)
 }
