@@ -1,0 +1,58 @@
+name: Live drift
+
+on:
+  schedule:
+    - cron: "41 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Live key set
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OC_DRIFT_CLUSTER: oc-drift
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install kind and kubectl
+        uses: helm/kind-action@v1
+        with:
+          install_only: true
+
+      - name: Install the latest OpenCost chart
+        run: |
+          export KUBECONFIG="${RUNNER_TEMP}/oc-drift.kubeconfig"
+          echo "KUBECONFIG=${KUBECONFIG}" >> "${GITHUB_ENV}"
+          bash hack/drift/live-up.sh
+
+      - name: Compare allocation keys
+        run: bash hack/drift/live-compare.sh
+
+      - name: Export cluster logs
+        if: failure()
+        run: |
+          mkdir -p "${RUNNER_TEMP}/oc-drift-logs"
+          kind export logs "${RUNNER_TEMP}/oc-drift-logs" --name oc-drift || true
+
+      - name: Upload cluster logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oc-drift-logs
+          path: ${{ runner.temp }}/oc-drift-logs
+          if-no-files-found: ignore
+
+      - name: Delete drift cluster
+        if: always()
+        run: kind delete cluster --name oc-drift --kubeconfig "${KUBECONFIG}" || true
