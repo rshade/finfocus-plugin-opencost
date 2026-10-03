@@ -4,7 +4,10 @@ import (
 	"maps"
 	"sort"
 	"strings"
+	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
@@ -84,9 +87,12 @@ func (r resourceRef) matches(key string, entry allocation.Entry) bool {
 	}
 }
 
-func resultsFor(resp *allocation.DetailedAllocationResponse, ref resourceRef) []*pbc.ActualCostResult {
+func resultsFor(
+	resp *allocation.DetailedAllocationResponse,
+	ref resourceRef,
+) ([]*pbc.ActualCostResult, error) {
 	if resp == nil {
-		return nil
+		return nil, nil
 	}
 	var results []*pbc.ActualCostResult
 	for _, step := range resp.Data {
@@ -100,32 +106,62 @@ func resultsFor(resp *allocation.DetailedAllocationResponse, ref resourceRef) []
 			if !ref.matches(key, entry) {
 				continue
 			}
+			stamped, err := allocationTime(entry)
+			if err != nil {
+				return nil, err
+			}
 			results = append(results, &pbc.ActualCostResult{
-				Timestamp:   timestamppb.New(itemTime(entry.Start)),
+				Timestamp:   timestamppb.New(stamped),
 				Cost:        entry.TotalCost,
 				Source:      pluginName,
-				FocusRecord: focusFor(entry.Properties),
+				FocusRecord: focusFor(entry.Properties, ref),
 			})
 		}
 	}
-	return results
+	return results, nil
+}
+
+func allocationTime(entry allocation.Entry) (time.Time, error) {
+	stamp := entry.Window.Start
+	if stamp == "" {
+		stamp = entry.Start
+	}
+	if stamp == "" {
+		return time.Time{}, status.Error(codes.FailedPrecondition, "allocation row has no window start")
+	}
+	parsed, err := time.Parse(time.RFC3339, stamp)
+	if err != nil {
+		parsed, err = time.Parse(time.RFC3339Nano, stamp)
+	}
+	if err != nil {
+		return time.Time{}, status.Errorf(codes.FailedPrecondition, "allocation row time %q is not RFC3339", stamp)
+	}
+	return parsed, nil
 }
 
 // focusFor copies OpenCost labels, annotations, and controller kind onto the
 // result. ActualCostResult has no metadata map. FOCUS tags are the label map.
 // Controller kind and annotations use extended columns, which the spec defines
 // as provider-specific extensions. Billing currency is applied after this copy.
-func focusFor(props allocation.Properties) *pbc.FocusCostRecord {
-	if len(props.Labels) == 0 && props.ControllerKind == "" && len(props.Annotations) == 0 {
+func focusFor(props allocation.Properties, ref resourceRef) *pbc.FocusCostRecord {
+	labels := props.Labels
+	controllerKind := props.ControllerKind
+	if ref.kind == kindNamespace {
+		if len(labels) == 0 {
+			labels = props.NamespaceLabels
+		}
+		controllerKind = ""
+	}
+	if len(labels) == 0 && controllerKind == "" && len(props.Annotations) == 0 {
 		return nil
 	}
 	record := &pbc.FocusCostRecord{}
-	if len(props.Labels) > 0 {
-		record.Tags = maps.Clone(props.Labels)
+	if len(labels) > 0 {
+		record.Tags = maps.Clone(labels)
 	}
 	columns := make(map[string]string, len(props.Annotations))
-	if props.ControllerKind != "" {
-		columns[columnControllerKind] = props.ControllerKind
+	if controllerKind != "" {
+		columns[columnControllerKind] = controllerKind
 	}
 	for key, value := range props.Annotations {
 		columns[annotationColumnPrefix+key] = value

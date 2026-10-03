@@ -193,7 +193,11 @@ func (s *Server) actualItem(
 	detailed *allocation.DetailedAllocationResponse,
 	ref resourceRef,
 ) *pbc.ResourceCostResult {
-	rows := resultsFor(detailed, ref)
+	rows, err := resultsFor(detailed, ref)
+	if err != nil {
+		result.Result = itemError(err, false)
+		return result
+	}
 	if len(rows) == 0 {
 		result.Result = itemError(noCostData(correlationID(result.GetResource(), ref)), false)
 		return result
@@ -277,6 +281,9 @@ func refForEstimate(resourceType string, attrs *structpb.Struct) (resourceRef, e
 	name, namespace := attributeNames(attrs)
 	id := name
 	if namespacedEstimate(resourceType) {
+		if namespace == "" {
+			namespace = "default"
+		}
 		id = namespace + "/" + name
 	}
 	return refForDescriptor(&pbc.ResourceDescriptor{ResourceType: resourceType, Id: id})

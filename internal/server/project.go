@@ -17,6 +17,7 @@ const (
 	hoursPerMonth          = 730.0
 	minutesPerHour         = 60.0
 	projectedBillingDetail = "30-day trailing average of this resource, projected to a 730-hour month"
+	hourlyRateAssumption   = "observed hourly cost over the trailing 30-day allocation window"
 )
 
 func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {

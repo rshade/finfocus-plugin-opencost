@@ -52,3 +52,16 @@ func TestGetActualCostCarriesRecordedMetadata(t *testing.T) {
 	require.Equal(t, entry.Properties.Labels, focus.GetTags())
 	require.Equal(t, entry.Properties.ControllerKind, focus.GetExtendedColumns()["controllerKind"])
 }
+
+func TestActualCostUsesNamespaceLabels(t *testing.T) {
+	t.Parallel()
+
+	body := readAllocation(t, "allocation-namespace-60m.json")
+	srv := serverForRecorded(t, body, `namespace:"oc-test"`, "namespace")
+	resp, err := srv.GetActualCost(t.Context(), actualWindow("namespace/oc-test"))
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.GetResults())
+	focus := resp.GetResults()[0].GetFocusRecord()
+	require.Equal(t, "oc-test", focus.GetTags()["kubernetes_io_metadata_name"])
+	require.NotContains(t, focus.GetExtendedColumns(), "controllerKind")
+}

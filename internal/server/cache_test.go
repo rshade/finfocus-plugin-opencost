@@ -24,7 +24,7 @@ func TestRepeatedActualCostUsesOneRequest(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(
 			[]byte(
-				`{"code":200,"data":[{"oc-test":{"name":"oc-test","properties":{"namespace":"oc-test"},"totalCost":1.25}}]}`,
+				`{"code":200,"data":[{"oc-test":{"name":"oc-test","properties":{"namespace":"oc-test"},"window":{"start":"2026-10-03T10:00:00Z"},"totalCost":1.25}}]}`,
 			),
 		)
 	}))
@@ -57,7 +57,7 @@ func TestRateLimitRejectsTheNextDistinctQuery(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(
 			[]byte(
-				`{"code":200,"data":[{"oc-test":{"name":"oc-test","properties":{"namespace":"oc-test"},"totalCost":1}}]}`,
+				`{"code":200,"data":[{"oc-test":{"name":"oc-test","properties":{"namespace":"oc-test"},"window":{"start":"2026-10-03T10:00:00Z"},"totalCost":1}}]}`,
 			),
 		)
 	}))

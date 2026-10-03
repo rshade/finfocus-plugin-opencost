@@ -117,9 +117,9 @@ func actualRequest() *pbc.GetActualCostRequest {
 
 func allocationBackend(t *testing.T, total float64) string {
 	t.Helper()
-	body := `{"code":200,"data":[{"oc-test":{"name":"oc-test","totalCost":0}}]}`
+	body := `{"code":200,"data":[{"oc-test":{"name":"oc-test","window":{"start":"2026-10-03T10:00:00Z"},"totalCost":0}}]}`
 	if total != 0 {
-		body = `{"code":200,"data":[{"oc-test":{"name":"oc-test","totalCost":1.25}}]}`
+		body = `{"code":200,"data":[{"oc-test":{"name":"oc-test","window":{"start":"2026-10-03T10:00:00Z"},"totalCost":1.25}}]}`
 	}
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
