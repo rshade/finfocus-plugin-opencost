@@ -29,6 +29,8 @@ type Config struct {
 	ClusterID        string `yaml:"clusterId"`
 	DefaultNamespace string `yaml:"defaultNamespace"`
 	PredictionWindow string `yaml:"predictionWindow"` // e.g. "2d" (default for prediction API)
+	// Currency is the ISO 4217 code from pricing config. Empty is not USD.
+	Currency string `yaml:"currency"`
 }
 
 func LoadConfigFromEnvOrFile(path string) (Config, error) {
@@ -42,6 +44,7 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 		ClusterID:        os.Getenv("KUBECOST_CLUSTER_ID"),
 		DefaultNamespace: getenvDefault("KUBECOST_DEFAULT_NAMESPACE", "default"),
 		PredictionWindow: getenvDefault("KUBECOST_PREDICTION_WINDOW", "2d"),
+		Currency:         os.Getenv("OPENCOST_CURRENCY"),
 	}
 	if path != "" {
 		b, err := os.ReadFile(path)
@@ -56,6 +59,9 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	}
 	if profile := os.Getenv("OPENCOST_PROFILE"); profile != "" {
 		cfg.Profile = profile
+	}
+	if currency := os.Getenv("OPENCOST_CURRENCY"); currency != "" {
+		cfg.Currency = currency
 	}
 	return cfg, nil
 }

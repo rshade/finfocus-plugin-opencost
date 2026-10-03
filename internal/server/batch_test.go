@@ -132,7 +132,7 @@ func serverForBatch(t *testing.T, body []byte, calls *atomic.Int32, windows *ato
 		_, _ = w.Write(body)
 	}))
 	t.Cleanup(backend.Close)
-	cli, err := allocation.NewClient(t.Context(), allocation.Config{BaseURL: backend.URL})
+	cli, err := allocation.NewClient(t.Context(), allocation.Config{BaseURL: backend.URL, Currency: "EUR"})
 	require.NoError(t, err)
 	return server.New(cli)
 }

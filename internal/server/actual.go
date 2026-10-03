@@ -114,7 +114,7 @@ func resultsFor(resp *allocation.DetailedAllocationResponse, ref resourceRef) []
 // focusFor copies OpenCost labels, annotations, and controller kind onto the
 // result. ActualCostResult has no metadata map. FOCUS tags are the label map.
 // Controller kind and annotations use extended columns, which the spec defines
-// as provider-specific extensions. The record stays partial: currency is OC-3.8.
+// as provider-specific extensions. Billing currency is applied after this copy.
 func focusFor(props allocation.AllocationProperties) *pbc.FocusCostRecord {
 	if len(props.Labels) == 0 && props.ControllerKind == "" && len(props.Annotations) == 0 {
 		return nil

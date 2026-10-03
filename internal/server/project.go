@@ -165,7 +165,7 @@ func scaledBreakdown(parts costParts, monthly float64) map[string]float64 {
 	return out
 }
 
-func projectedResponse(parts costParts) (*pbc.GetProjectedCostResponse, error) {
+func projectedResponse(parts costParts, currency string) (*pbc.GetProjectedCostResponse, error) {
 	hourly, monthly, breakdown, err := projectMonth(parts)
 	if err != nil {
 		return nil, err
@@ -173,6 +173,7 @@ func projectedResponse(parts costParts) (*pbc.GetProjectedCostResponse, error) {
 	resp := &pbc.GetProjectedCostResponse{
 		UnitPrice:     hourly,
 		CostPerMonth:  monthly,
+		Currency:      currency,
 		BillingDetail: projectedBillingDetail,
 		CostBreakdown: breakdown,
 	}

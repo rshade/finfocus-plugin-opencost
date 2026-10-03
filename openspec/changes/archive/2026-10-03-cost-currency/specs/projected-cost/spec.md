@@ -1,10 +1,4 @@
-# projected-cost Specification
-
-## Purpose
-
-Project one Kubernetes object's trailing allocation to a 730-hour month.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Project the requested resource
 

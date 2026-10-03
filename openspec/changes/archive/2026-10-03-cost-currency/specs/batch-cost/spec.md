@@ -1,10 +1,4 @@
-# batch-cost Specification
-
-## Purpose
-
-Estimate one resource and batch many resources from one allocation query.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Batch results keep request order
 

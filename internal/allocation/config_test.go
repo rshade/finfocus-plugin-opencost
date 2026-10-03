@@ -132,6 +132,35 @@ tlsSkipVerify: false
 	}
 }
 
+func TestLoadConfigCurrencyEnvOverridesFile(t *testing.T) {
+	tmpFile, err := os.CreateTemp(t.TempDir(), "opencost-currency-*.yaml")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	if _, writeErr := tmpFile.WriteString("currency: GBP\n"); writeErr != nil {
+		t.Fatalf("Failed to write config content: %v", writeErr)
+	}
+	tmpFile.Close()
+
+	t.Setenv("OPENCOST_CURRENCY", "")
+	fromFile, err := LoadConfigFromEnvOrFile(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("LoadConfigFromEnvOrFile failed: %v", err)
+	}
+	if fromFile.Currency != "GBP" {
+		t.Errorf("Expected file currency GBP, got %s", fromFile.Currency)
+	}
+
+	t.Setenv("OPENCOST_CURRENCY", "EUR")
+	fromEnv, err := LoadConfigFromEnvOrFile(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("LoadConfigFromEnvOrFile failed: %v", err)
+	}
+	if fromEnv.Currency != "EUR" {
+		t.Errorf("Expected env currency EUR, got %s", fromEnv.Currency)
+	}
+}
+
 func TestLoadConfigFromEnvOrFile_FileNotFound(t *testing.T) {
 	// Clear environment variables
 	os.Unsetenv("KUBECOST_BASE_URL")

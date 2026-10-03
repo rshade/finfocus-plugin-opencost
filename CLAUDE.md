@@ -38,7 +38,7 @@ The plugin maps resource IDs to Kubecost filters:
 
 ### Cost Projections
 
-`GetProjectedCost` queries window `30d` for the requested object, not the cluster. Monthly cost is `totalCost / (minutes / 60) * 730`. `billing_detail` states that 30-day trailing average. `cost_breakdown` sums to `cost_per_month`. A namespace id is the namespace name. Currency is not assumed here.
+`GetProjectedCost` queries window `30d` for the requested object, not the cluster. Monthly cost is `totalCost / (minutes / 60) * 730`. `billing_detail` states that 30-day trailing average. `cost_breakdown` sums to `cost_per_month`. A namespace id is the namespace name. `unit_price` is the observed hourly rate. Currency comes from the allocation body or pricing config (`OPENCOST_CURRENCY`). The plugin does not assume USD.
 
 ### Cost Prediction API
 
@@ -278,7 +278,7 @@ make lint
 - `DecodeAllocationBody` reads typed cost fields. `ConsumedFields` and `IgnoredFields` together cover every key of the recorded allocations. Those objects have 53 keys. `allocation-namespace-idle.json` also has `proportionalAssetResourceCosts` and `sharedCostBreakdown`. Do not edit `testdata/opencost-real/`.
 - HTTP 400 bodies in that directory are plain text, not JSON.
 - Cost RPCs use `finfocus-spec` v0.7.1. `Supports` accepts the Pulumi tokens documented in `docs/resource-mapping.md`.
-- `GetActualCost` maps `namespace/<name>`, `controller/<namespace>/<name>`, `pod/<namespace>/<name>`, and `node/<name>` to a sorted OpenCost filter. It returns typed `totalCost` for matching rows only, including a real zero. A node request matches `properties.node` because there is no node-aggregated recording. Labels from that row are `focus_record.tags`. Controller kind is extended column `controllerKind`. Annotations are extended columns `annotation.<key>`. The focus record has no currency.
-- `GetProjectedCost` uses the descriptor id with the Pulumi type. It queries `window=30d` and projects `totalCost / (minutes / 60) * 730`. An empty id is `InvalidArgument`. Do not assume USD.
-- `EstimateCost` reads `metadata.name` for a namespace. `BatchCost` issues one allocation query and returns results in request order. A missing object is a per-item `NotFound`, not an RPC error. The plugin reports `BATCH_COST`.
+- `GetActualCost` maps `namespace/<name>`, `controller/<namespace>/<name>`, `pod/<namespace>/<name>`, and `node/<name>` to a sorted OpenCost filter. It returns typed `totalCost` for matching rows only, including a real zero. A node request matches `properties.node` because there is no node-aggregated recording. Labels from that row are `focus_record.tags`. Controller kind is extended column `controllerKind`. Annotations are extended columns `annotation.<key>`. `focus_record.billing_currency` comes from the allocation body when it names one currency, otherwise from pricing config. Empty is `FailedPrecondition`, not USD.
+- `GetProjectedCost` uses the descriptor id with the Pulumi type. It queries `window=30d` and projects `totalCost / (minutes / 60) * 730`. An empty id is `InvalidArgument`. The response `currency` uses the same rule. `unit_price` stays the observed hourly rate.
+- `EstimateCost` reads `metadata.name` for a namespace. `BatchCost` issues one allocation query and returns results in request order. A missing object is a per-item `NotFound`, not an RPC error, even when currency is unset. A present row with no currency is a per-item `FailedPrecondition`. The plugin reports `BATCH_COST`. Pricing config currency is `currency` in YAML, and `OPENCOST_CURRENCY` overrides it.
 - This plugin does not implement `AllocatorService` and does not report `ALLOCATION`. OpenCost totals are not a split of host priced node costs, so they fail conservation in `finfocus-spec` `proto/finfocus/v1/allocation.proto`. See `docs/allocator-decision.md`. Issue #48 stays open.
