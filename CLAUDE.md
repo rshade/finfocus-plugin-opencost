@@ -16,6 +16,12 @@ make lint
 
 # Install to local plugin directory
 make install
+
+# Build the container image from the source tree
+docker build -t finfocus-plugin-opencost:dev .
+
+# Print -version and -port. The process exits 0.
+docker run --rm finfocus-plugin-opencost:dev --help
 ```
 
 ## Project Architecture
@@ -289,3 +295,4 @@ make lint
 - This plugin does not implement `AllocatorService` and does not report `ALLOCATION`. OpenCost totals are not a split of host priced node costs, so they fail conservation in `finfocus-spec` `proto/finfocus/v1/allocation.proto`. See `docs/allocator-decision.md`. Issue #48 stays open.
 - `.github/workflows/live-drift.yml` runs nightly or on `workflow_dispatch`. It creates kind cluster `oc-drift` (not `oc-e2e`), installs Prometheus chart 29.35.0, and installs the latest published `opencost` chart with no version pin. `go run ./hack/drift/livekeyset` compares the live `/allocation` key set and the HTTP 400 plain-text bodies with `testdata/opencost-real`. A difference prints `added:` and `removed:` and exits 1. The command only reads the fixtures. On the pinned chart 2.5.32 the key set matched (55 keys). Issue #14 stays open. The first CI run is an owner action.
 - `test/drift` is a separate module. `make drift` marshals `opencost.Allocation` from `github.com/opencost/opencost/core` v1.121.3 and requires those keys to equal `ConsumedFields` plus `IgnoredFields` and the recorded allocation objects. The plugin module does not import OpenCost. Empty `proportionalAssetResourceCosts` and `sharedCostBreakdown` maps are omitted by upstream JSON, so the drift value sets them. Do not add either key to the wire lists just to quiet a failure.
+- `Dockerfile` builds `./cmd/finfocus-plugin-opencost` with `CGO_ENABLED=0` on `golang:1.27.1` and copies that binary into `gcr.io/distroless/static-debian12:nonroot`. `docker run --rm finfocus-plugin-opencost:dev --help` prints `-version` and `-port` and exits 0. `.github/workflows/test.yml` builds tag `finfocus-plugin-opencost:dev`. `.github/workflows/kind.yml` builds the same tag and smoke-runs `--help` before `make e2e-kind`. The smoke step accepts exit 0 or 2 and requires both flags. GoReleaser's docker context has the prebuilt binary plus `config.example.yaml` and `plugin.manifest.json`, so `.goreleaser.yaml` sets `dockerfile: Dockerfile.goreleaser`. That file copies the binary and does not run `go build`. `goreleaser check` exits 2 on deprecated properties that already fail on the previous config. Issue #10 stays open. These jobs do not push the image.
