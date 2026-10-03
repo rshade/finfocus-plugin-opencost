@@ -41,6 +41,12 @@ govulncheck:
 drift:
 	cd test/drift && go test -count=1 ./...
 
+e2e-kind-up:
+	hack/kind/e2e-up.sh
+
+e2e-kind-down:
+	hack/kind/e2e-down.sh
+
 goreleaser-check:
 	goreleaser check
 

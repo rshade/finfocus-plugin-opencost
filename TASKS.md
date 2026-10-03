@@ -121,7 +121,7 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 
 | Id | Task | Issues | Verify | Status |
 | --- | --- | --- | --- | --- |
-| OC-5.1 | `hack/kind/`: kind config, `opencost-values.yaml`, workload manifest, and `make e2e-kind-up` / `e2e-kind-down` scripts using only documented commands | #14 | `make e2e-kind-up` ends with the OpenCost API answering `/allocation/compute?window=60m` | TODO |
+| OC-5.1 | `hack/kind/`: kind config, `opencost-values.yaml`, workload manifest, and `make e2e-kind-up` / `e2e-kind-down` scripts using only documented commands | #14 | `make e2e-kind-up` ends with the OpenCost API answering `/allocation/compute?window=60m` | DONE (`make e2e-kind-up` exit 0. HTTP 200 from `/allocation/compute?window=60m`. Charts prometheus 29.35.0 and opencost 2.5.32. Break: `/allocation/compute-missing` returns HTTP 404, so the script's HTTP 200 check fails. Issue #14 stays open for the later kind tasks) |
 | OC-5.2 | Wait for data: poll `/allocation` until the `oc-test` namespace appears, with a documented timeout | #14 | the poll returns within the timeout on a fresh cluster | TODO |
 | OC-5.3 | `make e2e-kind`: run the plugin binary against the cluster and compare `GetActualCost` for `oc-test` with the oracle | #14 | passes; break check: change one fixed rate and it fails | TODO |
 | OC-5.4 | Plugin conformance: run the SDK conformance suite against the plugin over a real gRPC connection | #14 | suite passes | TODO |
