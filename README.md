@@ -18,6 +18,7 @@ The protocol is `finfocus-spec` v0.7.1.
 The provider list is `kubernetes`.
 The plugin does not report `ALLOCATION` and does not implement `AllocatorService`.
 Profile `kubecost` `GetBudgets` calls `GET /model/budgets` and returns rules whose `values.namespace` is set.
+A request tag `namespace` keeps that namespace.
 `amount.currency` comes from pricing config.
 That response is a contract fixture and is not verified against live Kubecost.
 That decision is in [docs/allocator-decision.md](docs/allocator-decision.md).
