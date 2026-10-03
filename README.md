@@ -1,4 +1,4 @@
-# finfocus-plugin-kubecost
+# finfocus-plugin-opencost
 
 A FinFocus **CostSource** plugin that reads **actual** and **projected** Kubernetes costs from **Kubecost** via its HTTP API (e.g., `/model/allocation`), exposed over gRPC using the `costsource.proto` from `finfocus-spec`.
 
@@ -11,26 +11,26 @@ A FinFocus **CostSource** plugin that reads **actual** and **projected** Kuberne
 ## Installation (dev)
 
 ```bash
-git clone https://github.com/<you>/finfocus-plugin-kubecost
-cd finfocus-plugin-kubecost
+git clone https://github.com/<you>/finfocus-plugin-opencost
+cd finfocus-plugin-opencost
 go mod tidy
 make build
 ```
 
-This builds bin/finfocus-plugin-kubecost. Place it where FinFocus can find it:
+This builds bin/finfocus-plugin-opencost. Place it where FinFocus can find it:
 
 ```text
-~/.finfocus/plugins/kubecost/1.0.0/finfocus-plugin-kubecost
+~/.finfocus/plugins/opencost/1.0.0/finfocus-plugin-opencost
 ```
 
 # Folder structure
 ```text
-finfocus-plugin-kubecost/
+finfocus-plugin-opencost/
 ├─ README.md
 ├─ go.mod
 ├─ go.sum
 ├─ cmd/
-│  └─ finfocus-plugin-kubecost/
+│  └─ finfocus-plugin-opencost/
 │     └─ main.go
 ├─ internal/
 │  ├─ server/
@@ -121,5 +121,5 @@ Use testdata/ JSON fixtures. For live tests, set KUBECOST_BASE_URL and (optional
   "kind": "cost",
   "providers": ["kubernetes", "aws", "gcp", "azure"],
   "resourceTypes": ["k8s-namespace", "k8s-pod", "k8s-controller", "k8s-node"],
-  "entrypoint": "finfocus-plugin-kubecost"
+  "entrypoint": "finfocus-plugin-opencost"
 }

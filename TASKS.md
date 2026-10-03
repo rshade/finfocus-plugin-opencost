@@ -23,7 +23,7 @@ A task that only the `kubecost` profile can serve is delivered against fixtures 
 ## 2. Current state (read 2026-10-03)
 
 - The GitHub repo is `rshade/finfocus-plugin-opencost` (renamed). Its description still says "Kubecost Plugin for Pulumi".
-- Code: about 1,000 non-test lines. `internal/kubecost` is the client, `internal/server` the gRPC server, `cmd/finfocus-plugin-kubecost` the entry point. There is **no finfocus-spec import**: the server uses local stub types and `RegisterService` is a no-op.
+- Code: about 1,000 non-test lines. `internal/allocation` is the client, `internal/server` the gRPC server, `cmd/finfocus-plugin-opencost` the entry point. There is **no finfocus-spec import**: the server uses local stub types and `RegisterService` is a no-op.
 - The Go module path and manifest still use the old names.
 - The client builds Kubecost's `/model/allocation` URL with Kubecost's `idle` and `accumulate` parameters. OpenCost's documented parameters are `includeIdle` and `shareIdle`, with no `accumulate`, and its path is `/allocation`.
 - `GetProjectedCost` passes an empty resource id, so it averages the whole cluster.
@@ -79,7 +79,7 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 
 | Id | Task | Issues | Verify | Status |
 | --- | --- | --- | --- | --- |
-| OC-1.1 | Rename the Go module to `github.com/rshade/finfocus-plugin-opencost`, the cmd directory and binary to `finfocus-plugin-opencost`, and update the Makefile, goreleaser, manifest (`name: opencost`) and `internal/server` file names. The Kubecost client package becomes `internal/allocation` | #5 | `go build ./... && go vet ./...` and `rg -i pulumicost` prints nothing; break check: reintroduce one old import path and the build fails | TODO |
+| OC-1.1 | Rename the Go module to `github.com/rshade/finfocus-plugin-opencost`, the cmd directory and binary to `finfocus-plugin-opencost`, and update the Makefile, goreleaser, manifest (`name: opencost`) and `internal/server` file names. The Kubecost client package becomes `internal/allocation` | #5 | `go build ./... && go vet ./...` and `rg for the retired plugin prefix` prints nothing; break check: reintroduce one old import path and the build fails | DONE (`go build ./... && go vet ./...` exit 0; retired-prefix search empty; break: old module import fails with "no required module provides package") |
 | OC-1.2 | Initialise OpenSpec: pin `npm:@fission-ai/openspec` in `mise.toml`, run `mise exec -- openspec init`, write `openspec/config.yaml` project context | | `mise exec -- openspec validate --all --strict` | TODO |
 | OC-1.3 | Add the `.git/info/exclude` entries for `superpowers-prompt.md`, `superpowers-run-report.md` and `.superpowers/` if missing, and create `.superpowers/ledger.md` | | `git status --short` shows none of them | TODO |
 | OC-1.4 | Confirm CI from the baseline: lint, test, commitlint, prose and release-please workflows parse; add the `RELEASE_PLEASE_TOKEN` note to the report as an owner action | #7 | run `actionlint` if installed; `gh workflow list` is read-only | TODO |

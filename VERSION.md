@@ -22,16 +22,16 @@ The binary supports version-related command line flags:
 
 ```bash
 # Show basic version information
-./finfocus-plugin-kubecost -version
+./finfocus-plugin-opencost -version
 
 # Show detailed version information
-./finfocus-plugin-kubecost -version-full
+./finfocus-plugin-opencost -version-full
 ```
 
 ### Programmatic Usage
 
 ```go
-import "github.com/rshade/finfocus-plugin-kubecost/pkg/version"
+import "github.com/rshade/finfocus-plugin-opencost/pkg/version"
 
 // Get basic version string
 fmt.Println(version.String())
@@ -108,5 +108,5 @@ go test ./pkg/version
 The version information is automatically logged when the application starts:
 
 ```
-2024/01/15 14:30:00 finfocus-plugin-kubecost starting, v1.0.0 (a1b2c3d, 2024-01-15_14:30:00_UTC, linux/amd64)
+2024/01/15 14:30:00 finfocus-plugin-opencost starting, v1.0.0 (a1b2c3d, 2024-01-15_14:30:00_UTC, linux/amd64)
 ```

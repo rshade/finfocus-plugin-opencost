@@ -215,10 +215,10 @@ client := NewClient(Config{BaseURL: mockServer.URL})
 ### Go Testing Commands
 ```bash
 # Test specific package with verbose output
-go test ./internal/kubecost -v
+go test ./internal/allocation -v
 
 # Test specific function
-go test ./internal/kubecost -v -run TestFunctionName
+go test ./internal/allocation -v -run TestFunctionName
 
 # Test with race detection
 go test -race ./...

@@ -1,4 +1,4 @@
-BINARY=finfocus-plugin-kubecost
+BINARY=finfocus-plugin-opencost
 VERSION ?= 1.0.0
 
 # Get git information
@@ -12,12 +12,12 @@ all: build
 build:
 	mkdir -p bin
 	go build -ldflags "\
-		-X github.com/rshade/finfocus-plugin-kubecost/pkg/version.Version=$(VERSION) \
-		-X github.com/rshade/finfocus-plugin-kubecost/pkg/version.BuildDate=$(BUILD_DATE) \
-		-X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitCommit=$(GIT_COMMIT) \
-		-X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitBranch=$(GIT_BRANCH) \
-		-X github.com/rshade/finfocus-plugin-kubecost/pkg/version.GitState=$(GIT_STATE)" \
-		-o bin/$(BINARY) ./cmd/finfocus-plugin-kubecost
+		-X github.com/rshade/finfocus-plugin-opencost/pkg/version.Version=$(VERSION) \
+		-X github.com/rshade/finfocus-plugin-opencost/pkg/version.BuildDate=$(BUILD_DATE) \
+		-X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitCommit=$(GIT_COMMIT) \
+		-X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitBranch=$(GIT_BRANCH) \
+		-X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitState=$(GIT_STATE)" \
+		-o bin/$(BINARY) ./cmd/finfocus-plugin-opencost
 
 test:
 	go test ./...
@@ -58,8 +58,8 @@ depend:
 	@echo "Go development tools installed successfully!"
 
 install:
-	mkdir -p $$HOME/.finfocus/plugins/kubecost/$(VERSION)
-	cp bin/$(BINARY) $$HOME/.finfocus/plugins/kubecost/$(VERSION)/$(BINARY)
+	mkdir -p $$HOME/.finfocus/plugins/opencost/$(VERSION)
+	cp bin/$(BINARY) $$HOME/.finfocus/plugins/opencost/$(VERSION)/$(BINARY)
 
 version:
 	@echo "Version: $(VERSION)"

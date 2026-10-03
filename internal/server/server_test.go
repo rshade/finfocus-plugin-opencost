@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	kubecost "github.com/rshade/finfocus-plugin-kubecost/internal/kubecost"
+	allocation "github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -70,7 +70,7 @@ type MockCostSourceServer interface {
 
 func TestNewKubecostServer(t *testing.T) {
 	// Create a mock client
-	mockClient := &kubecost.Client{}
+	mockClient := &allocation.Client{}
 
 	server := NewKubecostServer(mockClient)
 	if server == nil {
@@ -83,7 +83,7 @@ func TestNewKubecostServer(t *testing.T) {
 }
 
 func TestRegisterService(_ *testing.T) {
-	mockClient := &kubecost.Client{}
+	mockClient := &allocation.Client{}
 	server := NewKubecostServer(mockClient)
 
 	// Create a mock gRPC server
@@ -94,7 +94,7 @@ func TestRegisterService(_ *testing.T) {
 }
 
 func TestServerName(t *testing.T) {
-	mockClient := &kubecost.Client{}
+	mockClient := &allocation.Client{}
 	server := NewKubecostServer(mockClient)
 
 	_ = context.Background()
@@ -114,7 +114,7 @@ func TestServerName(t *testing.T) {
 }
 
 func TestServerSupports(t *testing.T) {
-	mockClient := &kubecost.Client{}
+	mockClient := &allocation.Client{}
 	server := NewKubecostServer(mockClient)
 
 	// Test supported resource types
@@ -393,12 +393,12 @@ func TestGetActualCostWithDateRange(t *testing.T) {
 	defer mockServer.Close()
 
 	// Create Kubecost client pointing to mock server
-	cfg := kubecost.Config{
+	cfg := allocation.Config{
 		BaseURL: mockServer.URL,
 		Timeout: 30 * time.Second,
 	}
 
-	client, err := kubecost.NewClient(context.Background(), cfg)
+	client, err := allocation.NewClient(context.Background(), cfg)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -556,7 +556,7 @@ spec:
 	defer mockServer.Close()
 
 	// Create client with test server URL
-	cfg := kubecost.Config{
+	cfg := allocation.Config{
 		BaseURL:          mockServer.URL,
 		APIToken:         "test-token",
 		ClusterID:        "test-cluster",
@@ -564,7 +564,7 @@ spec:
 		PredictionWindow: "2d",
 	}
 
-	client, err := kubecost.NewClient(context.Background(), cfg)
+	client, err := allocation.NewClient(context.Background(), cfg)
 	if err != nil {
 		t.Fatalf("NewClient failed: %v", err)
 	}
@@ -622,7 +622,7 @@ func TestPredictSpecCostWithDefaults(t *testing.T) {
 	defer mockServer.Close()
 
 	// Create client with config defaults
-	cfg := kubecost.Config{
+	cfg := allocation.Config{
 		BaseURL:          mockServer.URL,
 		APIToken:         "test-token",
 		ClusterID:        "config-cluster",
@@ -630,7 +630,7 @@ func TestPredictSpecCostWithDefaults(t *testing.T) {
 		PredictionWindow: "7d",
 	}
 
-	client, err := kubecost.NewClient(context.Background(), cfg)
+	client, err := allocation.NewClient(context.Background(), cfg)
 	if err != nil {
 		t.Fatalf("NewClient failed: %v", err)
 	}
@@ -660,14 +660,14 @@ func TestPredictSpecCostError(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	cfg := kubecost.Config{
+	cfg := allocation.Config{
 		BaseURL:          mockServer.URL,
 		APIToken:         "test-token",
 		ClusterID:        "test-cluster",
 		DefaultNamespace: "default",
 	}
 
-	client, err := kubecost.NewClient(context.Background(), cfg)
+	client, err := allocation.NewClient(context.Background(), cfg)
 	if err != nil {
 		t.Fatalf("NewClient failed: %v", err)
 	}

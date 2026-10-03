@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/rshade/finfocus-plugin-kubecost/internal/kubecost"
-	"github.com/rshade/finfocus-plugin-kubecost/internal/server"
-	"github.com/rshade/finfocus-plugin-kubecost/pkg/version"
+	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
+	"github.com/rshade/finfocus-plugin-opencost/internal/server"
+	"github.com/rshade/finfocus-plugin-opencost/pkg/version"
 	// TODO: Add when finfocus-spec is available
 	// pbc "github.com/rshade/finfocus-spec/sdk/go/proto"
 )
@@ -34,17 +34,17 @@ func main() {
 		os.Exit(0)
 	}
 
-	cfg, err := kubecost.LoadConfigFromEnvOrFile(os.Getenv("KUBECOST_CONFIG"))
+	cfg, err := allocation.LoadConfigFromEnvOrFile(os.Getenv("KUBECOST_CONFIG"))
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
 
-	cli, err := kubecost.NewClient(cubectx(context.Background()), cfg)
+	cli, err := allocation.NewClient(cubectx(context.Background()), cfg)
 	if err != nil {
 		log.Fatalf("client: %v", err)
 	}
 
-	log.Printf("finfocus-plugin-kubecost starting, %s", version.String())
+	log.Printf("finfocus-plugin-opencost starting, %s", version.String())
 
 	// Pulumi-style plugins often use stdin/stdout. For simplicity here, use a TCP loopback.
 	// Your plugin host can launch and connect to this ephemeral port; or adapt to stdio transport.
