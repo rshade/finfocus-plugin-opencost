@@ -25,6 +25,7 @@ func Info() *pluginsdk.PluginInfo {
 			pbc.PluginCapability_PLUGIN_CAPABILITY_PRICING_SPEC,
 			pbc.PluginCapability_PLUGIN_CAPABILITY_ESTIMATE_COST,
 			pbc.PluginCapability_PLUGIN_CAPABILITY_BATCH_COST,
+			pbc.PluginCapability_PLUGIN_CAPABILITY_BUDGETS,
 		),
 	)
 }

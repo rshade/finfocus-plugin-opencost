@@ -8,7 +8,8 @@
     "ACTUAL_COSTS",
     "PRICING_SPEC",
     "ESTIMATE_COST",
-    "BATCH_COST"
+    "BATCH_COST",
+    "BUDGETS"
   ],
   "executable": "finfocus-plugin-opencost",
   "protocol": "grpc",

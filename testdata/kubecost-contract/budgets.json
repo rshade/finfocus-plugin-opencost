@@ -1,0 +1,55 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "name": "budget-rule-2",
+      "id": "ns-budget-1",
+      "values": {
+        "namespace": ["kubecost"]
+      },
+      "kind": "soft",
+      "interval": "monthly",
+      "intervalDay": 1,
+      "spendLimit": 400,
+      "actions": [
+        {
+          "percentage": 25,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": [],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-10-01T00:00:00Z",
+        "end": "2026-11-01T00:00:00Z"
+      },
+      "currentSpend": 100
+    },
+    {
+      "name": "budget-rule",
+      "id": "cluster-budget-1",
+      "values": {
+        "cluster": ["test"]
+      },
+      "kind": "soft",
+      "interval": "weekly",
+      "intervalDay": 3,
+      "spendLimit": 100,
+      "actions": [
+        {
+          "percentage": 75,
+          "slackWebhooks": [],
+          "msTeamsWebhooks": [],
+          "emails": ["foo@kubecost.com"],
+          "lastFired": ""
+        }
+      ],
+      "window": {
+        "start": "2026-09-30T00:00:00Z",
+        "end": "2026-10-07T00:00:00Z"
+      },
+      "currentSpend": 10
+    }
+  ]
+}

@@ -46,6 +46,7 @@ func TestDocsLimitKubecostToProfileAndHistory(t *testing.T) {
 		"PRICING_SPEC",
 		"ESTIMATE_COST",
 		"BATCH_COST",
+		"BUDGETS",
 	}, manifest.Capabilities)
 }
 
