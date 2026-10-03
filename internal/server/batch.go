@@ -25,6 +25,13 @@ func (s *Server) EstimateCost(
 	req *pbc.EstimateCostRequest,
 ) (*pbc.EstimateCostResponse, error) {
 	return observeResult(ctx, s, "EstimateCost", func() (*pbc.EstimateCostResponse, error) {
+		profile, err := s.cli.GetConfig().ProfileName()
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		if profile == allocation.ProfileKubecost {
+			return s.estimatePredicted(ctx, req)
+		}
 		ref, err := refForEstimate(req.GetResourceType(), req.GetAttributes())
 		if err != nil {
 			return nil, err

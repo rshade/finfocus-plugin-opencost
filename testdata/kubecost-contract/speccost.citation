@@ -1,0 +1,9 @@
+file: pkg/query/prediction_speccost.go
+commit: 1f45d3085b2ffa84758bfa8131ea8b7784cd8ed1
+repository: https://github.com/kubecost/kubectl-cost
+license: Apache-2.0
+checked: 2026-10-03
+path: /model/prediction/speccost
+query parameters: pkg/cmd/predict.go at the same commit
+response: schema example using the SpecCostDiff and CostPrediction json tags
+not verified against live Kubecost

@@ -1,0 +1,34 @@
+[
+  {
+    "namespace": "web",
+    "controllerKind": "deployment",
+    "controllerName": "fixed",
+    "costBefore": {
+      "totalMonthlyRate": 10,
+      "cpuMonthlyRate": 6,
+      "ramMonthlyRate": 4,
+      "gpuMonthlyRate": 0,
+      "monthlyCPUCoreHours": 48,
+      "monthlyRAMByteHours": 1024,
+      "monthlyGPUHours": 0
+    },
+    "costAfter": {
+      "totalMonthlyRate": 25.5,
+      "cpuMonthlyRate": 15,
+      "ramMonthlyRate": 10.5,
+      "gpuMonthlyRate": 0,
+      "monthlyCPUCoreHours": 96,
+      "monthlyRAMByteHours": 2048,
+      "monthlyGPUHours": 0
+    },
+    "costChange": {
+      "totalMonthlyRate": 15.5,
+      "cpuMonthlyRate": 9,
+      "ramMonthlyRate": 6.5,
+      "gpuMonthlyRate": 0,
+      "monthlyCPUCoreHours": 48,
+      "monthlyRAMByteHours": 1024,
+      "monthlyGPUHours": 0
+    }
+  }
+]

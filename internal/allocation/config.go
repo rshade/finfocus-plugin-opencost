@@ -75,6 +75,11 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	return cfg, nil
 }
 
+// ProfileName returns opencost or kubecost. An empty profile is opencost.
+func (c Config) ProfileName() (string, error) {
+	return c.resolvedProfile()
+}
+
 func (c Config) resolvedProfile() (string, error) {
 	switch c.Profile {
 	case "", ProfileOpenCost:

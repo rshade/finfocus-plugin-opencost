@@ -56,3 +56,26 @@ pricing config, and SHALL NOT assume USD.
 
 - **WHEN** `EstimateCost` reads `allocation-namespace-60m.json` for `oc-test` and the config currency is `EUR`
 - **THEN** `currency` is `EUR`
+
+### Requirement: Kubecost profile estimates from spec cost
+
+When the profile is `kubecost`, `EstimateCost` SHALL POST the resource
+attributes to `/model/prediction/speccost`. `cost_monthly` SHALL be
+`costAfter.totalMonthlyRate` from that response. The query SHALL send
+`clusterID`, `defaultNamespace`, `windowAvgUsage`, `windowResourceCost`, and
+`noUsage`. `currency` SHALL come from pricing config and SHALL NOT assume USD.
+The response contract is the `kubectl-cost` `SpecCostDiff` list and is not
+verified against live Kubecost.
+
+#### Scenario: Deployment spec cost
+
+- **WHEN** profile `kubecost` estimates a deployment and the contract fixture returns one row
+- **THEN** the request is `POST /model/prediction/speccost`
+- **AND** `cost_monthly` equals that row's `costAfter.totalMonthlyRate`
+- **AND** `currency` is the configured currency
+
+#### Scenario: Prediction without a currency
+
+- **WHEN** profile `kubecost` estimates a deployment and pricing config has no currency
+- **THEN** the RPC is `FailedPrecondition`
+- **AND** the message does not contain `USD`

@@ -133,9 +133,11 @@ Monthly cost is `totalCost / (minutes / 60) * 730`.
 `rate_per_unit` is the observed hourly rate.
 A zero rate is only a real zero total.
 
-`EstimateCost` reads `metadata.name` for a namespace and queries window `30d`.
-It uses the allocation API.
-It does not call `POST /model/prediction/speccost`.
+On profile `opencost`, `EstimateCost` reads `metadata.name` for a namespace and queries window `30d` on the allocation API.
+On profile `kubecost`, `EstimateCost` posts the resource attributes to `POST /model/prediction/speccost`.
+`cost_monthly` is `costAfter.totalMonthlyRate` from that response.
+The fixture follows `kubectl-cost` `pkg/query/prediction_speccost.go` at commit `1f45d3085b2ffa84758bfa8131ea8b7784cd8ed1`.
+It is not verified against live Kubecost.
 
 `BatchCost` issues one allocation query and returns results in request order.
 A missing object is a per-item `NotFound`, including when currency is unset.
