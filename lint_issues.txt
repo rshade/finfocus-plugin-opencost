@@ -1,0 +1,398 @@
+level=warning msg="[runner/exclusion_rules] Skipped 0 issues by rules: [Text: \"package comment should be of the form \\\".+\\\"\", Source: \"// ?(nolint|TODO)\", Linters: \"revive\"]"
+cmd/pulumicost-kubecost/main.go:30:3: use of `fmt.Println` forbidden by pattern `^(fmt\.Print(|f|ln)|print|println)$` (forbidigo)
+		fmt.Println(version.String())
+		^
+cmd/pulumicost-kubecost/main.go:34:3: use of `fmt.Println` forbidden by pattern `^(fmt\.Print(|f|ln)|print|println)$` (forbidigo)
+		fmt.Println(version.FullString())
+		^
+pkg/version/version.go:11:2: Version is a global variable (gochecknoglobals)
+	Version = "1.0.0"
+	^
+pkg/version/version.go:14:2: BuildDate is a global variable (gochecknoglobals)
+	BuildDate = "unknown"
+	^
+pkg/version/version.go:17:2: GitCommit is a global variable (gochecknoglobals)
+	GitCommit = "unknown"
+	^
+pkg/version/version.go:20:2: GitBranch is a global variable (gochecknoglobals)
+	GitBranch = "unknown"
+	^
+pkg/version/version.go:23:2: GitState is a global variable (gochecknoglobals)
+	GitState = "unknown"
+	^
+internal/server/kubecost_server_test.go:372:3: ifElseChain: rewrite if-else to switch statement (gocritic)
+		if resourceId == "namespace/default" {
+		^
+internal/kubecost/allocation_test.go:429:1: Comment should end in a period (godot)
+// Helper function
+^
+internal/server/kubecost_server_test.go:16:1: Comment should end in a period (godot)
+// Mock protobuf types for testing
+^
+internal/server/kubecost_server_test.go:62:1: Comment should end in a period (godot)
+// Mock gRPC server interface
+^
+internal/server/kubecost_server_test.go:365:1: Comment should end in a period (godot)
+// Helper function to parse resource ID (mocking the logic from the server)
+^
+internal/server/kubecost_server_test.go:388:1: Comment should end in a period (godot)
+// Integration test for GetActualCost with date range using mock HTTP server
+^
+pkg/version/version.go:8:1: Comment should end in a period (godot)
+// Version information
+^
+pkg/version/version.go:10:2: Comment should end in a period (godot)
+	// Version is the semantic version of the application
+	^
+pkg/version/version.go:13:2: Comment should end in a period (godot)
+	// BuildDate is the date when the binary was built
+	^
+pkg/version/version.go:16:2: Comment should end in a period (godot)
+	// GitCommit is the git commit hash
+	^
+pkg/version/version.go:19:2: Comment should end in a period (godot)
+	// GitBranch is the git branch name
+	^
+pkg/version/version.go:22:2: Comment should end in a period (godot)
+	// GitState is the state of the git repository (clean, dirty)
+	^
+pkg/version/version.go:26:1: Comment should end in a period (godot)
+// Info contains version information
+^
+pkg/version/version.go:37:1: Comment should end in a period (godot)
+// GetVersionInfo returns the complete version information
+^
+pkg/version/version.go:50:1: Comment should end in a period (godot)
+// String returns a formatted version string
+^
+pkg/version/version.go:60:1: Comment should end in a period (godot)
+// FullString returns a detailed version string
+^
+internal/kubecost/client.go:123:1: File is not properly formatted (golines)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBufferString(req.WorkloadSpec))
+^
+pkg/version/version.go:63:1: File is not properly formatted (golines)
+	return fmt.Sprintf("Version: %s\nBuild Date: %s\nGit Commit: %s\nGit Branch: %s\nGit State: %s\nGo Version: %s\nPlatform: %s",
+^
+internal/kubecost/allocation.go:129:26: G402: TLS InsecureSkipVerify may be true. (gosec)
+					InsecureSkipVerify: c.cfg.TLSSkipVerify,
+					                    ^
+cmd/pulumicost-kubecost/main.go:63:5: shadow: declaration of "err" shadows declaration at line 38 (govet)
+	if err := grpcServer.Serve(lis); err != nil {
+	   ^
+internal/kubecost/allocation.go:147:5: shadow: declaration of "err" shadows declaration at line 108 (govet)
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	   ^
+internal/kubecost/allocation_test.go:30:8: unusedwrite: unused write to field Start (govet)
+		Start:            "2024-01-01T00:00:00Z",
+		     ^
+internal/kubecost/allocation_test.go:31:6: unusedwrite: unused write to field End (govet)
+		End:              "2024-01-01T23:59:59Z",
+		   ^
+internal/kubecost/allocation_test.go:32:10: unusedwrite: unused write to field Minutes (govet)
+		Minutes:          1440.0,
+		       ^
+internal/kubecost/allocation_test.go:33:11: unusedwrite: unused write to field CPUCores (govet)
+		CPUCores:         2.0,
+		        ^
+internal/kubecost/allocation_test.go:34:15: unusedwrite: unused write to field CPUCoreHours (govet)
+		CPUCoreHours:     48.0,
+		            ^
+internal/kubecost/allocation_test.go:36:16: unusedwrite: unused write to field CPUEfficiency (govet)
+		CPUEfficiency:    0.85,
+		             ^
+internal/kubecost/allocation_test.go:37:11: unusedwrite: unused write to field GPUCount (govet)
+		GPUCount:         1.0,
+		        ^
+internal/kubecost/allocation_test.go:38:11: unusedwrite: unused write to field GPUHours (govet)
+		GPUHours:         24.0,
+		        ^
+internal/kubecost/allocation_test.go:43:11: unusedwrite: unused write to field RAMBytes (govet)
+		RAMBytes:         8589934592, // 8GB
+		        ^
+internal/kubecost/allocation_test.go:44:15: unusedwrite: unused write to field RAMByteHours (govet)
+		RAMByteHours:     206158430208,
+		            ^
+internal/kubecost/allocation_test.go:46:16: unusedwrite: unused write to field RAMEfficiency (govet)
+		RAMEfficiency:    0.90,
+		             ^
+internal/kubecost/allocation_test.go:47:13: unusedwrite: unused write to field SharedCost (govet)
+		SharedCost:       0.0,
+		          ^
+internal/kubecost/allocation_test.go:48:15: unusedwrite: unused write to field ExternalCost (govet)
+		ExternalCost:     0.0,
+		            ^
+internal/kubecost/allocation_test.go:50:18: unusedwrite: unused write to field TotalEfficiency (govet)
+		TotalEfficiency:  0.87,
+		               ^
+internal/kubecost/allocation_test.go:76:7: unusedwrite: unused write to field Node (govet)
+		Node:           "test-node",
+		    ^
+internal/kubecost/allocation_test.go:77:12: unusedwrite: unused write to field Container (govet)
+		Container:      "test-container",
+		         ^
+internal/kubecost/allocation_test.go:78:13: unusedwrite: unused write to field Controller (govet)
+		Controller:     "test-controller",
+		          ^
+internal/kubecost/allocation_test.go:79:17: unusedwrite: unused write to field ControllerKind (govet)
+		ControllerKind: "Deployment",
+		              ^
+internal/kubecost/allocation_test.go:80:12: unusedwrite: unused write to field Namespace (govet)
+		Namespace:      "default",
+		         ^
+internal/kubecost/allocation_test.go:81:6: unusedwrite: unused write to field Pod (govet)
+		Pod:            "test-pod",
+		   ^
+internal/kubecost/client.go:85:5: shadow: declaration of "err" shadows declaration at line 68 (govet)
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+	   ^
+internal/kubecost/client.go:149:5: shadow: declaration of "err" shadows declaration at line 95 (govet)
+	if err := json.NewDecoder(resp.Body).Decode(&predResp); err != nil {
+	   ^
+internal/kubecost/client_test.go:61:8: unusedwrite: unused write to field Start (govet)
+		Start:       "2024-01-01T00:00:00Z",
+		     ^
+internal/kubecost/client_test.go:62:6: unusedwrite: unused write to field End (govet)
+		End:         "2024-01-01T23:59:59Z",
+		   ^
+internal/kubecost/config_test.go:95:8: shadow: declaration of "err" shadows declaration at line 89 (govet)
+	if _, err := tmpFile.WriteString(configContent); err != nil {
+	      ^
+internal/server/kubecost_server_test.go:130:16: unusedwrite: unused write to field ResourceType (govet)
+			ResourceType: resourceType,
+			            ^
+internal/server/kubecost_server_test.go:282:12: unusedwrite: unused write to field Timestamp (govet)
+		Timestamp:   timestamppb.New(now),
+		         ^
+internal/server/kubecost_server_test.go:335:6: unusedwrite: unused write to field Sku (govet)
+		Sku:            "pod-default",
+		   ^
+internal/server/kubecost_server_test.go:336:9: unusedwrite: unused write to field Region (govet)
+		Region:         "us-west-2",
+		      ^
+internal/server/kubecost_server_test.go:337:14: unusedwrite: unused write to field BillingMode (govet)
+		BillingMode:    "per_day",
+		           ^
+internal/server/kubecost_server_test.go:338:14: unusedwrite: unused write to field RatePerUnit (govet)
+		RatePerUnit:    0.0,
+		           ^
+internal/server/kubecost_server_test.go:340:14: unusedwrite: unused write to field Description (govet)
+		Description:    "Kubecost-derived projection for k8s-pod",
+		           ^
+cmd/pulumicost-kubecost/main.go:69:7: Magic number: 30, in <operation> detected (mnd)
+	t := 30 * time.Second
+	     ^
+internal/kubecost/allocation.go:141:24: Magic number: 400, in <condition> detected (mnd)
+	if resp.StatusCode >= 400 {
+	                      ^
+internal/kubecost/allocation.go:151:20: Magic number: 200, in <condition> detected (mnd)
+	if result.Code != 200 {
+	                  ^
+internal/kubecost/client.go:81:24: Magic number: 300, in <condition> detected (mnd)
+	if resp.StatusCode >= 300 {
+	                      ^
+internal/kubecost/client.go:143:24: Magic number: 400, in <condition> detected (mnd)
+	if resp.StatusCode >= 400 {
+	                      ^
+internal/kubecost/config.go:28:56: Magic number: 15, in <argument> detected (mnd)
+		Timeout:          getenvDuration("KUBECOST_TIMEOUT", 15*time.Second),
+		                                                     ^
+internal/server/kubecost_server.go:75:21: Magic number: 2, in <condition> detected (mnd)
+			if len(parts) >= 2 {
+			                 ^
+internal/server/kubecost_server.go:79:21: Magic number: 3, in <condition> detected (mnd)
+			if len(parts) >= 3 {
+			                 ^
+internal/server/kubecost_server.go:84:21: Magic number: 3, in <condition> detected (mnd)
+			if len(parts) >= 3 {
+			                 ^
+internal/server/kubecost_server.go:89:21: Magic number: 2, in <condition> detected (mnd)
+			if len(parts) >= 2 {
+			                 ^
+internal/server/kubecost_server.go:140:21: Magic number: 30.0, in <operation> detected (mnd)
+	monthly := daily * 30.0
+	                   ^
+internal/server/kubecost_server_test.go:247:5: avoid direct access to proto field ts.Seconds, use ts.GetSeconds() instead (protogetter)
+	if ts.Seconds != now.Unix() {
+	   ^
+internal/server/kubecost_server_test.go:248:55: avoid direct access to proto field ts.Seconds, use ts.GetSeconds() instead (protogetter)
+		t.Errorf("Expected seconds %d, got %d", now.Unix(), ts.Seconds)
+		                                                    ^
+internal/server/kubecost_server_test.go:251:5: avoid direct access to proto field ts.Nanos, use ts.GetNanos() instead (protogetter)
+	if ts.Nanos != int32(now.Nanosecond()) {
+	   ^
+internal/server/kubecost_server_test.go:252:59: avoid direct access to proto field ts.Nanos, use ts.GetNanos() instead (protogetter)
+		t.Errorf("Expected nanos %d, got %d", now.Nanosecond(), ts.Nanos)
+		                                                        ^
+cmd/pulumicost-kubecost/main_test.go:25:3: reassigning variable Args in other package os (reassign)
+		os.Args = originalArgs
+		^
+cmd/pulumicost-kubecost/main_test.go:26:3: reassigning variable CommandLine in other package flag (reassign)
+		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+		^
+cmd/pulumicost-kubecost/main_test.go:30:2: reassigning variable Args in other package os (reassign)
+	os.Args = []string{"pulumicost-kubecost", "-version"}
+	^
+cmd/pulumicost-kubecost/main_test.go:31:2: reassigning variable CommandLine in other package flag (reassign)
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	^
+cmd/pulumicost-kubecost/main_test.go:41:2: reassigning variable Args in other package os (reassign)
+	os.Args = []string{"pulumicost-kubecost", "-version-full"}
+	^
+cmd/pulumicost-kubecost/main_test.go:42:2: reassigning variable CommandLine in other package flag (reassign)
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	^
+internal/kubecost/allocation.go:190:1: exported: comment on exported method Client.EnhancedAllocation should be of the form "EnhancedAllocation ..." (revive)
+// Enhanced Allocation method that uses detailed allocation API
+^
+internal/kubecost/allocation.go:200:1: exported: comment on exported function FormatTimeWindow should be of the form "FormatTimeWindow ..." (revive)
+// Helper function to format time window for Kubecost API
+^
+internal/kubecost/allocation.go:206:1: exported: comment on exported function ParseDurationWindow should be of the form "ParseDurationWindow ..." (revive)
+// Helper function to parse duration window (e.g., "30d", "7d", "24h")
+^
+internal/kubecost/allocation_test.go:249:76: unused-parameter: parameter 'r' seems to be unused, consider removing or renaming it as _ (revive)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	                                                                          ^
+internal/kubecost/allocation_test.go:372:76: unused-parameter: parameter 'r' seems to be unused, consider removing or renaming it as _ (revive)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	                                                                          ^
+internal/kubecost/client.go:17:16: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+func NewClient(ctx context.Context, cfg Config) (*Client, error) {
+               ^
+internal/kubecost/client_test.go:150:76: unused-parameter: parameter 'r' seems to be unused, consider removing or renaming it as _ (revive)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	                                                                          ^
+internal/kubecost/client_test.go:425:76: unused-parameter: parameter 'r' seems to be unused, consider removing or renaming it as _ (revive)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	                                                                          ^
+internal/server/kubecost_server.go:20:30: var-naming: struct field ResourceId should be ResourceID (revive)
+type ActualCostQuery struct{ ResourceId, Start, End string }
+                             ^
+internal/server/kubecost_server.go:52:42: unused-parameter: parameter 'grpcServer' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *KubecostServer) RegisterService(grpcServer *grpc.Server) {
+                                         ^
+internal/server/kubecost_server.go:57:31: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *KubecostServer) Name(ctx context.Context, _ *Empty) (*PluginName, error) {
+                              ^
+internal/server/kubecost_server.go:61:35: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *KubecostServer) Supports(ctx context.Context, r *ResourceDescriptor) (*SupportsResponse, error) {
+                                  ^
+internal/server/kubecost_server.go:119:64: unused-parameter: parameter 'r' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *KubecostServer) GetProjectedCost(ctx context.Context, r *ResourceDescriptor) (*PriceInfo, error) {
+                                                               ^
+internal/server/kubecost_server.go:150:41: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *KubecostServer) GetPricingSpec(ctx context.Context, r *ResourceDescriptor) (*PricingSpec, error) {
+                                        ^
+internal/server/kubecost_server_test.go:30:2: var-naming: struct field ResourceId should be ResourceID (revive)
+	ResourceId string
+	^
+internal/server/kubecost_server_test.go:85:26: unused-parameter: parameter 't' seems to be unused, consider removing or renaming it as _ (revive)
+func TestRegisterService(t *testing.T) {
+                         ^
+internal/server/kubecost_server_test.go:167:3: var-naming: struct field resourceId should be resourceID (revive)
+		resourceId string
+		^
+internal/server/kubecost_server_test.go:366:6: var-naming: func parseResourceId should be parseResourceID (revive)
+func parseResourceId(resourceId string) map[string]string {
+     ^
+internal/server/kubecost_server_test.go:656:80: unused-parameter: parameter 'r' seems to be unused, consider removing or renaming it as _ (revive)
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	                                                                              ^
+internal/kubecost/allocation_test.go:347:2: SA4006: this value of end is never used (staticcheck)
+	start, end, err = ParseDurationWindow("24h")
+	^
+internal/kubecost/allocation_test.go:1:9: package should be `kubecost_test` instead of `kubecost` (testpackage)
+package kubecost
+        ^
+internal/kubecost/client_test.go:1:9: package should be `kubecost_test` instead of `kubecost` (testpackage)
+package kubecost
+        ^
+internal/kubecost/config_test.go:1:9: package should be `kubecost_test` instead of `kubecost` (testpackage)
+package kubecost
+        ^
+internal/server/kubecost_server_test.go:1:9: package should be `server_test` instead of `server` (testpackage)
+package server
+        ^
+pkg/version/version_test.go:1:9: package should be `version_test` instead of `version` (testpackage)
+package version
+        ^
+internal/kubecost/config.go:55:31: getenvDuration - def always receives 15 * time.Second (15000000000) (unparam)
+func getenvDuration(k string, def time.Duration) time.Duration {
+                              ^
+cmd/pulumicost-kubecost/main_test.go:70:2: os.Setenv() could be replaced by t.Setenv() in TestCubectxWithEnvironmentVariable (usetesting)
+	os.Setenv("KUBECOST_TIMEOUT", "60s")
+	^
+cmd/pulumicost-kubecost/main_test.go:90:2: os.Setenv() could be replaced by t.Setenv() in TestCubectxWithInvalidEnvironmentVariable (usetesting)
+	os.Setenv("KUBECOST_TIMEOUT", "invalid")
+	^
+cmd/pulumicost-kubecost/main_test.go:110:2: os.Setenv() could be replaced by t.Setenv() in TestCubectxWithEmptyEnvironmentVariable (usetesting)
+	os.Setenv("KUBECOST_TIMEOUT", "")
+	^
+cmd/pulumicost-kubecost/main_test.go:130:2: os.Setenv() could be replaced by t.Setenv() in TestCubectxWithZeroTimeout (usetesting)
+	os.Setenv("KUBECOST_TIMEOUT", "0s")
+	^
+cmd/pulumicost-kubecost/main_test.go:150:2: os.Setenv() could be replaced by t.Setenv() in TestCubectxWithNegativeTimeout (usetesting)
+	os.Setenv("KUBECOST_TIMEOUT", "-10s")
+	^
+cmd/pulumicost-kubecost/main_test.go:170:2: os.Setenv() could be replaced by t.Setenv() in TestCubectxWithComplexTimeout (usetesting)
+	os.Setenv("KUBECOST_TIMEOUT", "1h30m45s")
+	^
+cmd/pulumicost-kubecost/main_test.go:201:2: os.Setenv() could be replaced by t.Setenv() in TestContextCancellation (usetesting)
+	os.Setenv("KUBECOST_TIMEOUT", "1ms")
+	^
+internal/kubecost/config_test.go:41:2: os.Setenv() could be replaced by t.Setenv() in TestLoadConfigFromEnvOrFile_EnvironmentOnly (usetesting)
+	os.Setenv("KUBECOST_BASE_URL", "http://env-test:9090")
+	^
+internal/kubecost/config_test.go:42:2: os.Setenv() could be replaced by t.Setenv() in TestLoadConfigFromEnvOrFile_EnvironmentOnly (usetesting)
+	os.Setenv("KUBECOST_API_TOKEN", "env-token")
+	^
+internal/kubecost/config_test.go:43:2: os.Setenv() could be replaced by t.Setenv() in TestLoadConfigFromEnvOrFile_EnvironmentOnly (usetesting)
+	os.Setenv("KUBECOST_DEFAULT_WINDOW", "7d")
+	^
+internal/kubecost/config_test.go:44:2: os.Setenv() could be replaced by t.Setenv() in TestLoadConfigFromEnvOrFile_EnvironmentOnly (usetesting)
+	os.Setenv("KUBECOST_TIMEOUT", "60s")
+	^
+internal/kubecost/config_test.go:45:2: os.Setenv() could be replaced by t.Setenv() in TestLoadConfigFromEnvOrFile_EnvironmentOnly (usetesting)
+	os.Setenv("KUBECOST_TLS_SKIP_VERIFY", "true")
+	^
+internal/kubecost/config_test.go:89:18: os.CreateTemp("", ...) could be replaced by os.CreateTemp(t.TempDir(), ...) in TestLoadConfigFromEnvOrFile_WithFile (usetesting)
+	tmpFile, err := os.CreateTemp("", "kubecost-config-*.yaml")
+	                ^
+internal/kubecost/config_test.go:101:2: os.Setenv() could be replaced by t.Setenv() in TestLoadConfigFromEnvOrFile_WithFile (usetesting)
+	os.Setenv("KUBECOST_BASE_URL", "http://env-test:9090")
+	^
+internal/kubecost/config_test.go:102:2: os.Setenv() could be replaced by t.Setenv() in TestLoadConfigFromEnvOrFile_WithFile (usetesting)
+	os.Setenv("KUBECOST_API_TOKEN", "env-token")
+	^
+internal/kubecost/config_test.go:172:2: os.Setenv() could be replaced by t.Setenv() in TestGetenvDefault (usetesting)
+	os.Setenv("TEST_VAR", "test-value")
+	^
+internal/kubecost/config_test.go:187:2: os.Setenv() could be replaced by t.Setenv() in TestGetenvDefault (usetesting)
+	os.Setenv("EMPTY_VAR", "")
+	^
+internal/kubecost/config_test.go:196:2: os.Setenv() could be replaced by t.Setenv() in TestGetenvDuration (usetesting)
+	os.Setenv("TEST_DURATION", "30s")
+	^
+internal/kubecost/config_test.go:205:2: os.Setenv() could be replaced by t.Setenv() in TestGetenvDuration (usetesting)
+	os.Setenv("INVALID_DURATION", "invalid")
+	^
+internal/kubecost/config_test.go:218:2: os.Setenv() could be replaced by t.Setenv() in TestGetenvDuration (usetesting)
+	os.Setenv("COMPLEX_DURATION", "1h30m")
+	^
+127 issues:
+* forbidigo: 2
+* gochecknoglobals: 5
+* gocritic: 1
+* godot: 15
+* golines: 2
+* gosec: 1
+* govet: 34
+* mnd: 11
+* protogetter: 4
+* reassign: 6
+* revive: 19
+* staticcheck: 1
+* testpackage: 5
+* unparam: 1
+* usetesting: 20

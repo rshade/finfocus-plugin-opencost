@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	kubecost "github.com/rshade/pulumicost-plugin-kubecost/internal/kubecost"
+	kubecost "github.com/rshade/finfocus-plugin-kubecost/internal/kubecost"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

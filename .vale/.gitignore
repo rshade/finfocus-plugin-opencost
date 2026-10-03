@@ -1,0 +1,5 @@
+# Ignore downloaded style packages (fetched by vale sync)
+/styles/*
+
+# But keep the config directory (our vocabulary definitions)
+!/styles/config/

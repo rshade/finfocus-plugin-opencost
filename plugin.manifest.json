@@ -2,8 +2,8 @@
   "name": "kubecost",
   "version": "1.0.0",
   "type": "costsource",
-  "description": "Kubecost plugin for Pulumicost - provides actual and projected cost for Kubernetes resources",
-  "executable": "pulumicost-kubecost",
+  "description": "Kubecost plugin for FinFocus - provides actual and projected cost for Kubernetes resources",
+  "executable": "finfocus-plugin-kubecost",
   "protocol": "grpc",
   "supported_resources": [
     "k8s-namespace",

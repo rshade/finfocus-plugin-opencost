@@ -1,6 +1,6 @@
-module github.com/rshade/pulumicost-plugin-kubecost
+module github.com/rshade/finfocus-plugin-kubecost
 
-go 1.23
+go 1.27.1
 
 require (
 	google.golang.org/grpc v1.69.4
@@ -15,5 +15,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 )
 
-// Replace this with the actual pulumicost-spec module when available
-// replace github.com/yourorg/pulumicost-spec => ../pulumicost-spec
+// Uncomment below when using local finfocus-spec (development)
+// replace github.com/rshade/finfocus-spec => ../finfocus-spec

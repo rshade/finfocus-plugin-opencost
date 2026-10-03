@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rshade/pulumicost-plugin-kubecost/pkg/version"
+	"github.com/rshade/finfocus-plugin-kubecost/pkg/version"
 )
 
 func TestMainFunction(t *testing.T) {
@@ -29,7 +29,7 @@ func TestVersionFlags(t *testing.T) {
 
 	// Test -version flag
 	//nolint:reassign // Required for testing CLI behavior
-	os.Args = []string{"pulumicost-kubecost", "-version"}
+	os.Args = []string{"finfocus-plugin-kubecost", "-version"}
 	//nolint:reassign // Required for testing CLI behavior
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
@@ -42,7 +42,7 @@ func TestVersionFlags(t *testing.T) {
 
 	// Test -version-full flag
 	//nolint:reassign // Required for testing CLI behavior
-	os.Args = []string{"pulumicost-kubecost", "-version-full"}
+	os.Args = []string{"finfocus-plugin-kubecost", "-version-full"}
 	//nolint:reassign // Required for testing CLI behavior
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 

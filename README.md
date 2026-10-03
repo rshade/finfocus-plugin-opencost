@@ -1,36 +1,36 @@
-# pulumicost-plugin-kubecost
+# finfocus-plugin-kubecost
 
-A PulumiCost **CostSource** plugin that reads **actual** and **projected** Kubernetes costs from **Kubecost** via its HTTP API (e.g., `/model/allocation`), exposed over gRPC using the `costsource.proto` from `pulumicost-spec`.
+A FinFocus **CostSource** plugin that reads **actual** and **projected** Kubernetes costs from **Kubecost** via its HTTP API (e.g., `/model/allocation`), exposed over gRPC using the `costsource.proto` from `finfocus-spec`.
 
 ## Capabilities
 
 - **Actual cost** by Kubernetes dimension (cluster, namespace, controller, pod, node, label)
 - **Projected cost** using Kubecost pricing data (CPU/RAM/GPUs, node share, amortized assets)
-- Pluggable, isolated process compatible with PulumiCost plugin host
+- Pluggable, isolated process compatible with FinFocus plugin host
 
 ## Installation (dev)
 
 ```bash
-git clone https://github.com/<you>/pulumicost-plugin-kubecost
-cd pulumicost-plugin-kubecost
+git clone https://github.com/<you>/finfocus-plugin-kubecost
+cd finfocus-plugin-kubecost
 go mod tidy
 make build
 ```
 
-This builds bin/pulumicost-kubecost. Place it where PulumiCost can find it:
+This builds bin/finfocus-plugin-kubecost. Place it where FinFocus can find it:
 
 ```text
-~/.pulumicost/plugins/kubecost/1.0.0/pulumicost-kubecost
+~/.finfocus/plugins/kubecost/1.0.0/finfocus-plugin-kubecost
 ```
 
 # Folder structure
 ```text
-pulumicost-plugin-kubecost/
+finfocus-plugin-kubecost/
 ├─ README.md
 ├─ go.mod
 ├─ go.sum
 ├─ cmd/
-│  └─ pulumicost-kubecost/
+│  └─ finfocus-plugin-kubecost/
 │     └─ main.go
 ├─ internal/
 │  ├─ server/
@@ -45,8 +45,8 @@ pulumicost-plugin-kubecost/
 ├─ pkg/
 │  └─ version/
 │     └─ version.go
-├─ proto/                            # pulled in via submodule or copied from pulumicost-spec
-│  └─ costsource.proto               # (optional local copy for dev; canonical in pulumicost-spec)
+├─ proto/                            # pulled in via submodule or copied from finfocus-spec
+│  └─ costsource.proto               # (optional local copy for dev; canonical in finfocus-spec)
 ├─ plugin.manifest.json
 ├─ config.example.yaml
 ├─ Makefile
@@ -72,7 +72,7 @@ KUBECOST_TLS_SKIP_VERIFY (true|false)
 config.example.yaml shows all fields.
 
 # Protocol
-Implements CostSource from pulumicost-spec/proto/costsource.proto. Methods:
+Implements CostSource from finfocus-spec/proto/costsource.proto. Methods:
 
 * Name()
 * Supports(ResourceDescriptor)
@@ -121,5 +121,5 @@ Use testdata/ JSON fixtures. For live tests, set KUBECOST_BASE_URL and (optional
   "kind": "cost",
   "providers": ["kubernetes", "aws", "gcp", "azure"],
   "resourceTypes": ["k8s-namespace", "k8s-pod", "k8s-controller", "k8s-node"],
-  "entrypoint": "pulumicost-kubecost"
+  "entrypoint": "finfocus-plugin-kubecost"
 }
