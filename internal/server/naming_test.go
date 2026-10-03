@@ -15,7 +15,7 @@ import (
 func TestDocsLimitKubecostToProfileAndHistory(t *testing.T) {
 	t.Parallel()
 
-	names := []string{"CLAUDE.md", "plugin.manifest.json"}
+	names := []string{"CLAUDE.md", "plugin.manifest.json", ".goreleaser.yaml"}
 	roadmap := repoPath(t, "ROADMAP.md")
 	_, err := os.Stat(roadmap)
 	if err == nil {

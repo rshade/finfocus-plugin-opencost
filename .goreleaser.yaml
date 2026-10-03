@@ -56,7 +56,7 @@ dockers_v2:
 homebrew_casks:
   - name: finfocus-plugin-opencost
     homepage: "https://github.com/rshade/finfocus-plugin-opencost"
-    description: "FinFocus plugin for Kubecost integration"
+    description: "FinFocus OpenCost cost source, with a kubecost allocation profile"
     repository:
       owner: rshade
       name: homebrew-tap
@@ -68,7 +68,7 @@ homebrew_casks:
 
 nfpms:
   - maintainer: "rshade <rshade@example.com>"
-    description: "FinFocus plugin for Kubecost integration"
+    description: "FinFocus OpenCost cost source, with a kubecost allocation profile"
     homepage: "https://github.com/rshade/finfocus-plugin-opencost"
     license: "MIT"
     formats:
