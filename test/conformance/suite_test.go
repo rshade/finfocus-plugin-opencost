@@ -4,6 +4,7 @@ package conformance_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -18,7 +19,9 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/proto"
 
+	"github.com/rshade/finfocus-plugin-opencost/test/conformance"
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 	plugintesting "github.com/rshade/finfocus-spec/sdk/go/testing"
 )
@@ -81,12 +84,28 @@ func (a tcpAdapter) GetActualCost(
 func (a tcpAdapter) GetProjectedCost(
 	ctx context.Context, req *pbc.GetProjectedCostRequest,
 ) (*pbc.GetProjectedCostResponse, error) {
+	if req != nil {
+		next, ok := proto.Clone(req).(*pbc.GetProjectedCostRequest)
+		if !ok || next == nil {
+			return nil, errors.New("clone projected cost request")
+		}
+		next.Resource = conformance.KubernetesProbe(req.GetResource())
+		req = next
+	}
 	return a.client.GetProjectedCost(ctx, req)
 }
 
 func (a tcpAdapter) GetPricingSpec(
 	ctx context.Context, req *pbc.GetPricingSpecRequest,
 ) (*pbc.GetPricingSpecResponse, error) {
+	if req != nil {
+		next, ok := proto.Clone(req).(*pbc.GetPricingSpecRequest)
+		if !ok || next == nil {
+			return nil, errors.New("clone pricing spec request")
+		}
+		next.Resource = conformance.KubernetesProbe(req.GetResource())
+		req = next
+	}
 	return a.client.GetPricingSpec(ctx, req)
 }
 
