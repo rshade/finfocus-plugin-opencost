@@ -24,6 +24,7 @@ type cachedBody struct {
 	status  int
 	body    []byte
 	expires time.Time
+	used    time.Time
 }
 
 type responseCache struct {
@@ -47,6 +48,8 @@ func (c *responseCache) get(key string, now time.Time) (cachedBody, bool) {
 		delete(c.entries, key)
 		return cachedBody{}, false
 	}
+	entry.used = now
+	c.entries[key] = entry
 	return entry, true
 }
 
@@ -63,7 +66,7 @@ func (c *responseCache) put(key string, status int, body []byte, now time.Time) 
 			delete(c.entries, existing)
 		}
 	}
-	c.entries[key] = cachedBody{status: status, body: copied, expires: expires}
+	c.entries[key] = cachedBody{status: status, body: copied, expires: expires, used: now}
 	for len(c.entries) > maxCacheEntries {
 		oldestKey := ""
 		var oldest time.Time
@@ -71,9 +74,9 @@ func (c *responseCache) put(key string, status int, body []byte, now time.Time) 
 			if existing == key {
 				continue
 			}
-			if oldestKey == "" || entry.expires.Before(oldest) {
+			if oldestKey == "" || entry.used.Before(oldest) {
 				oldestKey = existing
-				oldest = entry.expires
+				oldest = entry.used
 			}
 		}
 		if oldestKey == "" {

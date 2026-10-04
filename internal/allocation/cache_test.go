@@ -67,6 +67,29 @@ func TestCachePutCapsLiveEntries(t *testing.T) {
 	}
 }
 
+func TestCachePutKeepsARecentlyReadEntry(t *testing.T) {
+	now := time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
+	cache := newResponseCache(time.Hour)
+	cache.put("https://opencost/old", 200, []byte("old"), now)
+	for i := 1; i < maxCacheEntries; i++ {
+		cache.put(fmt.Sprintf("https://opencost/%d", i), 200, []byte("x"), now.Add(time.Duration(i)))
+	}
+	readAt := now.Add(time.Minute)
+	if _, ok := cache.get("https://opencost/old", readAt); !ok {
+		t.Fatal("old entry was missing before the extra insert")
+	}
+	cache.put("https://opencost/new", 200, []byte("new"), readAt)
+	if _, ok := cache.entries["https://opencost/old"]; !ok {
+		t.Fatal("recently read entry was evicted")
+	}
+	if _, ok := cache.entries["https://opencost/1"]; ok {
+		t.Fatal("least recently used entry was kept")
+	}
+	if _, ok := cache.entries["https://opencost/new"]; !ok {
+		t.Fatal("new entry was evicted")
+	}
+}
+
 func TestCachePutKeepsNewestWhenExpiriesTie(t *testing.T) {
 	now := time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
 	cache := newResponseCache(time.Minute)

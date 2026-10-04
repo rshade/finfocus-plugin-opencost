@@ -109,6 +109,9 @@ The default TTL SHALL be 30 seconds. `cacheTTL` MAY override it.
 A negative `cacheTTL` SHALL disable the cache.
 The cache SHALL NOT store the API token.
 A failed response SHALL NOT be cached.
+The cache SHALL store at most 256 live bodies.
+Above that cap it SHALL evict the least recently used body.
+A read inside the TTL SHALL count as use.
 
 #### Scenario: Two identical calls
 
@@ -120,6 +123,12 @@ A failed response SHALL NOT be cached.
 
 - **WHEN** the same query runs again after the TTL
 - **THEN** the backend receives another request
+
+#### Scenario: Least recently used body is evicted
+
+- **WHEN** the cache holds 256 live bodies and the oldest body is read inside the TTL
+- **THEN** inserting one more body evicts a body that was not read
+- **AND** the body that was read stays
 
 ### Requirement: Cost results advertise expires_at
 
