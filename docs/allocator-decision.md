@@ -1,6 +1,6 @@
 # AllocatorService decision
 
-Recommendation: do not implement `AllocatorService`. Status for OC-3.6 is NOT-DELIVERED. This plugin stays a CostSource. It does not report `PLUGIN_CAPABILITY_ALLOCATION`. Issue #48 stays open.
+Recommendation: do not implement `AllocatorService`. Status for OC-3.6 is NOT-DELIVERED. This plugin stays a CostSource. It does not report `PLUGIN_CAPABILITY_ALLOCATION`. Issue #48 is closed.
 
 `openspec list` shows no active change. This task does not change plugin behavior, so no OpenSpec change is archived with it.
 
@@ -52,4 +52,4 @@ Scaling OpenCost's shares onto `priced.cost` could make the numeric sum match. T
 
 ## What this plugin ships
 
-`GetActualCost`, `GetProjectedCost`, `EstimateCost`, and `BatchCost` stay cost-source methods. There is no `Allocate` method and no `PLUGIN_CAPABILITY_ALLOCATION` in `internal/server/info.go`. Issue #48 is left open for an owner who wants a separate allocator that takes priced node costs.
+`GetActualCost`, `GetProjectedCost`, `EstimateCost`, and `BatchCost` stay cost-source methods. There is no `Allocate` method and no `PLUGIN_CAPABILITY_ALLOCATION` in `internal/server/info.go`. Issue #48 is closed. A separate allocator that takes priced node costs would be a new issue.
