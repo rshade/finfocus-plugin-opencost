@@ -65,7 +65,7 @@ Profile `opencost` `EstimateCost` reads `metadata.name` as a namespace and queri
 
 The plugin depends on:
 - `github.com/rshade/finfocus-spec/sdk/go/proto` - Protocol buffer definitions
-- `google.golang.org/grpc` v1.86.0-dev. `govulncheck` reports GO-2026-6443 for v1.84.0, and no stable tag newer than v1.84.0 is published. The plugin server does not call `xds.NewGRPCServer`.
+- `google.golang.org/grpc` v1.86.0-dev. `govulncheck` reports GO-2026-6443 for v1.84.0, and no stable tag newer than v1.84.0 is published. The Test workflow runs `govulncheck` and fails the job on a finding. The plugin server does not call `xds.NewGRPCServer`.
 - `gopkg.in/yaml.v3` for configuration parsing
 
 ## Testing Approach

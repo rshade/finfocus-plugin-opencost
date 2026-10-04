@@ -43,9 +43,5 @@ jobs:
           args: --timeout=5m
 
       - name: Run govulncheck
-        # GO-2026-6443 is a known vulnerability in grpc v1.84.0 (on origin/main).
-        # This branch has older grpc v1.69.4, but origin/main will have this issue.
-        # Vulnerability is fixed only in a dev pseudo-version of grpc.
-        # Non-blocking to allow CI to proceed.
-        continue-on-error: true
+        # grpc v1.86.0-dev is the published fix for GO-2026-6443. A finding fails this job.
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
