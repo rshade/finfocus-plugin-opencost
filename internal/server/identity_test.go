@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	"github.com/rshade/finfocus-plugin-opencost/internal/server"
@@ -38,6 +39,39 @@ func TestProjectedCostUsesMetadataWhenIDIsAPulumiURN(t *testing.T) {
 	require.NotContains(t, filter, "urn:")
 	plain := projectNamespace(t, srv, "oc-test")
 	require.InDelta(t, plain.GetCostPerMonth(), resp.GetCostPerMonth(), 1e-6)
+}
+
+func TestProjectedCostPrefersAttributeMetadataOverTags(t *testing.T) {
+	t.Parallel()
+
+	body := []byte(`{"code":200,"data":[{"oc-example/deployment:fixed":{` +
+		`"name":"oc-example/deployment:fixed",` +
+		`"properties":{"namespace":"oc-example","controller":"fixed","controllerKind":"deployment"},` +
+		`"minutes":60,"totalCost":3,"cpuCost":3,"start":"2026-10-03T10:00:00Z"}}]}`)
+	var filter string
+	srv := serverForFilter(t, body, &filter)
+	attrs, err := structpb.NewStruct(map[string]any{
+		"metadata": map[string]any{"name": "fixed", "namespace": "oc-example"},
+	})
+	require.NoError(t, err)
+	resp, err := srv.GetProjectedCost(t.Context(), &pbc.GetProjectedCostRequest{
+		Resource: &pbc.ResourceDescriptor{
+			Provider:     "kubernetes",
+			ResourceType: "kubernetes:apps/v1:Deployment",
+			Id:           deploymentURN,
+			Tags: map[string]string{
+				"metadata.namespace": "other",
+				"metadata.name":      "also-wrong",
+			},
+			Attributes: attrs,
+		},
+	})
+	require.NoError(t, err)
+	require.Contains(t, filter, `namespace:"oc-example"`)
+	require.Contains(t, filter, `controller:"fixed"`)
+	require.NotContains(t, filter, `namespace:"other"`)
+	require.NotContains(t, filter, `controller:"also-wrong"`)
+	require.InDelta(t, 3.0/1.0*730, resp.GetCostPerMonth(), 1e-6)
 }
 
 func TestProjectedCostDoesNotSplitADeploymentURN(t *testing.T) {
