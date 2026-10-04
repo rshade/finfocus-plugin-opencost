@@ -1,11 +1,11 @@
 ---
-description: Take one open issue from TASKS.md through OpenSpec or direct implementation, verify it against the real OpenCost backend, and commit it on the run branch
+description: Take one open issue from TASKS.md through OpenSpec or direct implementation, verify it, and open one pull request
 ---
 
 # Pick an Issue: One Issue Per Invocation
 
 Choose exactly one open issue in `rshade/finfocus-plugin-opencost`, take it to
-verified commits on the run branch, and **stop**. Do not start a second one.
+a verified pull request, and **stop**. Do not start a second one.
 
 Adapted from the `pick-issue` command in `gojev` (OpenSpec) and in `finfocus`
 (Spec Kit). What differs here:
@@ -15,11 +15,19 @@ Adapted from the `pick-issue` command in `gojev` (OpenSpec) and in `finfocus`
   worker, so claims are off. Coordination lives in `.superpowers/ledger.md`.
   Posting a claim or release comment is a public write; do it only if the
   owner turns claims on in the request.
-- **GitHub is read-only** (`gh issue view`, `gh issue list`, `gh api` GETs).
-  No comments, labels, closes, pushes or PRs. Issues close through `Closes #N`
-  in a commit body when the owner merges. The one exception is the spec-gap
-  rule in the run prompt, which needs a genericity argument.
-- **The plan of record is `TASKS.md`**, not roadmap labels.
+- **GitHub writes are one pull request, plus an out-of-date close.** Read with
+  `gh issue view`, `gh issue list`, and `gh api` GETs. Branch from `origin/main`,
+  push that branch, and open one pull request. Watch its checks and push fixes
+  to the same branch. The owner merges. Put `Closes #N` in the pull request body
+  when the pull request finishes the issue. Close an issue with `gh issue close`
+  only after a command shows the current code already satisfies it or the issue
+  is out of date, and cite that command and commit in the comment. #18 stays
+  open for the owner. #63 is outside Phase 9; take it only when the launch
+  prompt names it. The 2026-10-03 read-only rule applied to Phases 1 to 8.
+- **The plan of record is `TASKS.md`**, not roadmap labels. Phase 9 is the
+  queue. A row is eligible when its status is exactly `TODO` and every task id
+  in Depends is `DONE`. `TODO (owner)`, `BLOCKED`, and `BLOCKED-ON-INPUT` are
+  not eligible.
 - **OpenSpec, not Spec Kit.** The CLI is pinned in `mise.toml` as
   `npm:@fission-ai/openspec`; run it as `mise exec -- openspec ...`.
 - **Ground truth is owner-owned.** `testdata/opencost-real/` (responses,
@@ -31,18 +39,27 @@ Adapted from the `pick-issue` command in `gojev` (OpenSpec) and in `finfocus`
 ```bash
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-git rev-parse --abbrev-ref HEAD    # must be the run branch, not main
+git fetch origin
+git rev-parse --abbrev-ref HEAD    # main, equal to origin/main, before you branch
 git status --short                 # tracked files clean
+git rev-parse HEAD origin/main
 mise exec -- openspec list --json  # .root.path must be $ROOT
 ```
 
-Stop and report when the tree has uncommitted tracked changes you did not
-make. Never `git add -A` or `git add .`; stage named files only.
+The tree is clean, and `HEAD` equals `origin/main`, before you branch. Start
+from `main` and create `issue-<n>-<slug>`. Continue when you are already on
+that issue's branch and the only commits are yours for this issue. Any other
+branch: stop and report. Stop when the tree has uncommitted tracked changes
+you did not make. Never `git add -A` or `git add .`; stage named files only.
+Push the issue branch. A push to `main` is outside this command.
 
 ## Phase 1: Choose
 
-If an issue number was given, use it. Otherwise take the first task in
-`TASKS.md` whose status is `TODO` and whose dependencies are `DONE`.
+If an issue number was given, use it. Otherwise take the first Phase 9 row
+whose status is exactly `TODO` and whose Depends task ids are all `DONE`.
+Phase 0 rows marked `TODO (owner)` are the owner's. When the issue has a
+Phase 9 row and that row is `BLOCKED` or `BLOCKED-ON-INPUT`, report the row
+and stop.
 
 Read the issue and its comments (`gh issue view N --comments`) and the
 `TASKS.md` entry. Then reconcile before routing:
@@ -98,11 +115,16 @@ Archive lands in the same commit as the code, after verify passes.
 
 ## Phase 3: Work it
 
-One conventional commit per task on the run branch, header ending in the task
+One conventional commit per task on the issue branch, header ending in the task
 id, for example `feat(client): add opencost endpoint profile (OC-3.2)`.
 Stage named files only. Run the commit message through
 `cat PR_MESSAGE.md | npx commitlint` before committing. Never add
-`Co-Authored-By` or session-link trailers. Never push.
+`Co-Authored-By` or session-link trailers. Push the issue branch and open one
+pull request with `gh pr create`. The body carries the verify output and, when
+the pull request finishes the issue, `Closes #N`.
+
+When the task says to stop and ask, stop. Do not invent the missing input.
+For OC-9.3 the missing input is the owner-captured controller fixture.
 
 Use TDD: a failing test first. Use testify. Tests that mutate environment or
 process state are not parallel.
@@ -130,17 +152,16 @@ result that never fails proves nothing: confirm the break check fails first.
 Report real failures and unavailable tools. Do not edit a test, a fixture or
 the oracle to make a gate pass.
 
-## Later: pull request mode (not yet)
+## Pull request mode
 
-Until the testing setup has proven itself, there are **no pull requests**: work
-stays on the local run branch and the owner reviews it. This is the owner's rule
-(2026-10-03), because managing PRs is a burden before the checks can be trusted.
-Once the owner says the setup is good enough, this command changes to: open a PR
-per issue, watch its checks, fix failures, and merge when green. Update this
-section then. Do not open, watch or merge a PR before that.
+Pull request mode is on (owner, 2026-10-04). Open one pull request, watch its
+checks, and push fixes to that branch. The owner merges. Release pull request
+#76 waits until OC-9.1 and OC-9.2 have landed. Phases 1 to 8 stayed on the
+local run branch under the 2026-10-03 rule.
 
 ## Phase 5: Report and stop
 
 Update the ledger and the task status. Report: the issue and why it was
-chosen, the route, the OpenSpec change if any, gate results, the commits, and
-anything that goes in the "Not delivered" register. Then stop.
+chosen, the route, the OpenSpec change if any, gate results, the commits, the
+pull request URL, and anything that goes in the "Not delivered" register. Then
+stop.

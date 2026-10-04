@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable MD013 MD060 -->
 
-**Status**: Planning. Rewritten 2026-10-03 and supersedes the 2026-09-30 kubecost plan.
+**Status**: Planning. Rewritten 2026-10-03 and supersedes the 2026-09-30 kubecost plan. Phase 9 added 2026-10-04.
 **Target version**: v0.1.0
 **Go**: 1.27.1. **finfocus-spec**: v0.7.1 minimum.
 **Process**: Superpowers for the run, then OpenSpec changes per task group (see section 6). Run prompt: `superpowers-prompt.md`.
@@ -34,7 +34,7 @@ A task that only the `kubecost` profile can serve is delivered against fixtures 
 
 All rules in `superpowers-prompt.md` apply. The ones that shape this plan:
 
-1. One conventional commit per task on the run branch, header ending in the task id. Never push. GitHub is read-only.
+1. Phases 1 to 8: one conventional commit per task on the run branch, header ending in the task id. That run did not push. Phase 9 follows `.claude/commands/pick-issue.md`: one issue, one branch from `main`, one pull request. The owner merges.
 2. `testdata/opencost-real/` (responses, `expected.json`, provenance) is owner-owned. You may not create, edit or regenerate them.
 3. No hand-written fixture stands in for a real OpenCost response. Contract fixtures for Kubecost are allowed only under `testdata/kubecost-contract/` and are labelled.
 4. Every task has a `Verify:` command and a break check.
@@ -155,6 +155,55 @@ Status values: `TODO`, `IN-PROGRESS`, `DONE`, `BLOCKED`, `BLOCKED-ON-INPUT`, `NO
 | OC-8.1 | Disposition of #18 (Dependency Dashboard): not code. Record "obsolete, Renovate handles it; owner closes" in the register | DONE (`TestDependencyDashboardIsOwnerClose` reads section 8. The register says obsolete, Renovate handles it; owner closes. `renovate.json` extends `config:recommended` and leaves the dashboard on. Break: removing that sentence fails the test. Issue 18 stays open) |
 | OC-8.2 | Convert any remaining Phase 1 to 7 behaviour not yet captured into `openspec/specs/` capabilities and archive the changes | DONE (OpenSpec change `remaining-behaviour` archived as `2026-10-03-remaining-behaviour`. New capabilities: `plugin-info`, `cost-errors`, `contract-sources`, and `kind-suite`. Earlier specs already cover allocation, cost, budgets, health, and pricing. Packaging and the Pulumi example stay outside the spec set. No production code change. Break: replacing `no upstream module` in the contract-sources spec fails `TestRemainingBehaviourSpecsExist`. `mise exec -- openspec validate --all --strict` exit 0) |
 | OC-8.3 | Write `superpowers-run-report.md` with the issue-by-issue table, the "Not delivered" register and the spec-gap log | DONE (`superpowers-run-report.md` is git-excluded and lists every task, the 21 issues, and the not-delivered register. Section 7 commands in the acceptance log exit 0, including `make govulncheck` and `make drift`. `make e2e-kind` evidence is the session log `E2E_EXIT:0` on cluster `oc-e2e`, charts prometheus 29.35.0 and opencost 2.5.32. Two live rounds of `Supports` and `GetActualCost` for namespace `oc-test` returned cost 0.49333 EUR, and `Supports` for `kubernetes:core/v1:Service` is false. The spec-gap log has no filed issue. Break: not a code path; the report is the deliverable) |
+
+### Phase 9: Review follow-ups
+
+Added 2026-10-04. These rows are the queue. `.claude/commands/pick-issue.md` is the procedure.
+
+A row is eligible when its status is exactly `TODO` and every task id in Depends is `DONE`. An empty Depends is eligible. `BLOCKED` and `BLOCKED-ON-INPUT` are not eligible. Phase 0 statuses `TODO (owner)` are not `TODO`.
+
+Take the first eligible row, one issue, one pull request, then stop. The owner merges. Release pull request #76 stays open until OC-9.1 and OC-9.2 have landed and Release Please shows version 0.1.0.
+
+On a row that says to stop and ask, stop. Do not invent the missing input. After asking, set that row to `BLOCKED-ON-INPUT`. The owner sets it back to `TODO` once the input is in the tree. For #66, #67, and #68, finish the agent slice, stop before secrets and branch protection, leave the GitHub issue open, and record the owner step in the ledger.
+
+`testdata/opencost-real/` stays read-only. A captured controller body goes in `testdata/opencost-real-controller/` after the owner captures it.
+
+Launch prompt:
+
+```text
+Follow .claude/commands/pick-issue.md. The plan of record is TASKS.md Phase 9.
+
+Take the first row whose status is exactly TODO and whose Depends task ids are all DONE. One issue, one small pull request, then stop.
+
+Start from a clean main that matches origin/main. Push only the issue branch. The owner merges. Leave release pull request #76 open.
+
+Do not close #18. Do not take #63 unless this prompt names it. Close an issue yourself only when main already satisfies it, and cite the commit and the command.
+
+On #64 (OC-9.3), stop and ask for the captured controller fixture before any code change. testdata/opencost-real/ is read-only. Do not hand-write a response body.
+
+For #66, #67, and #68, do the agent slice and stop before secrets and branch protection. Leave those issues open.
+
+Skip BLOCKED and BLOCKED-ON-INPUT rows.
+```
+
+| Id | Issue | Task | Depends | Verify | Status |
+| --- | --- | --- | --- | --- | --- |
+| OC-9.1 | [#77](https://github.com/rshade/finfocus-plugin-opencost/issues/77) | Direct. Add `"initial-version": "0.1.0"` on the `.` package in `release-please-config.json`. After Release Please rebuilds, the release PR title and manifest say `0.1.0`. If they still say `1.0.0`, stop and ask the owner to land a `Release-As: 0.1.0` commit. Leave #76 unmerged. | | `jq -r '.packages["."]["initial-version"]' release-please-config.json` prints `0.1.0`. `gh pr view 76 --json title` shows `0.1.0` after the rebuild. Break: delete the key and jq prints `null`. | IN-PROGRESS (`TestReleasePleaseInitialVersionIs010` fails while `initial-version` is empty and passes on `0.1.0`. Release PR #76 still titles `1.0.0` until this merges and Release Please runs. Do not merge #76 before that.) |
+| OC-9.2 | [#78](https://github.com/rshade/finfocus-plugin-opencost/issues/78) | Direct. Add `CHANGELOG.md` to the `ignores` list in `.markdownlint-cli2.jsonc`. Leave `MD012` on for every other file. Add one `CLAUDE.md` line that `CHANGELOG.md` is generated and is not hand-edited. A later #63 ignore list keeps this entry and the narrowed OpenSpec globs. | | Check out the release branch's `CHANGELOG.md` and run `npx markdownlint-cli2 "**/*.md"`; exit 0. Break: two consecutive blank lines in `README.md` still report `MD012`. | TODO |
+| OC-9.3 | [#64](https://github.com/rshade/finfocus-plugin-opencost/issues/64) | OpenSpec. Controller queries filter on `controllerName`; aggregate stays `controller`. First action: ask the owner to capture the HTTP 500 body for `controller:"fixed"` and the row for `controllerName:"fixed"` into `testdata/opencost-real-controller/`, with date, chart versions, and the command in a README. Set this row to `BLOCKED-ON-INPUT` and stop. The owner sets it back to `TODO` once that directory is in the tree. Do not change the filter and do not write a body before then. | OC-9.1, OC-9.2 | After the capture: `go test -count=1 ./internal/server/ -run 'TestGetActualCost\|TestIdentity'` and `mise exec -- openspec validate --all --strict`. Break: a filter key `controller` fails the grammar test. Then `make e2e-kind` for Deployment `fixed`. | TODO |
+| OC-9.4 | [#73](https://github.com/rshade/finfocus-plugin-opencost/issues/73) | OpenSpec. Return YAML and environment parse errors with the file path or variable name. `Config.Validate` runs before `Serve`: `baseUrl` is an http(s) URL with a host, profile is empty or `opencost` or `kubecost`, and a set currency is three upper-case letters. A missing config file stays tolerated. Do not enable `KnownFields` unless the invocation says so. No token in an error or a log. README states the real precedence. | OC-9.3 | `go test -count=1 ./internal/allocation/ ./cmd/finfocus-plugin-opencost/ -run 'Config\|Validate'`. The binary with an empty `KUBECOST_BASE_URL` exits 1. Break: restore `_ = yaml.Unmarshal` and the syntax test fails. | TODO |
+| OC-9.5 | [#70](https://github.com/rshade/finfocus-plugin-opencost/issues/70) | OpenSpec for the gRPC behaviour. No new proto field. Skip a budget rule that fails validation and return the rest, with one WARN naming the rule id and the reason. HTTP 401 is `Unauthenticated` and HTTP 403 is `PermissionDenied`, through a typed status error. The message names the check for `KUBECOST_API_TOKEN` and does not contain the token. | OC-9.4 | `go test -count=1 ./internal/server/ ./internal/allocation/ -run 'GetBudgets\|Auth\|Backend\|Token'`. Break: a `daily` interval fails the whole call again. | TODO |
+| OC-9.6 | [#74](https://github.com/rshade/finfocus-plugin-opencost/issues/74) | Direct. Replace the empty `main` tests with a built-binary check of `-version` and `-version-full`. Delete dead `Client.Allocation`, `EnhancedAllocation`, `ConvertToSimpleResponse`, `Point`, and `Response`, and delete unreferenced `testdata/sample_*.json`. Keep `TestKubecostContractSourcesListsEveryFixture`. Keep or remove each other doc-content test with a one-line reason. `internal/server` statement coverage stays at or above 84.2%. | OC-9.5 | `go test -count=1 ./cmd/finfocus-plugin-opencost/ ./internal/allocation/ ./internal/server/`. `rg 'EnhancedAllocation\|ConvertToSimpleResponse\|allocation\.Point' --glob '*.go'` prints nothing. Break: `-version` printing nothing fails the binary test. | TODO |
+| OC-9.7 | [#72](https://github.com/rshade/finfocus-plugin-opencost/issues/72) | OpenSpec. Reject a non-loopback `http` base URL unless `allowInsecureHttp` is set. `http://localhost` still starts. Log one WARN per startup when `tlsSkipVerify` is on, and none when it is off. Add `caCertFile` for a private CA. Document the new keys in the README and `config.example.yaml`. gRPC authentication stays a non-goal. | OC-9.6 | `go test -count=1 ./internal/allocation/ -run 'TestReadmeDocumentsEveryConfigKey\|TestTLS\|TestInsecure\|TestCA'`. Break: accepting `http://example.com` fails the reject test. | TODO |
+| OC-9.8 | [#65](https://github.com/rshade/finfocus-plugin-opencost/issues/65) | OpenSpec once core sends `GetActualCostRequest.resource`. Bump `finfocus-spec` to v0.7.4 and, when the descriptor is set, resolve actual cost from it. Attributes win over tags. An unset descriptor keeps today's tag path. Core at the time of the issue does not populate the field. | OC-9.7, core sends `resource` on actual-cost calls | `go test -count=1 ./internal/server/ ./test/conformance/ -run 'Plugin\|GetActualCost\|RPCCorrectness_GetActualCostWithResource'`. Break: ignoring `resource` fails the descriptor cases. | BLOCKED |
+| OC-9.9 | [#66](https://github.com/rshade/finfocus-plugin-opencost/issues/66) | Direct. The owner already replaced the token; release PR #76 opened. Add the finfocus-spec style probe so an invalid `RELEASE_PLEASE_TOKEN` warns and falls back, and document permissions and rotation. Do not read or set the secret. Leave the issue open until `release.yml` has run after the first release. | OC-9.7 | `actionlint .github/workflows/release-please.yml`. A branch run with the secret name blanked shows the warning. Break: the job fails with `Bad credentials` again. | TODO |
+| OC-9.10 | [#67](https://github.com/rshade/finfocus-plugin-opencost/issues/67) | Direct for the workflow edit and one dispatch of `kind.yml` and `live-drift.yml` when the token can start them. Record both run URLs on the issue. Run `E2E (kind)` on pull requests that touch `internal/**`, `test/e2e/**`, or `hack/kind/**`. A live key-set difference opens or updates one issue. Stop before adding a required check. A break branch that edits a fixture is not merged. | OC-9.9 | `actionlint .github/workflows/kind.yml .github/workflows/live-drift.yml`. `gh run list --workflow kind.yml --limit 1` shows a completed run. Break: one removed fixture key on a throwaway branch opens the drift issue. | TODO |
+| OC-9.11 | [#68](https://github.com/rshade/finfocus-plugin-opencost/issues/68) | Direct. Run `go test -race -covermode=atomic -coverprofile=coverage.out ./...` in `test.yml`, write the total to the step summary, and upload `coverage.out`. No Go matrix. Badges only for workflows that are green on `main`. Stop before the branch-protection ruleset. That ruleset is the owner's, and `Prose` waits until OC-9.2 has landed. | OC-9.10 | `actionlint .github/workflows/test.yml` and `make test-race` exit 0. Break: a `matrix` key in `test.yml` fails the empty-matrix check. | TODO |
+| OC-9.12 | [#69](https://github.com/rshade/finfocus-plugin-opencost/issues/69) | Direct once the owner has reviewed the expectation inputs. Extend the kind oracle to controller, pod, and node. Discover the pod name at run time. Do not derive a number from the plugin. Do not edit `testdata/opencost-real/` until the owner has reviewed the values. The controller filter is OC-9.3. | OC-9.3, owner-reviewed expectations | `make e2e-kind` logs an oracle match for each kind. Break: CPU `9.0` diverges for every kind, then restore `2.0`. | BLOCKED-ON-INPUT |
+| OC-9.13 | [#71](https://github.com/rshade/finfocus-plugin-opencost/issues/71) | The kubecost profile needs a Kubecost the agent can call. The kind spike's `GET /model/allocation` was HTTP 404. A live capture uses owner-redacted responses. Label the profile experimental only when the owner chooses that in the invocation. | OC-9.7, a reachable Kubecost | The decision is written in `docs/kubecost-kind-spike.md`. Contract tests still pass. Break: removing the decision line fails that test. | BLOCKED-ON-INPUT |
+| OC-9.14 | [#75](https://github.com/rshade/finfocus-plugin-opencost/issues/75) | Replace `google.golang.org/grpc v1.86.0-dev` when a stable tag contains the GO-2026-6443 fix. Until that tag exists, leave the require line as it is. Land the pin note with the bump, then delete the note. | a stable grpc tag at or above the fix | `govulncheck ./...` prints `No vulnerabilities found.` and `go list -m google.golang.org/grpc` shows the stable tag. Break: `v1.84.0` reports GO-2026-6443, then restore `go.mod` and `go.sum`. | BLOCKED |
+
+Outside this phase: [#63](https://github.com/rshade/finfocus-plugin-opencost/issues/63) (OpenSpec process and its CI gaps) stays open and is not a row. [#76](https://github.com/rshade/finfocus-plugin-opencost/pull/76) is the release pull request, not an issue to implement. [#18](https://github.com/rshade/finfocus-plugin-opencost/issues/18) stays in section 8.
 
 ## 6. OpenSpec conversion
 
