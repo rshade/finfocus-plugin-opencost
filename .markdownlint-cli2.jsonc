@@ -1,0 +1,7 @@
+{
+  // OpenSpec writes the command and skill files under .claude.
+  // The prose workflow lints every Markdown file, and those templates
+  // are not project prose.
+  "globs": ["**/*.md"],
+  "ignores": [".claude/**"]
+}
