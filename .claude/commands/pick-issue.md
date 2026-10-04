@@ -26,7 +26,7 @@ Adapted from the `pick-issue` command in `gojev` (OpenSpec) and in `finfocus`
   prompt names it. The 2026-10-03 read-only rule applied to Phases 1 to 8.
 - **The plan of record is `TASKS.md`**, not roadmap labels. Phase 9 is the
   queue. A row is eligible when its status is exactly `TODO` and every task id
-  in Depends is `DONE`. `TODO (owner)`, `BLOCKED`, and `BLOCKED-ON-INPUT` are
+  in Depends is `DONE` or `IN-PROGRESS` on the open stack. `TODO (owner)`, `BLOCKED`, and `BLOCKED-ON-INPUT` are
   not eligible.
 - **OpenSpec, not Spec Kit.** The CLI is pinned in `mise.toml` as
   `npm:@fission-ai/openspec`; run it as `mise exec -- openspec ...`.
