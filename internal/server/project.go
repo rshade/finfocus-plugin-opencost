@@ -7,6 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
 	"github.com/rshade/finfocus-spec/sdk/go/pluginsdk"
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
@@ -24,7 +26,43 @@ func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
 	if resource == nil {
 		return resourceRef{}, status.Error(codes.InvalidArgument, "empty resource id")
 	}
-	return resolveRef(resource.GetResourceType(), resource.GetId(), resource.GetTags())
+	return resolveRef(resource.GetResourceType(), resource.GetId(), tagsPreferringAttributes(resource))
+}
+
+// tagsPreferringAttributes copies descriptor tags and lets metadata.name and
+// metadata.namespace from attributes replace the flattened tag. An empty
+// attributes path leaves the tag in place. GetActualCost has no attributes
+// field, so it keeps calling resolveRef with tags only.
+func tagsPreferringAttributes(resource *pbc.ResourceDescriptor) map[string]string {
+	tags := resource.GetTags()
+	name, nameOK := attributeString(resource.GetAttributes(), "metadata.name")
+	namespace, namespaceOK := attributeString(resource.GetAttributes(), "metadata.namespace")
+	if !nameOK && !namespaceOK {
+		return tags
+	}
+	merged := make(map[string]string, len(tags))
+	for key, value := range tags {
+		merged[key] = value
+	}
+	if nameOK {
+		merged["metadata.name"] = name
+	}
+	if namespaceOK {
+		merged["metadata.namespace"] = namespace
+	}
+	return merged
+}
+
+func attributeString(attrs *structpb.Struct, path string) (string, bool) {
+	value, ok := pluginsdk.AttributeValue(attrs, path)
+	if !ok {
+		return "", false
+	}
+	text := value.GetStringValue()
+	if text == "" {
+		return "", false
+	}
+	return text, true
 }
 
 // resolveRef finds the OpenCost object for a cost request.
@@ -32,7 +70,8 @@ func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
 // Kubernetes name. The plugin grammar (namespace/<name>, pod/<ns>/<name>,
 // controller/<ns>/<name>, node/<name>) is still accepted. A cloud id such as
 // oc-example/fixed is accepted when the resource type is known. Otherwise the
-// name comes from metadata.name and metadata.namespace tags.
+// name comes from metadata.name and metadata.namespace. Attributes win over
+// the same keys in tags.
 func resolveRef(resourceType, id string, tags map[string]string) (resourceRef, error) {
 	if strings.TrimSpace(id) == "" {
 		return resourceRef{}, status.Error(codes.InvalidArgument, "empty resource id")

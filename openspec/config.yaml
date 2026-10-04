@@ -3,7 +3,7 @@ schema: spec-driven
 context: |
   Plugin: finfocus-plugin-opencost, FinFocus cost source named opencost.
   Module: github.com/rshade/finfocus-plugin-opencost. Binary: finfocus-plugin-opencost.
-  Spec: finfocus-spec v0.7.1 via the sibling SDK. Do not import github.com/opencost/opencost
+  Spec: finfocus-spec v0.7.3 via the sibling SDK. Do not import github.com/opencost/opencost
   from the plugin module. Drift checks live in the separate test/drift module.
   Profiles: opencost calls /allocation with includeIdle and no required token.
   kubecost calls /model/allocation with a bearer token. Kubecost behaviour is

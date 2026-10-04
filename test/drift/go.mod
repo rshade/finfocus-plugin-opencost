@@ -40,7 +40,7 @@ require (
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/rshade/ax-go v0.7.0 // indirect
-	github.com/rshade/finfocus-spec v0.7.1 // indirect
+	github.com/rshade/finfocus-spec v0.7.3 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
