@@ -62,7 +62,7 @@ This cost source does not support those `aws:*`, `gcp:*`, or `azure-native:*` to
 - `kubernetes:batch/v1:Job`
 - `kubernetes:batch/v1:CronJob`
 
-`kubernetes:core/v1:Service` is a real stack type (`internal/ingest/mapper_test.go:382`). This plugin returns `Supported: false` with a reason. OpenCost allocation filters used here are namespace, pod, controller, and node.
+`kubernetes:core/v1:Service` is a real stack type (`internal/ingest/mapper_test.go:382`). This plugin returns `Supported: false` with a reason. OpenCost allocation filters used here are namespace, pod, controllerName, and node. A controller query still aggregates by `namespace,controller`.
 
 The spec's resource type examples include `k8s-namespace` (`finfocus-spec` `proto/finfocus/v1/costsource.proto:768`). Core docs repeat that example and do not show a translator:
 
