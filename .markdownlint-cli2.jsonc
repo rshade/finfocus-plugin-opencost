@@ -1,7 +1,8 @@
 {
   // OpenSpec writes the command and skill files under .claude.
-  // The prose workflow lints every Markdown file, and those templates
+  // Release Please writes CHANGELOG.md. Hand edits are overwritten.
+  // The prose workflow lints every Markdown file, and those files
   // are not project prose.
   "globs": ["**/*.md"],
-  "ignores": [".claude/**"]
+  "ignores": [".claude/**", "CHANGELOG.md"]
 }

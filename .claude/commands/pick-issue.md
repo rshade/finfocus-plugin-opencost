@@ -46,8 +46,10 @@ git rev-parse HEAD origin/main
 mise exec -- openspec list --json  # .root.path must be $ROOT
 ```
 
-The tree is clean, and `HEAD` equals `origin/main`, before you branch. Start
-from `main` and create `issue-<n>-<slug>`. Continue when you are already on
+The tree is clean before you branch. When the previous issue's pull request
+is open, branch from that issue branch and open the new pull request against
+it. Do not wait for the owner to merge. Otherwise start from `main` equal to
+`origin/main` and create `issue-<n>-<slug>`. Continue when you are already on
 that issue's branch and the only commits are yours for this issue. Any other
 branch: stop and report. Stop when the tree has uncommitted tracked changes
 you did not make. Never `git add -A` or `git add .`; stage named files only.
@@ -56,10 +58,10 @@ Push the issue branch. A push to `main` is outside this command.
 ## Phase 1: Choose
 
 If an issue number was given, use it. Otherwise take the first Phase 9 row
-whose status is exactly `TODO` and whose Depends task ids are all `DONE`.
-Phase 0 rows marked `TODO (owner)` are the owner's. When the issue has a
-Phase 9 row and that row is `BLOCKED` or `BLOCKED-ON-INPUT`, report the row
-and stop.
+whose status is exactly `TODO` and whose Depends task ids are `DONE` or
+`IN-PROGRESS` on the open stack. Phase 0 rows marked `TODO (owner)` are the
+owner's. When the issue has a Phase 9 row and that row is `BLOCKED` or
+`BLOCKED-ON-INPUT`, report the row and stop.
 
 Read the issue and its comments (`gh issue view N --comments`) and the
 `TASKS.md` entry. Then reconcile before routing:
@@ -155,9 +157,10 @@ the oracle to make a gate pass.
 ## Pull request mode
 
 Pull request mode is on (owner, 2026-10-04). Open one pull request, watch its
-checks, and push fixes to that branch. The owner merges. Release pull request
-#76 waits until OC-9.1 and OC-9.2 have landed. Phases 1 to 8 stayed on the
-local run branch under the 2026-10-03 rule.
+checks, and push fixes to that branch. The owner merges. Stack the next issue
+on the previous open pull request. Do not wait for that merge. Release pull
+request #76 waits until OC-9.1 and OC-9.2 have landed. Phases 1 to 8 stayed
+on the local run branch under the 2026-10-03 rule.
 
 ## Phase 5: Report and stop
 
