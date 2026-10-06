@@ -122,6 +122,8 @@ The client does not send those values.
 - `pod/<namespace>/<name>`
 - `node/<name>`
 
+When the request sets `resource`, that descriptor selects the object. `metadata.name` and `metadata.namespace` in attributes replace the same tag keys. An unset `resource` keeps the resource id and tag path. A missing row names the descriptor id.
+
 `Supports` accepts these types:
 
 - `kubernetes:core/v1:Namespace` and `k8s-namespace`
