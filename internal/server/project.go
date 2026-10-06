@@ -22,6 +22,20 @@ const (
 	hourlyRateAssumption   = "observed hourly cost over the trailing 30-day allocation window"
 )
 
+func actualRef(req *pbc.GetActualCostRequest) (resourceRef, error) {
+	if req.GetResource() != nil {
+		return refForDescriptor(req.GetResource())
+	}
+	return resolveRef("", req.GetResourceId(), req.GetTags())
+}
+
+func actualMissingID(req *pbc.GetActualCostRequest, ref resourceRef) string {
+	if req.GetResource() != nil {
+		return correlationID(req.GetResource(), ref)
+	}
+	return req.GetResourceId()
+}
+
 func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
 	if resource == nil {
 		return resourceRef{}, status.Error(codes.InvalidArgument, "empty resource id")
@@ -31,8 +45,7 @@ func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
 
 // tagsPreferringAttributes copies descriptor tags and lets metadata.name and
 // metadata.namespace from attributes replace the flattened tag. An empty
-// attributes path leaves the tag in place. GetActualCost has no attributes
-// field, so it keeps calling resolveRef with tags only.
+// attributes path leaves the tag in place.
 func tagsPreferringAttributes(resource *pbc.ResourceDescriptor) map[string]string {
 	tags := resource.GetTags()
 	name, nameOK := attributeString(resource.GetAttributes(), "metadata.name")
