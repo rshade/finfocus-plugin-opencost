@@ -48,29 +48,31 @@ Both must succeed, and the build must write archives and `checksums.txt`. A conf
 working config. Add a test that reads the config and the manifest and fails when a setting above is wrong. Break
 check: reintroduce each defect in turn and the test fails.
 
-### Release token check (`RELEASE_PLEASE_TOKEN`)
+### Workflow files and the release token (`RELEASE_PLEASE_TOKEN`)
 
-Events created with `GITHUB_TOKEN` do not trigger other workflows. A release PR opened that way never runs `Test`
-or `Commitlint`, and the published release never fires `release.yml`, so GoReleaser never runs. The repo needs a
-secret `RELEASE_PLEASE_TOKEN`: a fine-grained token limited to this repo with Contents, Pull requests and Issues
-read and write, and Metadata read. The agent never reads or sets the secret; the owner does.
+The pattern is aws-public's, from release-please to GoReleaser. Copy the files, do not reinvent them:
 
-- A plain `secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN` is not enough. `||` falls back only when the secret is
-  empty, and an expired token is a non-empty string that fails later with `Bad credentials` (opencost: 16 of 16
-  runs failed this way). A PAT alone with no fallback fails the same way.
-- Add a "Resolve release token" step before the action, copied from `finfocus-spec`'s
-  `.github/workflows/release-please.yml`. It passes the secret through `env:`, probes it with `gh api /user`, sets
-  an output, and degrades to `GITHUB_TOKEN` with a `::warning::` that names the secret. The action gets
-  `steps.token.outputs.use_pat == 'true' && secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN`.
-- Owner check before the first release PR: the secret exists (Settings, Secrets, or `gh secret list` with admin
-  rights, which a plain token cannot do), and a `workflow_dispatch` run of `Release Please` logs
-  `RELEASE_PLEASE_TOKEN authenticated successfully.` and not a warning. If you rely on the fallback, Settings,
-  Actions, General, "Allow GitHub Actions to create and approve pull requests" must be on.
-- Document the token, its scopes, its expiry date and how to rotate it in the repo's `CLAUDE.md` or
-  `CONTRIBUTING.md`.
-- `release.yml` triggers on `release: created`, needs only `contents: write` and `GITHUB_TOKEN`, and has a
-  `workflow_dispatch` with a required `tag` input so a failed run can be re-run on an existing tag. Add that input
-  where it is missing.
+- `release-please.yml`: copy aws-public's. `googleapis/release-please-action@v5.0.0` with
+  `token: ${{ secrets.RELEASE_PLEASE_TOKEN }}`, triggers `push` to `main` and `workflow_dispatch`, permissions
+  `contents`, `issues` and `pull-requests` write. azure-public and opencost append `|| secrets.GITHUB_TOKEN`; both
+  shapes are the family pattern. A probe step (as in `finfocus-spec`) is optional hardening, not required.
+- `release.yml` (single-binary plugins): copy opencost's or azure-public's. Triggers `release: types: [created]`
+  and `workflow_dispatch` with a required `tag` input, `permissions: contents: write`, checkout at
+  `ref: ${{ inputs.tag || github.event.release.tag_name }}` with `fetch-depth: 0`, `actions/setup-go@v7` with
+  `go-version-file: go.mod`, `goreleaser/goreleaser-action@v7` with `args: release --clean`, and `GITHUB_TOKEN` only.
+  aws-public's `release.yml` is the multi-region variant and is not the template for a single-binary plugin.
+- Not allowed: a `push: tags` trigger (release-please creates the tag through the API, so it never fires),
+  `--rm-dist` (removed in GoReleaser v2), `actions/checkout` older than v7, `goreleaser-action` older than v7,
+  `release-please-action` v4, and `google-apis/release-please-action` (the org is `googleapis`).
+
+Why the token matters: events created with `GITHUB_TOKEN` do not trigger other workflows, so a release PR opened that
+way never runs `Test` or `Commitlint`, and a published release never fires `release.yml`. The secret is a
+fine-grained token limited to this repo with Contents, Pull requests and Issues read and write, and Metadata read.
+The agent never reads or sets it. The check is a state check, not a decision: before the first release PR the owner
+confirms the secret exists (Settings, Secrets) and that a `workflow_dispatch` run of `Release Please` does not fail
+with `Input required and not supplied: token` or `Bad credentials`. An expired token is a non-empty string, so
+`||` does not rescue it (opencost: 16 of 16 runs failed). Document the token, its scopes, its expiry and how to rotate
+it in the repo's `CLAUDE.md` or `CONTRIBUTING.md`.
 
 ### Release steps
 
@@ -100,11 +102,10 @@ Open a pull request to `rshade/finfocus`, modelled on #1697 (azure-public) and #
   Also run `plugin inspect <name> <type>`: opencost failed with "capability discovery not implemented", so record a
   failure as a plugin gap in the PR.
 
-State of this repo on 2026-10-06: release-please config fixed (merged as PR 86). GoReleaser fixed (merged as PR 88):
-v0.1.2 is the first release with assets (v0.1.0 and v0.1.1 have none). Registry entry merged in `rshade/finfocus`
-PR 1720; the Kubecost clean-up is PR 1721. Token: `release-please.yml` uses `RELEASE_PLEASE_TOKEN || GITHUB_TOKEN`, the
-PAT works (recent runs succeeded), and the probe step is row OC-9.9 (issue 66). `release.yml` has the `tag`
-dispatch input. Open: the probe step, and the `plugin inspect` gap ("capability discovery not implemented").
+State of this repo on 2026-10-06: right. v0.1.2 is the first release with assets (v0.1.0 and v0.1.1 have none).
+Registry entry merged in `rshade/finfocus` PR 1720; the Kubecost clean-up is PR 1721. Token: `release-please.yml`
+uses `RELEASE_PLEASE_TOKEN || GITHUB_TOKEN` and the PAT works. A probe step (row OC-9.9, issue 66) is optional
+hardening. Open: the `plugin inspect` gap ("capability discovery not implemented").
 
 ## 1. Scope decision
 
