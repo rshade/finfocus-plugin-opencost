@@ -9,8 +9,8 @@
 
 ## Release and tag rules (family standard, added 2026-10-06)
 
-Every release-please config in this family needs these three settings on the `.` package, and a test that fails
-when any is wrong:
+Release Please settings. Every release-please config in this family needs these three on the `.` package, and a
+test that fails when any is wrong:
 
 1. `"include-component-in-tag": false`. Without it a config that sets `package-name` creates tags like
    `finfocus-plugin-<name>-v0.1.0`. `release.yml` runs on `release: created`, GoReleaser parses the tag as semver,
@@ -19,17 +19,37 @@ when any is wrong:
 3. `.release-please-manifest.json` keeps `"."` at `0.0.0` until the first release PR merges. A `0.1.0` before then
    records 0.1.0 as already shipped.
 
-The test reads `release-please-config.json` and the manifest (`jq` or Go). Break check: delete each key in turn
-and the test fails.
+GoReleaser settings. The release uploads archives and `checksums.txt` only, as aws-public and azure-public do:
+
+- No `dockers`, `dockers_v2`, `homebrew_casks`, `brews` or `nfpms` section, and no deb or rpm. `release.yml` has
+   no registry login, no `packages: write` and no tap token. opencost's config had all three and its package
+   scripts never existed.
+- Use only template fields GoReleaser defines. opencost's `{{if .Dirty}}` failed both release runs with
+   `map has no entry for key "Dirty"`; use `{{ .GitTreeState }}`.
+- Use current keys: `goreleaser check` must exit 0, so no deprecated `archives.format`; use `formats`.
+- Names say `finfocus-plugin-<name>`, never `pulumicost`.
+
+Proof before the first tag, on the pinned GoReleaser version, in the repo or a copy:
+
+```bash
+GORELEASER_CURRENT_TAG=v0.1.0 goreleaser release --snapshot --clean --skip=publish
+goreleaser check
+```
+
+Both must succeed, and the build must write archives and `checksums.txt`. A config that was never built is not a
+working config. Add a test that reads the config and the manifest and fails when a setting above is wrong. Break
+check: reintroduce each defect in turn and the test fails.
 
 A merged release PR is not a release. Done means: the tag is plain `vX.Y.Z`, the GoReleaser run is green, and
 `gh release view vX.Y.Z --json assets --jq '.assets | length'` is above 0. Release tooling (goreleaser,
-release-please, Homebrew, Docker) is ask-first: change it only when the task or the invocation says so. The agent
-never deletes or moves a tag or release; the owner re-cuts one.
+release-please, the release workflow) is ask-first: change it only when the task or the invocation says so. The
+agent never deletes or moves a tag or release; the owner re-cuts one.
 
-State of this repo on 2026-10-06: not compliant. `package-name` is set, `include-component-in-tag` is absent,
-`initial-version` is `0.1.0`. Tag `finfocus-plugin-opencost-v0.1.0` exists and its GoReleaser run failed, so the
-release has no binaries. Row OC-9.15 fixes it; the owner re-cuts the release.
+State of this repo on 2026-10-06: release-please is fixed (`include-component-in-tag` is `false`, merged as #86).
+GoReleaser is fixed in pull request #88: the `.Dirty` ldflag, `dockers_v2`, `homebrew_casks` and `nfpms` are
+removed and a snapshot build succeeds. Tags `v0.1.0` and `v0.1.1` exist with no assets, because both GoReleaser
+runs failed on `.Dirty`. After #88 merges, the owner re-runs the GoReleaser workflow with `workflow_dispatch` and
+the tag.
 
 ## 1. Scope decision
 
@@ -229,7 +249,7 @@ Skip BLOCKED and BLOCKED-ON-INPUT rows.
 | OC-9.12 | [#69](https://github.com/rshade/finfocus-plugin-opencost/issues/69) | Direct once the owner has reviewed the expectation inputs. Extend the kind oracle to controller, pod, and node. Discover the pod name at run time. Do not derive a number from the plugin. Do not edit `testdata/opencost-real/` until the owner has reviewed the values. The controller filter is OC-9.3. | OC-9.3, owner-reviewed expectations | `make e2e-kind` logs an oracle match for each kind. Break: CPU `9.0` diverges for every kind, then restore `2.0`. | BLOCKED-ON-INPUT |
 | OC-9.13 | [#71](https://github.com/rshade/finfocus-plugin-opencost/issues/71) | The kubecost profile needs a Kubecost the agent can call. The kind spike's `GET /model/allocation` was HTTP 404. A live capture uses owner-redacted responses. Label the profile experimental only when the owner chooses that in the invocation. | OC-9.7, a reachable Kubecost | The decision is written in `docs/kubecost-kind-spike.md`. Contract tests still pass. Break: removing the decision line fails that test. | BLOCKED-ON-INPUT |
 | OC-9.14 | [#75](https://github.com/rshade/finfocus-plugin-opencost/issues/75) | Replace `google.golang.org/grpc v1.86.0-dev` when a stable tag contains the GO-2026-6443 fix. Until that tag exists, leave the require line as it is. Land the pin note with the bump, then delete the note. | a stable grpc tag at or above the fix | `govulncheck ./...` prints `No vulnerabilities found.` and `go list -m google.golang.org/grpc` shows the stable tag. Break: `v1.84.0` reports GO-2026-6443, then restore `go.mod` and `go.sum`. | BLOCKED |
-| OC-9.15 | [PR #86](https://github.com/rshade/finfocus-plugin-opencost/pull/86) | Release tooling, the owner approves it in the invocation. Set `"include-component-in-tag": false` on the `.` package in `release-please-config.json` and follow the "Release and tag rules" block near the top. A test reads the config and the manifest and fails when any of the three settings is wrong. The agent does not delete or move tags or releases; the owner re-cuts v0.1.0 | | `go test -count=1 ./... -run ReleasePlease`. Break: delete the key and the test fails. After the owner re-cuts, the GoReleaser run is green and `gh release view v0.1.0 --json assets --jq '.assets \| length'` is above 0 | IN-PROGRESS (Merged as #86: the key is set and tested. It does not repair the existing release. The owner removes the prefixed tag and release and re-cuts v0.1.0 on a plain tag. Release Please PR #84 proposes 0.2.0 until then; do not merge it.) |
+| OC-9.15 | [PR #86](https://github.com/rshade/finfocus-plugin-opencost/pull/86) | Release tooling, the owner approves it in the invocation. Set `"include-component-in-tag": false` on the `.` package in `release-please-config.json` and follow the "Release and tag rules" block near the top. A test reads the config and the manifest and fails when any of the three settings is wrong. The agent does not delete or move tags or releases; the owner re-cuts v0.1.0 | | `go test -count=1 ./... -run ReleasePlease`. Break: delete the key and the test fails. After the owner re-cuts, the GoReleaser run is green and `gh release view v0.1.0 --json assets --jq '.assets \| length'` is above 0 | IN-PROGRESS (Release Please: #86 merged, plain tags `v0.1.0` and `v0.1.1` exist. GoReleaser: both runs failed on the `.Dirty` ldflag, so neither release has assets. Pull request #88 fixes the config and drops Docker, Homebrew and nfpm as azure-public does. Done when the workflow re-run on a tag leaves assets above 0.) |
 | OC-9.16 | [#82](https://github.com/rshade/finfocus-plugin-opencost/pull/82) | Direct. Rebase `issue-64-controller-filter` onto `main` so the commits already merged through #81 drop out, refresh the pull request body (it still says the capture is blocked), and confirm the `Test` check runs. Owner-first: if the owner rebased it already, mark this DONE with the check output | | `git log origin/main..HEAD --oneline` lists only the OC-9.3 and OC-9.8 doc commits. `gh pr checks 82` includes `Test` | DONE (Rebased onto `main` on 2026-10-06 so only the OC-9.3 and OC-9.8 doc commits remain. Body refreshed.) |
 
 Outside this phase: [#63](https://github.com/rshade/finfocus-plugin-opencost/issues/63) (OpenSpec process and its CI gaps) stays open and is not a row. [#76](https://github.com/rshade/finfocus-plugin-opencost/pull/76) was the release pull request and is merged; the release itself needs OC-9.15. [#18](https://github.com/rshade/finfocus-plugin-opencost/issues/18) stays in section 8.
