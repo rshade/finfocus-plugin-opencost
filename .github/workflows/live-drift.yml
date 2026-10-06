@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   drift:
@@ -39,7 +40,19 @@ jobs:
           bash hack/drift/live-up.sh
 
       - name: Compare allocation keys
-        run: bash hack/drift/live-compare.sh
+        id: compare
+        run: |
+          set +e
+          bash hack/drift/live-compare.sh > "${RUNNER_TEMP}/drift.txt" 2>&1
+          code=$?
+          cat "${RUNNER_TEMP}/drift.txt"
+          exit "${code}"
+
+      - name: Open or update one drift issue
+        if: failure() && steps.compare.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash hack/drift/open-issue.sh < "${RUNNER_TEMP}/drift.txt"
 
       - name: Export cluster logs
         if: failure()
