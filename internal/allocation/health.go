@@ -34,7 +34,10 @@ func (c *Client) Probe(ctx context.Context) error {
 	defer resp.Body.Close()
 	_, _ = io.Copy(io.Discard, resp.Body)
 	if resp.StatusCode >= httpClientError {
-		return fmt.Errorf("allocation health: status=%d", resp.StatusCode)
+		return &StatusError{
+			Code: resp.StatusCode,
+			Msg:  fmt.Sprintf("allocation health: status=%d", resp.StatusCode),
+		}
 	}
 	return nil
 }

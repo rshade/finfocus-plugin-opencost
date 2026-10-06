@@ -15,5 +15,5 @@ func (s *Server) Check(ctx context.Context) error {
 		err = s.cli.Probe(ctx)
 	}
 	s.observe(ctx, "HealthCheck", start, err)
-	return err
+	return mapBackendError(err)
 }

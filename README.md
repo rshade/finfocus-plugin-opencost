@@ -26,6 +26,9 @@ The summary counts OK, warning, critical, and exceeded for the budgets the filte
 Those four counts equal the number of budgets.
 Critical stays its own count.
 A request without `include_status` omits the summary.
+A rule with an unsupported interval or no spend limit is skipped with one WARN per rule; the rest are returned.
+The first returned budget carries `skippedRules` and `skippedRuleReasons` in metadata.
+A namespace filter that removes every returned budget also removes that metadata; the WARN log still names each skipped rule.
 That response is a contract fixture and is not verified against live Kubecost.
 That decision is in [docs/allocator-decision.md](docs/allocator-decision.md).
 
@@ -206,7 +209,8 @@ The service in that plan stays unsupported.
 - Message `unknown allocation profile`: set `profile` to `opencost` or `kubecost`.
 - Message `allocation request rate limit exceeded`: the RPC is `ResourceExhausted`. Raise `requestsPerSecond` or `rateBurst`. That call did not reach the API.
 - Certificate errors on a local server: set `KUBECOST_TLS_SKIP_VERIFY` to `true`. Leave verification on for a shared cluster.
-- The `kubecost` profile returns status 401: set `KUBECOST_API_TOKEN`. The `opencost` profile does not send that token.
+- The `kubecost` profile returns status 401: the RPC is `Unauthenticated`. Set `KUBECOST_API_TOKEN`. The `opencost` profile does not send that token.
+- The backend returns status 403: the RPC is `PermissionDenied`. The token in `KUBECOST_API_TOKEN` lacks the permission the endpoint needs.
 - `Supports` names `kubernetes:core/v1:Service`: this plugin has no allocation filter for a Service.
 - Message `no cost data available for resource`: the window has no matching row. `GetActualCost` maps that to `NotFound`.
 - The API returns HTTP 400 as plain text. A rejected window starts with `Invalid 'window' parameter`.
