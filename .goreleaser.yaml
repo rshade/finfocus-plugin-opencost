@@ -26,7 +26,7 @@ builds:
       - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.BuildDate={{.Date}}
       - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitCommit={{.Commit}}
       - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitBranch={{.Branch}}
-      - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitState={{if .Dirty}}dirty{{else}}clean{{end}}
+      - -X github.com/rshade/finfocus-plugin-opencost/pkg/version.GitState={{ .GitTreeState }}
     binary: finfocus-plugin-opencost
     main: ./cmd/finfocus-plugin-opencost
 
@@ -41,47 +41,6 @@ archives:
       - LICENSE
       - plugin.manifest.json
       - config.example.yaml
-
-dockers_v2:
-  - images:
-      - ghcr.io/rshade/finfocus-plugin-opencost
-    tags:
-      - "{{ .Version }}"
-      - latest
-    dockerfile: Dockerfile.goreleaser
-    extra_files:
-      - config.example.yaml
-      - plugin.manifest.json
-
-homebrew_casks:
-  - name: finfocus-plugin-opencost
-    homepage: "https://github.com/rshade/finfocus-plugin-opencost"
-    description: "FinFocus OpenCost cost source, with a kubecost allocation profile"
-    repository:
-      owner: rshade
-      name: homebrew-tap
-    commit_author:
-      name: goreleaserbot
-      email: goreleaser@carlosbecker.com
-    binaries:
-      - finfocus-plugin-opencost
-
-nfpms:
-  - maintainer: "rshade <rshade@example.com>"
-    description: "FinFocus OpenCost cost source, with a kubecost allocation profile"
-    homepage: "https://github.com/rshade/finfocus-plugin-opencost"
-    license: "MIT"
-    formats:
-      - deb
-      - rpm
-    contents:
-      - src: config.example.yaml
-        dst: /etc/finfocus/opencost/config.example.yaml
-      - src: plugin.manifest.json
-        dst: /etc/finfocus/opencost/plugin.manifest.json
-    scripts:
-      postinstall: scripts/postinstall.sh
-      postremove: scripts/postremove.sh
 
 checksum:
   name_template: 'checksums.txt'
