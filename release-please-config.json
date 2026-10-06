@@ -36,7 +36,8 @@
           "hidden": true
         }
       ],
-      "package-name": "finfocus-plugin-opencost"
+      "package-name": "finfocus-plugin-opencost",
+      "include-component-in-tag": false
     }
   }
 }
