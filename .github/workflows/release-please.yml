@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      blank_release_token:
+        description: Treat RELEASE_PLEASE_TOKEN as unset and skip the release action
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -15,6 +21,53 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v5.0.0
+      # A plain `${{ secrets.A || secrets.B }}` falls back only when the left
+      # side is empty. An expired PAT is non-empty and fails later with
+      # "Bad credentials". Probe first so an expired PAT warns and falls back.
+      - name: Resolve release token
+        id: token
+        env:
+          # blank_release_token is a proof input. It does not read or change the stored secret.
+          RELEASE_PLEASE_TOKEN: ${{ github.event.inputs.blank_release_token == 'true' && '' || secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          set -uo pipefail
+
+          fallback_note="The release PR and GitHub Release will still be created \
+          under GITHUB_TOKEN, but events from that token do not trigger \
+          release.yml, so GoReleaser will not publish. Rotate RELEASE_PLEASE_TOKEN. \
+          Permissions and rotation are in CLAUDE.md."
+
+          use_pat=false
+          if [ -z "${RELEASE_PLEASE_TOKEN-}" ]; then
+            echo "::warning title=RELEASE_PLEASE_TOKEN is not set::${fallback_note}"
+          # GH_TOKEN is the environment, not a process argument, so the token is not on the command line.
+          elif GH_TOKEN="${RELEASE_PLEASE_TOKEN}" gh api /user --jq .login >/dev/null 2>/tmp/gh_err; then
+            use_pat=true
+            echo "RELEASE_PLEASE_TOKEN authenticated successfully."
+          else
+            reason=$(tr '\n' ' ' </tmp/gh_err | head -c 200)
+            echo "::warning title=RELEASE_PLEASE_TOKEN is invalid or expired::${reason} ${fallback_note}"
+          fi
+
+          echo "use_pat=${use_pat}" >>"$GITHUB_OUTPUT"
+
+      - name: Release
+        if: github.event.inputs.blank_release_token != 'true'
+        uses: googleapis/release-please-action@v5.0.0
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          # Prefer a PAT so the release event can trigger release.yml.
+          # GITHUB_TOKEN events do not trigger other workflows.
+          # https://github.com/googleapis/release-please-action#github-credentials
+          #
+          # RELEASE_PLEASE_TOKEN is a fine-grained PAT for this repository:
+          #   contents: write
+          #   pull-requests: write
+          #   issues: write
+          #   metadata: read
+          # Do not grant admin:org or packages:write.
+          # Rotate by creating a new PAT, updating this secret, and revoking the old PAT.
+          # Record the new expiry when you rotate. The workflow does not read the secret value.
+          token: >-
+            ${{ steps.token.outputs.use_pat == 'true'
+                && secrets.RELEASE_PLEASE_TOKEN
+                || secrets.GITHUB_TOKEN }}
