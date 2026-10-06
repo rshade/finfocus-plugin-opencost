@@ -54,6 +54,8 @@ func TestEnvParseErrorNamesVariable(t *testing.T) {
 		{"skip verify numeric", "KUBECOST_TLS_SKIP_VERIFY", "1", true},
 		{"skip verify true", "KUBECOST_TLS_SKIP_VERIFY", "true", false},
 		{"skip verify false", "KUBECOST_TLS_SKIP_VERIFY", "false", false},
+		{"insecure http not a boolean", "KUBECOST_ALLOW_INSECURE_HTTP", "yes", true},
+		{"insecure http true", "KUBECOST_ALLOW_INSECURE_HTTP", "true", false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -82,12 +84,12 @@ func TestConfigValidate(t *testing.T) {
 		{"non-http scheme", allocation.Config{BaseURL: "ftp://example.com"}, "baseUrl"},
 		{"no host", allocation.Config{BaseURL: "http://"}, "baseUrl"},
 		{"bare host", allocation.Config{BaseURL: "localhost:9090"}, "baseUrl"},
-		{"unknown profile", allocation.Config{BaseURL: "http://h:1", Profile: "opensost"}, "profile"},
-		{"lowercase currency", allocation.Config{BaseURL: "http://h:1", Currency: "eur"}, "currency"},
-		{"short currency", allocation.Config{BaseURL: "http://h:1", Currency: "EU"}, "currency"},
-		{"negative timeout", allocation.Config{BaseURL: "http://h:1", Timeout: -time.Second}, "timeout"},
-		{"negative rate", allocation.Config{BaseURL: "http://h:1", RequestsPerSecond: -1}, "requestsPerSecond"},
-		{"negative burst", allocation.Config{BaseURL: "http://h:1", RateBurst: -1}, "rateBurst"},
+		{"unknown profile", allocation.Config{BaseURL: "https://h:1", Profile: "opensost"}, "profile"},
+		{"lowercase currency", allocation.Config{BaseURL: "https://h:1", Currency: "eur"}, "currency"},
+		{"short currency", allocation.Config{BaseURL: "https://h:1", Currency: "EU"}, "currency"},
+		{"negative timeout", allocation.Config{BaseURL: "https://h:1", Timeout: -time.Second}, "timeout"},
+		{"negative rate", allocation.Config{BaseURL: "https://h:1", RequestsPerSecond: -1}, "requestsPerSecond"},
+		{"negative burst", allocation.Config{BaseURL: "https://h:1", RateBurst: -1}, "rateBurst"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -101,11 +103,11 @@ func TestConfigValidate(t *testing.T) {
 		name string
 		cfg  allocation.Config
 	}{
-		{"empty profile", allocation.Config{BaseURL: "http://h:1"}},
-		{"opencost profile", allocation.Config{BaseURL: "http://h:1", Profile: allocation.ProfileOpenCost}},
+		{"empty profile", allocation.Config{BaseURL: "https://h:1"}},
+		{"opencost profile", allocation.Config{BaseURL: "https://h:1", Profile: allocation.ProfileOpenCost}},
 		{"kubecost profile", allocation.Config{BaseURL: "https://h:1", Profile: allocation.ProfileKubecost}},
-		{"uppercase currency", allocation.Config{BaseURL: "http://h:1", Currency: "EUR"}},
-		{"zero rate values", allocation.Config{BaseURL: "http://h:1", Timeout: 0, RequestsPerSecond: 0, RateBurst: 0}},
+		{"uppercase currency", allocation.Config{BaseURL: "https://h:1", Currency: "EUR"}},
+		{"zero rate values", allocation.Config{BaseURL: "https://h:1", Timeout: 0, RequestsPerSecond: 0, RateBurst: 0}},
 	}
 	for _, tc := range valids {
 		t.Run("valid "+tc.name, func(t *testing.T) {
@@ -137,8 +139,8 @@ func TestConfigErrorsNeverContainToken(t *testing.T) {
 	for _, cfg := range []allocation.Config{
 		{},
 		{BaseURL: "ftp://example.com"},
-		{BaseURL: "http://h:1", Profile: "opensost"},
-		{BaseURL: "http://h:1", Currency: "eur"},
+		{BaseURL: "https://h:1", Profile: "opensost"},
+		{BaseURL: "https://h:1", Currency: "eur"},
 	} {
 		validateErr := cfg.Validate()
 		require.Error(t, validateErr)
