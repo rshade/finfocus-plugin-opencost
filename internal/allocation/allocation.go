@@ -268,48 +268,6 @@ func DecodeAllocationBody(statusCode int, body []byte) (*DetailedAllocationRespo
 	return &result, nil
 }
 
-// ConvertToSimpleResponse converts detailed allocation to the simple response format.
-func ConvertToSimpleResponse(detailed *DetailedAllocationResponse) Response {
-	var items []Point
-
-	for _, dayData := range detailed.Data {
-		for _, entry := range dayData {
-			// Parse the window times
-			start := entry.Start
-			end := entry.End
-			if start == "" && entry.Window.Start != "" {
-				start = entry.Window.Start
-			}
-			if end == "" && entry.Window.End != "" {
-				end = entry.Window.End
-			}
-
-			items = append(items, Point{
-				Start:       start,
-				End:         end,
-				Cost:        entry.TotalCost,
-				CPUCost:     entry.CPUCost,
-				RAMCost:     entry.RAMCost,
-				GPUCost:     entry.GPUCost,
-				PVCCost:     entry.PVCost,
-				NetworkCost: entry.NetworkCost,
-			})
-		}
-	}
-
-	return Response{Items: items}
-}
-
-// EnhancedAllocation method that uses detailed allocation API to retrieve allocation data.
-func (c *Client) EnhancedAllocation(ctx context.Context, q Query) (Response, error) {
-	detailed, err := c.GetDetailedAllocation(ctx, q)
-	if err != nil {
-		return Response{}, err
-	}
-
-	return ConvertToSimpleResponse(detailed), nil
-}
-
 // FormatTimeWindow formats time window for Kubecost API.
 func FormatTimeWindow(start, end time.Time) string {
 	// Kubecost accepts various formats, RFC3339 is most reliable

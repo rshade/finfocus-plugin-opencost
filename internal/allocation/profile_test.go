@@ -70,7 +70,7 @@ func TestProfileSendsTokenOnlyForKubecost(t *testing.T) {
 		Profile:  allocation.ProfileOpenCost,
 	})
 	require.NoError(t, err)
-	_, err = opencost.EnhancedAllocation(t.Context(), query)
+	_, err = opencost.GetDetailedAllocation(t.Context(), query)
 	require.NoError(t, err)
 	require.Empty(t, gotAuth)
 
@@ -80,7 +80,7 @@ func TestProfileSendsTokenOnlyForKubecost(t *testing.T) {
 		Profile:  allocation.ProfileKubecost,
 	})
 	require.NoError(t, err)
-	_, err = kubecost.EnhancedAllocation(t.Context(), query)
+	_, err = kubecost.GetDetailedAllocation(t.Context(), query)
 	require.NoError(t, err)
 	require.Equal(t, "Bearer secret", gotAuth)
 }
