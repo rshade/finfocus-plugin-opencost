@@ -103,7 +103,7 @@ grpcurl -plaintext localhost:50051 describe CostSource
 
 ### Modifying allocation API calls
 
-The HTTP client in `internal/allocation/client.go` queries the allocation API. Exported allocation types are `Entry`, `Properties`, `Window`, `Query`, `Point`, and `Response`. `DetailedAllocationResponse` keeps its name. To add new endpoints:
+The HTTP client in `internal/allocation/client.go` queries the allocation API. Exported allocation types are `Entry`, `Properties`, `Window`, and `Query`. `DetailedAllocationResponse` keeps its name. `Client.Allocation`, `EnhancedAllocation`, `ConvertToSimpleResponse`, `Point`, and `Response` are gone: they decoded an `items` envelope that OpenCost does not return. The server calls `GetDetailedAllocation`. To add new endpoints:
 
 1. Add new methods to the Client struct
 2. Define request/response types
@@ -143,10 +143,7 @@ The HTTP client in `internal/allocation/client.go` queries the allocation API. E
 
 ### Allocation API Methods
 
-The project has two allocation methods with different capabilities:
-- **Basic `Allocation`**: Simple method, was incomplete (fixed in recent update)
-- **Enhanced `EnhancedAllocation`**: Full-featured method using `GetDetailedAllocation` + `ConvertToSimpleResponse`
-- **Recommendation**: Use `EnhancedAllocation` for new implementations
+The allocation client method the server calls is `GetDetailedAllocation`. It decodes the recorded `{"code","data"}` envelope.
 
 ### Testing Architecture
 

@@ -34,10 +34,10 @@ func TestBackendStatusErrorIsTyped(t *testing.T) {
 		{
 			name: "allocation",
 			call: func() error {
-				_, err := cli.Allocation(t.Context(), allocation.Query{Window: "60m"})
+				_, err := cli.GetDetailedAllocation(t.Context(), allocation.Query{Window: "60m"})
 				return err
 			},
-			want: "kubecost 401",
+			want: "allocation API error: status=401, body=denied",
 		},
 		{
 			name: "prediction",

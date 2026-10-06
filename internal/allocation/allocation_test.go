@@ -253,47 +253,6 @@ func TestGetDetailedAllocation_Error(t *testing.T) {
 	}
 }
 
-func TestConvertToSimpleResponse(t *testing.T) {
-	detailed := &DetailedAllocationResponse{
-		Code:   200,
-		Status: "success",
-		Data: []map[string]Entry{
-			{
-				"test-allocation": {
-					Name: "test-allocation",
-					Window: Window{
-						Start: "2024-01-01T00:00:00Z",
-						End:   "2024-01-01T23:59:59Z",
-					},
-					Start:       "2024-01-01T00:00:00Z",
-					End:         "2024-01-01T23:59:59Z",
-					TotalCost:   100.50,
-					CPUCost:     50.25,
-					RAMCost:     30.15,
-					GPUCost:     10.10,
-					PVCost:      5.00,
-					NetworkCost: 5.00,
-				},
-			},
-		},
-	}
-
-	simple := ConvertToSimpleResponse(detailed)
-
-	if len(simple.Items) != 1 {
-		t.Errorf("Expected 1 item, got %d", len(simple.Items))
-	}
-
-	item := simple.Items[0]
-	if item.Cost != 100.50 {
-		t.Errorf("Expected cost %f, got %f", 100.50, item.Cost)
-	}
-
-	if item.Start != "2024-01-01T00:00:00Z" {
-		t.Errorf("Expected start %s, got %s", "2024-01-01T00:00:00Z", item.Start)
-	}
-}
-
 func TestFormatTimeWindow(t *testing.T) {
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
@@ -347,65 +306,6 @@ func TestParseDurationWindow_Invalid(t *testing.T) {
 	_, _, err = ParseDurationWindow("30x")
 	if err == nil {
 		t.Error("Expected error for invalid duration format")
-	}
-}
-
-func TestEnhancedAllocation(t *testing.T) {
-	// Create test server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{
-			"code": 200,
-			"status": "success",
-			"data": [
-				{
-					"test-allocation": {
-						"name": "test-allocation",
-						"window": {
-							"start": "2024-01-01T00:00:00Z",
-							"end": "2024-01-01T23:59:59Z"
-						},
-						"start": "2024-01-01T00:00:00Z",
-						"end": "2024-01-01T23:59:59Z",
-						"totalCost": 100.50,
-						"cpuCost": 50.25,
-						"ramCost": 30.15,
-						"gpuCost": 10.10,
-						"pvCost": 5.00,
-						"networkCost": 5.00
-					}
-				}
-			]
-		}`))
-	}))
-	defer server.Close()
-
-	client := &Client{
-		cfg: Config{
-			BaseURL:  server.URL,
-			APIToken: "test-token",
-			Timeout:  30 * time.Second,
-		},
-		http: &http.Client{},
-	}
-
-	query := Query{
-		Window: "30d",
-	}
-
-	resp, err := client.EnhancedAllocation(context.Background(), query)
-	if err != nil {
-		t.Fatalf("EnhancedAllocation failed: %v", err)
-	}
-
-	if len(resp.Items) != 1 {
-		t.Errorf("Expected 1 item, got %d", len(resp.Items))
-	}
-
-	item := resp.Items[0]
-	if item.Cost != 100.50 {
-		t.Errorf("Expected cost %f, got %f", 100.50, item.Cost)
 	}
 }
 

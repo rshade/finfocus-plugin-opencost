@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	httpRedirectStatus   = 300
 	httpClientError      = 400
 	pooledIdleConns      = 10
 	dialTimeout          = 5 * time.Second
@@ -110,22 +109,6 @@ type Query struct {
 	AggregateBy []string          // e.g., ["namespace", "controller"]
 }
 
-type Point struct {
-	Start       string  `json:"start"`
-	End         string  `json:"end"`
-	Cost        float64 `json:"cost"`
-	CPUCost     float64 `json:"cpuCost"`
-	RAMCost     float64 `json:"ramCost"`
-	GPUCost     float64 `json:"gpuCost"`
-	PVCCost     float64 `json:"pvcCost"`
-	NetworkCost float64 `json:"networkCost"`
-	// ... add fields as needed
-}
-
-type Response struct {
-	Items []Point `json:"items"`
-}
-
 // SpecCostWindowResourceCost is the kubectl-cost --window-cost default.
 // pkg/cmd/predict.go at 1f45d3085b2ffa84758bfa8131ea8b7784cd8ed1.
 const SpecCostWindowResourceCost = "7d offset 48h"
@@ -163,31 +146,6 @@ type SpecCostDiff struct {
 	CostBefore     CostPrediction `json:"costBefore"`
 	CostAfter      CostPrediction `json:"costAfter"`
 	CostChange     CostPrediction `json:"costChange"`
-}
-
-func (c *Client) Allocation(ctx context.Context, q Query) (Response, error) {
-	url, err := c.BuildAllocationURL(q)
-	if err != nil {
-		return Response{}, err
-	}
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	c.setAuth(req)
-	resp, err := c.do(req)
-	if err != nil {
-		return Response{}, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= httpRedirectStatus {
-		return Response{}, &StatusError{
-			Code: resp.StatusCode,
-			Msg:  fmt.Sprintf("kubecost %d", resp.StatusCode),
-		}
-	}
-	var out Response
-	if decodeErr := json.NewDecoder(resp.Body).Decode(&out); decodeErr != nil {
-		return out, decodeErr
-	}
-	return out, nil
 }
 
 // PredictSpecCost posts a workload spec to /model/prediction/speccost.
