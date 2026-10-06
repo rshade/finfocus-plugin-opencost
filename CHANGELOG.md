@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.3](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.1.2...v0.1.3) (2026-10-06)
+
+
+### Bug Fixes
+
+* **config:** return config parse errors and validate before serving (OC-9.4) ([#91](https://github.com/rshade/finfocus-plugin-opencost/issues/91)) ([2e6d1f3](https://github.com/rshade/finfocus-plugin-opencost/commit/2e6d1f37127130ebfb7ee29b82e876aafb2055ba))
+* **server:** skip invalid budget rules and map backend 401/403 (OC-9.5) ([#94](https://github.com/rshade/finfocus-plugin-opencost/issues/94)) ([f631fde](https://github.com/rshade/finfocus-plugin-opencost/commit/f631fde7e25d3e8b07cae7672cd7eb6c8e8a3f65))
+
+
+### Documentation
+
+* **tasks:** sync the release block and Phase 9 rows (OC-9.15) ([#90](https://github.com/rshade/finfocus-plugin-opencost/issues/90)) ([d97fc66](https://github.com/rshade/finfocus-plugin-opencost/commit/d97fc663cf476aafb4c6c89a1e251f533e1b54b2))
+
 ## [0.1.2](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.1.1...v0.1.2) (2026-10-06)
 
 
