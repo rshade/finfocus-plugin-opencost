@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -36,14 +39,47 @@ type Client struct {
 	limiter *limiter
 }
 
+const tlsSkipVerifyWarning = "TLS certificate verification is disabled"
+
 func NewClient(_ context.Context, cfg Config) (*Client, error) {
+	var roots *x509.CertPool
+	if cfg.CACertFile != "" {
+		var err error
+		roots, err = rootPool(cfg.CACertFile)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &Client{
 		cfg:     cfg,
-		http:    httpClient(cfg),
+		http:    httpClient(cfg, roots),
 		now:     time.Now,
 		cache:   newResponseCache(resolvedCacheTTL(cfg.CacheTTL)),
 		limiter: newLimiter(cfg.RequestsPerSecond, cfg.RateBurst),
 	}, nil
+}
+
+// WarnIfTLSSkipped logs one warning when certificate verification is off.
+func (c Config) WarnIfTLSSkipped(logger zerolog.Logger) {
+	if !c.TLSSkipVerify {
+		return
+	}
+	logger.Warn().Msg(tlsSkipVerifyWarning)
+}
+
+func rootPool(path string) (*x509.CertPool, error) {
+	pemBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("config: caCertFile: %w", err)
+	}
+	pool, err := x509.SystemCertPool()
+	if err != nil || pool == nil {
+		pool = x509.NewCertPool()
+	}
+	if !pool.AppendCertsFromPEM(pemBytes) {
+		return nil, errors.New("config: caCertFile did not contain a PEM certificate")
+	}
+	return pool, nil
 }
 
 func (c *Client) clock() time.Time {
@@ -62,7 +98,7 @@ func (c *Client) SetLogger(logger zerolog.Logger) {
 	c.logger = logger
 }
 
-func httpClient(cfg Config) *http.Client {
+func httpClient(cfg Config, roots *x509.CertPool) *http.Client {
 	headerTimeout := cfg.Timeout
 	if headerTimeout <= 0 {
 		headerTimeout = defaultTimeoutDuration
@@ -82,6 +118,7 @@ func httpClient(cfg Config) *http.Client {
 			ExpectContinueTimeout: expectContinuePeriod,
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: cfg.TLSSkipVerify, //nolint:gosec // explicit opt-in, off by default
+				RootCAs:            roots,
 			},
 		},
 	}

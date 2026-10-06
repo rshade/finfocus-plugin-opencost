@@ -51,8 +51,8 @@ A missing file leaves the environment values in place, even when the path is a t
 Precedence runs defaults first, then the environment, then the file for the keys it sets.
 `OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, and `KUBECOST_API_TOKEN` are read again after the file and always win.
 
-A file that does not parse, a `KUBECOST_TIMEOUT` value that is not a duration, or a `KUBECOST_TLS_SKIP_VERIFY` value other than `true` or `false` stops startup with an error that names the file or the variable.
-Before serving, the plugin validates the config: `baseUrl` must be an `http` or `https` URL with a host, `profile` must be empty, `opencost`, or `kubecost`, a set `currency` must be three upper-case letters, and `timeout`, `requestsPerSecond`, and `rateBurst` must not be negative.
+A file that does not parse, a `KUBECOST_TIMEOUT` value that is not a duration, or a `KUBECOST_TLS_SKIP_VERIFY` or `KUBECOST_ALLOW_INSECURE_HTTP` value other than `true` or `false` stops startup with an error that names the file or the variable.
+Before serving, the plugin validates the config: `baseUrl` must be an `https` URL with a host, or an `http` URL on `localhost`, `127.0.0.0/8`, or `::1`, unless `allowInsecureHttp` is set. `profile` must be empty, `opencost`, or `kubecost`. A set `currency` must be three upper-case letters. `timeout`, `requestsPerSecond`, and `rateBurst` must not be negative. A set `caCertFile` must be a PEM file the process can read.
 A failure exits with a one-line reason.
 No error or log line contains the API token.
 
@@ -69,13 +69,24 @@ Request logs do not include the token.
 | `currency` | `OPENCOST_CURRENCY` | empty | ISO 4217 code used when the body does not name one currency. The environment variable wins. The plugin does not assume USD. |
 | `defaultWindow` | `KUBECOST_DEFAULT_WINDOW` | `30d` | Stored on the client. Cost methods send their own window. |
 | `timeout` | `KUBECOST_TIMEOUT` | `15s` | HTTP client timeout. |
-| `tlsSkipVerify` | `KUBECOST_TLS_SKIP_VERIFY` | `false` | Set the variable to `true` to skip certificate checks. Leave it unset on a shared cluster. |
+| `tlsSkipVerify` | `KUBECOST_TLS_SKIP_VERIFY` | `false` | Set the variable to `true` to skip certificate checks. Startup then logs one warning. Leave it unset on a shared cluster. |
+| `allowInsecureHttp` | `KUBECOST_ALLOW_INSECURE_HTTP` | `false` | Allow an `http` base URL whose host is not loopback. `http://localhost` works with this left `false`. |
+| `caCertFile` | `KUBECOST_CA_CERT_FILE` | empty | PEM bundle added to the system trust pool. A missing or unparsable file stops startup. |
 | `cacheTTL` | none | `30s` | How long a successful allocation URL is reused. `0s` selects 30 seconds. A negative value disables the cache. |
 | `requestsPerSecond` | none | `10` | Outbound allocation rate. `0` selects 10 per second. Past that limit, the call is `ResourceExhausted` and does not reach the backend. |
 | `rateBurst` | none | `20` | How many outbound requests may run together. `0` selects 20. |
 | `clusterId` | `KUBECOST_CLUSTER_ID` | empty | Profile `kubecost` `EstimateCost` sends this as `clusterID`. Other cost methods do not. |
 | `defaultNamespace` | `KUBECOST_DEFAULT_NAMESPACE` | `default` | Profile `kubecost` `EstimateCost` sends this as `defaultNamespace`. Other cost methods do not. |
 | `predictionWindow` | `KUBECOST_PREDICTION_WINDOW` | `2d` | Profile `kubecost` `EstimateCost` sends this as `windowAvgUsage`. Other cost methods do not. |
+
+## Security
+
+gRPC authentication is a non-goal. FinFocus starts this plugin and dials it on `127.0.0.1`.
+
+A non-loopback `http` base URL stops startup unless `allowInsecureHttp` is set.
+`http://localhost` and other loopback hosts still start.
+When `tlsSkipVerify` is on, startup logs one warning and the line does not include the API token.
+`caCertFile` trusts a private CA without turning verification off.
 
 ## Profiles
 
