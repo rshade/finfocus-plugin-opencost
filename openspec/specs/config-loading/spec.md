@@ -1,6 +1,7 @@
 # config-loading Specification
 
 ## Purpose
+
 Load configuration from the environment and an optional YAML file, report
 parse errors with the file path or variable name, and validate the result
 before the plugin serves so a bad config stops startup with a one-line
@@ -8,7 +9,7 @@ reason.
 
 ## Requirements
 
-### Requirement: Config file parse errors name the file
+### Requirement: Configuration file parse errors name the file
 
 A config file that fails to parse SHALL be an error naming the file path.
 A missing config file SHALL be tolerated and leaves the environment and
@@ -44,7 +45,7 @@ error naming `KUBECOST_TIMEOUT`. A set `KUBECOST_TLS_SKIP_VERIFY` other
 than `true` or `false` SHALL be an error naming
 `KUBECOST_TLS_SKIP_VERIFY`. An unset or empty variable keeps the default.
 
-#### Scenario: Unparseable timeout
+#### Scenario: Timeout without a unit
 
 - **WHEN** `KUBECOST_TIMEOUT` is `30` with no unit
 - **THEN** loading fails with an error containing `KUBECOST_TIMEOUT`
