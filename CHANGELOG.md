@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.1.1...v0.1.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* **release:** build archives only and use a real git state field (OC-9.15) ([#88](https://github.com/rshade/finfocus-plugin-opencost/issues/88)) ([54de975](https://github.com/rshade/finfocus-plugin-opencost/commit/54de97530819368712272873864722ae59b7277d))
+
 ## [0.1.1](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.1.0...v0.1.1) (2026-10-06)
 
 
