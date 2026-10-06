@@ -16,8 +16,8 @@ Adapted from the `pick-issue` command in `gojev` (OpenSpec) and in `finfocus`
   Posting a claim or release comment is a public write; do it only if the
   owner turns claims on in the request.
 - **GitHub writes are one pull request, plus an out-of-date close.** Read with
-  `gh issue view`, `gh issue list`, and `gh api` GETs. Branch from `origin/main`,
-  push that branch, and open one pull request. Watch its checks and push fixes
+  `gh issue view`, `gh issue list`, and `gh api` GETs. Branch from `origin/main`
+  (or from the previous open issue branch when stacking), push that branch, and open one pull request. Watch its checks and push fixes
   to the same branch. The owner merges. Put `Closes #N` in the pull request body
   when the pull request finishes the issue. Close an issue with `gh issue close`
   only after a command shows the current code already satisfies it or the issue
@@ -40,7 +40,7 @@ Adapted from the `pick-issue` command in `gojev` (OpenSpec) and in `finfocus`
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 git fetch origin
-git rev-parse --abbrev-ref HEAD    # main, equal to origin/main, before you branch
+git rev-parse --abbrev-ref HEAD    # main equal to origin/main, or the previous issue branch when stacking
 git status --short                 # tracked files clean
 git rev-parse HEAD origin/main
 mise exec -- openspec list --json  # .root.path must be $ROOT
@@ -158,8 +158,8 @@ the oracle to make a gate pass.
 
 Pull request mode is on (owner, 2026-10-04). Open one pull request, watch its
 checks, and push fixes to that branch. The owner merges. Stack the next issue
-on the previous open pull request. Do not wait for that merge. Release pull
-request #76 waits until OC-9.1 and OC-9.2 have landed. Phases 1 to 8 stayed
+on the previous open pull request. Do not wait for that merge. After a base merges, rebase the next
+branch onto `main`. Phases 1 to 8 stayed
 on the local run branch under the 2026-10-03 rule.
 
 ## Phase 5: Report and stop
