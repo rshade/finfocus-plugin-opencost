@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"net/http"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,6 +41,20 @@ func mapBackendError(err error) error {
 	}
 	if allocation.IsRateLimited(err) {
 		return status.Error(codes.ResourceExhausted, err.Error())
+	}
+	if code, ok := allocation.HTTPStatus(err); ok {
+		switch code {
+		case http.StatusUnauthorized:
+			return status.Error(
+				codes.Unauthenticated,
+				"kubecost rejected the credentials (HTTP 401); check KUBECOST_API_TOKEN",
+			)
+		case http.StatusForbidden:
+			return status.Error(
+				codes.PermissionDenied,
+				"kubecost rejected the credentials (HTTP 403); check KUBECOST_API_TOKEN",
+			)
+		}
 	}
 	if errors.Is(err, context.DeadlineExceeded) || status.Code(err) == codes.DeadlineExceeded {
 		return status.Error(codes.DeadlineExceeded, "allocation query timed out")

@@ -1,10 +1,6 @@
-# cost-errors Specification
+# Spec Delta
 
-## Purpose
-
-Map cost RPC failures to explicit gRPC codes, and return a real zero cost instead of hiding it.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Cost RPCs use explicit status codes
 
@@ -70,19 +66,3 @@ SHALL NOT contain the token. Other 4xx and 5xx statuses SHALL stay
 
 - **WHEN** a backend call gets HTTP 400, 404, or 500
 - **THEN** the status is `Unavailable`
-
-### Requirement: A real zero stays zero
-
-A matching allocation whose total is zero SHALL return one result with cost
-zero. A matching nonzero total SHALL be returned unchanged.
-
-#### Scenario: Zero total
-
-- **WHEN** the matching allocation total is 0
-- **THEN** the call succeeds
-- **AND** the single result cost is 0
-
-#### Scenario: Nonzero total
-
-- **WHEN** the matching allocation total is 1.25
-- **THEN** the single result cost is 1.25

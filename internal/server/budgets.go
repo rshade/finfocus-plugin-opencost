@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -38,10 +39,7 @@ func (s *Server) GetBudgets(
 		if err != nil {
 			return nil, err
 		}
-		budgets, err := namespaceBudgets(rules, currency, req.GetIncludeStatus())
-		if err != nil {
-			return nil, err
-		}
+		budgets := namespaceBudgets(s.logger, rules, currency, req.GetIncludeStatus())
 		filtered := filterBudgets(budgets, req.GetFilter())
 		resp := &pbc.GetBudgetsResponse{Budgets: filtered}
 		if req.GetIncludeStatus() {
@@ -51,8 +49,18 @@ func (s *Server) GetBudgets(
 	})
 }
 
-func namespaceBudgets(rules []allocation.BudgetRule, currency string, includeStatus bool) ([]*pbc.Budget, error) {
+// namespaceBudgets maps rules to budgets. A rule budgetFromRule rejects is
+// skipped with one WARN; the rest are returned. The first returned budget
+// carries the skip count and reasons in metadata. An all-invalid list is
+// empty, not an error.
+func namespaceBudgets(
+	logger zerolog.Logger,
+	rules []allocation.BudgetRule,
+	currency string,
+	includeStatus bool,
+) []*pbc.Budget {
 	budgets := make([]*pbc.Budget, 0, len(rules))
+	var skipped []string
 	for _, rule := range rules {
 		names := nonemptyNames(rule.Values["namespace"])
 		if len(names) == 0 {
@@ -60,7 +68,10 @@ func namespaceBudgets(rules []allocation.BudgetRule, currency string, includeSta
 		}
 		budget, err := budgetFromRule(rule, names[0], currency, includeStatus)
 		if err != nil {
-			return nil, err
+			reason := status.Convert(err).Message()
+			logger.Warn().Str("rule", rule.ID).Str("reason", reason).Msg("skipping invalid budget rule")
+			skipped = append(skipped, rule.ID+": "+reason)
+			continue
 		}
 		if len(names) > 1 {
 			// One rule has one spend limit. Keep every name on that budget
@@ -70,7 +81,15 @@ func namespaceBudgets(rules []allocation.BudgetRule, currency string, includeSta
 		}
 		budgets = append(budgets, budget)
 	}
-	return budgets, nil
+	if len(skipped) > 0 && len(budgets) > 0 {
+		first := budgets[0]
+		if first.Metadata == nil {
+			first.Metadata = map[string]string{}
+		}
+		first.Metadata["skippedRules"] = strconv.Itoa(len(skipped))
+		first.Metadata["skippedRuleReasons"] = strings.Join(skipped, "; ")
+	}
+	return budgets
 }
 
 func nonemptyNames(names []string) []string {

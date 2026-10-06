@@ -178,7 +178,10 @@ func (c *Client) Allocation(ctx context.Context, q Query) (Response, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= httpRedirectStatus {
-		return Response{}, fmt.Errorf("kubecost %d", resp.StatusCode)
+		return Response{}, &StatusError{
+			Code: resp.StatusCode,
+			Msg:  fmt.Sprintf("kubecost %d", resp.StatusCode),
+		}
 	}
 	var out Response
 	if decodeErr := json.NewDecoder(resp.Body).Decode(&out); decodeErr != nil {
@@ -238,7 +241,10 @@ func (c *Client) PredictSpecCost(ctx context.Context, req PredictionRequest) ([]
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= httpClientError {
-		return nil, fmt.Errorf("prediction API error: status=%d", resp.StatusCode)
+		return nil, &StatusError{
+			Code: resp.StatusCode,
+			Msg:  fmt.Sprintf("prediction API error: status=%d", resp.StatusCode),
+		}
 	}
 	var rows []SpecCostDiff
 	if decodeErr := json.NewDecoder(resp.Body).Decode(&rows); decodeErr != nil {

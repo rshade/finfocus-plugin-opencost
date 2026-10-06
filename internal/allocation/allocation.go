@@ -253,7 +253,10 @@ func allocationFromCache(hit cachedBody) (*DetailedAllocationResponse, error) {
 func DecodeAllocationBody(statusCode int, body []byte) (*DetailedAllocationResponse, error) {
 	trimmed := bytes.TrimSpace(body)
 	if statusCode >= httpClientErrorStatus || (len(trimmed) > 0 && trimmed[0] != '{') {
-		return nil, fmt.Errorf("allocation API error: status=%d, body=%s", statusCode, string(trimmed))
+		return nil, &StatusError{
+			Code: statusCode,
+			Msg:  fmt.Sprintf("allocation API error: status=%d, body=%s", statusCode, string(trimmed)),
+		}
 	}
 	var result DetailedAllocationResponse
 	if err := json.Unmarshal(trimmed, &result); err != nil {

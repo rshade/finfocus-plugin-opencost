@@ -68,7 +68,10 @@ func (c *Client) ListBudgets(ctx context.Context) ([]BudgetRule, error) {
 		return nil, fmt.Errorf("reading response: %w", err)
 	}
 	if resp.StatusCode >= httpClientError {
-		return nil, fmt.Errorf("budget API error: status=%d", resp.StatusCode)
+		return nil, &StatusError{
+			Code: resp.StatusCode,
+			Msg:  fmt.Sprintf("budget API error: status=%d", resp.StatusCode),
+		}
 	}
 	var listed struct {
 		Code int          `json:"code"`
@@ -78,7 +81,10 @@ func (c *Client) ListBudgets(ctx context.Context) ([]BudgetRule, error) {
 		return nil, fmt.Errorf("decoding response: %w", decodeErr)
 	}
 	if listed.Code >= httpClientError {
-		return nil, fmt.Errorf("budget API error: status=%d", listed.Code)
+		return nil, &StatusError{
+			Code: listed.Code,
+			Msg:  fmt.Sprintf("budget API error: status=%d", listed.Code),
+		}
 	}
 	return listed.Data, nil
 }
