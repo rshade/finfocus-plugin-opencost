@@ -18,21 +18,31 @@ func TestDockerfileBuildsPluginBinary(t *testing.T) {
 	require.Contains(t, text, `ENTRYPOINT ["/finfocus-plugin-opencost"]`)
 }
 
-func TestGoReleaserDockerfileCopiesBuiltBinary(t *testing.T) {
+func TestGoReleaserPublishesArchivesOnly(t *testing.T) {
+	t.Parallel()
+
+	var config map[string]any
+	require.NoError(t, yaml.Unmarshal(readRepoFile(t, ".goreleaser.yaml"), &config))
+	for _, key := range []string{"dockers", "dockers_v2", "homebrew_casks", "brews", "nfpms"} {
+		require.NotContains(t, config, key, "the release uploads archives and checksums only")
+	}
+	require.Contains(t, config, "archives")
+	require.Contains(t, config, "checksum")
+}
+
+func TestGoReleaserLdflagsUseKnownGitFields(t *testing.T) {
 	t.Parallel()
 
 	var config struct {
-		Dockers []struct {
-			Dockerfile string `yaml:"dockerfile"`
-		} `yaml:"dockers_v2"`
+		Builds []struct {
+			Ldflags []string `yaml:"ldflags"`
+		} `yaml:"builds"`
 	}
 	require.NoError(t, yaml.Unmarshal(readRepoFile(t, ".goreleaser.yaml"), &config))
-	require.NotEmpty(t, config.Dockers)
-	name := config.Dockers[0].Dockerfile
-	require.NotEmpty(t, name)
-	text := string(readRepoFile(t, name))
-	require.Contains(t, text, "COPY $TARGETPLATFORM/finfocus-plugin-opencost /finfocus-plugin-opencost")
-	require.Contains(t, text, `ENTRYPOINT ["/finfocus-plugin-opencost"]`)
+	require.NotEmpty(t, config.Builds)
+	for _, flag := range config.Builds[0].Ldflags {
+		require.NotContains(t, flag, ".Dirty", "GoReleaser has no Dirty field; use GitTreeState")
+	}
 }
 
 func TestCIBuildsAndSmokeRunsTheImage(t *testing.T) {
