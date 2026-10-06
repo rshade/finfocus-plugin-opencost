@@ -28,6 +28,7 @@ Critical stays its own count.
 A request without `include_status` omits the summary.
 A rule with an unsupported interval or no spend limit is skipped with one WARN per rule; the rest are returned.
 The first returned budget carries `skippedRules` and `skippedRuleReasons` in metadata.
+A namespace filter that removes every returned budget also removes that metadata; the WARN log still names each skipped rule.
 That response is a contract fixture and is not verified against live Kubecost.
 That decision is in [docs/allocator-decision.md](docs/allocator-decision.md).
 

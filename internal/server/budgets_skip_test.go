@@ -70,8 +70,7 @@ func TestGetBudgetsSkipsInvalidRules(t *testing.T) {
 	require.NotContains(t, reasons, "empty-ns")
 }
 
-func TestGetBudgetsSkipsAllInvalidRules(t *testing.T) {
-	t.Parallel()
+func TestGetBudgetsSkipsAllInvalidRules(t *testing.T) {	t.Parallel()
 
 	body := `{"code":200,"data":[` +
 		`{"name":"bad","id":"daily-budget","values":{"namespace":["bad"]},` +
@@ -87,4 +86,30 @@ func TestGetBudgetsSkipsAllInvalidRules(t *testing.T) {
 	require.Equal(t, int32(0), resp.GetSummary().GetTotalBudgets())
 	require.Contains(t, logs.String(), "daily-budget")
 	require.NotContains(t, logs.String(), authTestToken)
+}
+
+// Pinning test: a namespace filter that excludes every returned budget
+// also drops the skip metadata, because it lives on the first budget.
+// The WARN log still names each skipped rule. Ruled and documented in
+// the README; a warnings field is a proto change and out of scope.
+func TestGetBudgetsFilterOnSkippedNamespaceReturnsEmpty(t *testing.T) {
+	t.Parallel()
+
+	srv := kubecostServer(t, budgetsBackend(t, mixedBudgetsBody))
+	var logs bytes.Buffer
+	srv.SetLogger(zerolog.New(&logs))
+
+	resp, err := srv.GetBudgets(t.Context(), &pbc.GetBudgetsRequest{
+		IncludeStatus: true,
+		Filter:        &pbc.BudgetFilter{Tags: map[string]string{"namespace": "bad"}},
+	})
+	require.NoError(t, err)
+	require.Empty(t, resp.GetBudgets())
+	require.Equal(t, int32(0), resp.GetSummary().GetTotalBudgets())
+	require.Contains(t, logs.String(), "daily-budget")
+
+	unfiltered, err := srv.GetBudgets(t.Context(), &pbc.GetBudgetsRequest{})
+	require.NoError(t, err)
+	require.NotEmpty(t, unfiltered.GetBudgets())
+	require.Equal(t, "2", unfiltered.GetBudgets()[0].GetMetadata()["skippedRules"])
 }
