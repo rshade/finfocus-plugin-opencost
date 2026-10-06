@@ -2,6 +2,7 @@ package allocation //nolint:testpackage // Package name intentionally matches im
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -225,27 +226,39 @@ func TestGetenvDuration(t *testing.T) {
 	t.Setenv("TEST_DURATION", "30s")
 	defer os.Unsetenv("TEST_DURATION")
 
-	result := getenvDuration("TEST_DURATION", 15*time.Second)
+	result, err := getenvDuration("TEST_DURATION", 15*time.Second)
+	if err != nil {
+		t.Fatalf("getenvDuration failed: %v", err)
+	}
 	if result != 30*time.Second {
 		t.Errorf("Expected %v, got %v", 30*time.Second, result)
 	}
 
-	// Test with invalid duration
+	// Test with invalid duration: an error names the variable
 	t.Setenv("INVALID_DURATION", "invalid")
-	result = getenvDuration("INVALID_DURATION", 15*time.Second)
-	if result != 15*time.Second {
-		t.Errorf("Expected %v, got %v", 15*time.Second, result)
+	_, err = getenvDuration("INVALID_DURATION", 15*time.Second)
+	if err == nil {
+		t.Fatal("Expected an error for an invalid duration, got nil")
+	}
+	if !strings.Contains(err.Error(), "INVALID_DURATION") {
+		t.Errorf("Expected the error to name INVALID_DURATION, got %v", err)
 	}
 
 	// Test with environment variable not set
-	result = getenvDuration("NONEXISTENT_DURATION", 15*time.Second)
+	result, err = getenvDuration("NONEXISTENT_DURATION", 15*time.Second)
+	if err != nil {
+		t.Fatalf("getenvDuration failed: %v", err)
+	}
 	if result != 15*time.Second {
 		t.Errorf("Expected %v, got %v", 15*time.Second, result)
 	}
 
 	// Test with complex duration
 	t.Setenv("COMPLEX_DURATION", "1h30m")
-	result = getenvDuration("COMPLEX_DURATION", 15*time.Second)
+	result, err = getenvDuration("COMPLEX_DURATION", 15*time.Second)
+	if err != nil {
+		t.Fatalf("getenvDuration failed: %v", err)
+	}
 	expected := 1*time.Hour + 30*time.Minute
 	if result != expected {
 		t.Errorf("Expected %v, got %v", expected, result)

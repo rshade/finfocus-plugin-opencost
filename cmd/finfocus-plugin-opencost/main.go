@@ -44,6 +44,10 @@ func run() int {
 		logger.Error().Err(err).Msg("config")
 		return 1
 	}
+	if validateErr := cfg.Validate(); validateErr != nil {
+		logger.Error().Err(validateErr).Msg("config")
+		return 1
+	}
 	cli, err := allocation.NewClient(context.Background(), cfg)
 	if err != nil {
 		logger.Error().Err(err).Msg("client")

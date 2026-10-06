@@ -43,8 +43,15 @@ make install
 
 The process reads the file in `OPENCOST_CONFIG`.
 When `OPENCOST_CONFIG` is empty, it reads `KUBECOST_CONFIG`.
-A missing file leaves the environment values in place.
-`OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, and `KUBECOST_API_TOKEN` replace the file after it is read.
+A missing file leaves the environment values in place, even when the path is a typo.
+
+Precedence runs defaults first, then the environment, then the file for the keys it sets.
+`OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, and `KUBECOST_API_TOKEN` are read again after the file and always win.
+
+A file that does not parse, a `KUBECOST_TIMEOUT` value that is not a duration, or a `KUBECOST_TLS_SKIP_VERIFY` value other than `true` or `false` stops startup with an error that names the file or the variable.
+Before serving, the plugin validates the config: `baseUrl` must be an `http` or `https` URL with a host, `profile` must be empty, `opencost`, or `kubecost`, a set `currency` must be three upper-case letters, and `timeout`, `requestsPerSecond`, and `rateBurst` must not be negative.
+A failure exits with a one-line reason.
+No error or log line contains the API token.
 
 The API token is `KUBECOST_API_TOKEN` only.
 A YAML `apiToken` field is ignored.
