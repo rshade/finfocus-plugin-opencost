@@ -70,7 +70,8 @@ func TestGetBudgetsSkipsInvalidRules(t *testing.T) {
 	require.NotContains(t, reasons, "empty-ns")
 }
 
-func TestGetBudgetsSkipsAllInvalidRules(t *testing.T) {	t.Parallel()
+func TestGetBudgetsSkipsAllInvalidRules(t *testing.T) {
+	t.Parallel()
 
 	body := `{"code":200,"data":[` +
 		`{"name":"bad","id":"daily-budget","values":{"namespace":["bad"]},` +
