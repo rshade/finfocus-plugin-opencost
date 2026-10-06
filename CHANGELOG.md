@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.1.0...v0.1.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* **allocation:** filter controllers on controllerName (OC-9.3) ([#82](https://github.com/rshade/finfocus-plugin-opencost/issues/82)) ([1b5ecec](https://github.com/rshade/finfocus-plugin-opencost/commit/1b5ecec1b117ba1fb63ef5d0e95987de6bf60fa1))
+* **release:** keep the component out of the release tag (OC-9.15) ([#86](https://github.com/rshade/finfocus-plugin-opencost/issues/86)) ([2da0fef](https://github.com/rshade/finfocus-plugin-opencost/commit/2da0fef02f2229b3298b426719d8a81388c47e2a))
+
 ## 0.1.0 (2026-10-05)
 
 
