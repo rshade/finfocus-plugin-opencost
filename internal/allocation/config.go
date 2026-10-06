@@ -3,8 +3,10 @@ package allocation
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -27,6 +29,10 @@ type Config struct {
 	DefaultWindow string        `yaml:"defaultWindow"` // e.g. "30d"
 	Timeout       time.Duration `yaml:"timeout"`
 	TLSSkipVerify bool          `yaml:"tlsSkipVerify"`
+	// AllowInsecureHTTP permits a non-loopback http base URL.
+	AllowInsecureHTTP bool `yaml:"allowInsecureHttp"`
+	// CACertFile is a PEM bundle added to the system trust pool.
+	CACertFile string `yaml:"caCertFile"`
 	// Prediction API specific configuration
 	ClusterID        string `yaml:"clusterId"`
 	DefaultNamespace string `yaml:"defaultNamespace"`
@@ -51,17 +57,23 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	allowInsecure, err := getenvBool("KUBECOST_ALLOW_INSECURE_HTTP")
+	if err != nil {
+		return Config{}, err
+	}
 	cfg := Config{
-		BaseURL:          os.Getenv("KUBECOST_BASE_URL"),
-		APIToken:         os.Getenv("KUBECOST_API_TOKEN"),
-		Profile:          os.Getenv("OPENCOST_PROFILE"),
-		DefaultWindow:    getenvDefault("KUBECOST_DEFAULT_WINDOW", "30d"),
-		Timeout:          timeout,
-		TLSSkipVerify:    skipVerify,
-		ClusterID:        os.Getenv("KUBECOST_CLUSTER_ID"),
-		DefaultNamespace: getenvDefault("KUBECOST_DEFAULT_NAMESPACE", "default"),
-		PredictionWindow: getenvDefault("KUBECOST_PREDICTION_WINDOW", "2d"),
-		Currency:         os.Getenv("OPENCOST_CURRENCY"),
+		BaseURL:           os.Getenv("KUBECOST_BASE_URL"),
+		APIToken:          os.Getenv("KUBECOST_API_TOKEN"),
+		Profile:           os.Getenv("OPENCOST_PROFILE"),
+		DefaultWindow:     getenvDefault("KUBECOST_DEFAULT_WINDOW", "30d"),
+		Timeout:           timeout,
+		TLSSkipVerify:     skipVerify,
+		AllowInsecureHTTP: allowInsecure,
+		CACertFile:        os.Getenv("KUBECOST_CA_CERT_FILE"),
+		ClusterID:         os.Getenv("KUBECOST_CLUSTER_ID"),
+		DefaultNamespace:  getenvDefault("KUBECOST_DEFAULT_NAMESPACE", "default"),
+		PredictionWindow:  getenvDefault("KUBECOST_PREDICTION_WINDOW", "2d"),
+		Currency:          os.Getenv("OPENCOST_CURRENCY"),
 	}
 	if path != "" {
 		b, readErr := os.ReadFile(path)
@@ -91,6 +103,14 @@ func (c Config) Validate() error {
 	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
 		return errors.New("config: baseUrl must be an http(s) URL with a host")
 	}
+	if u.Scheme == "http" && !c.AllowInsecureHTTP && !loopbackHost(u.Hostname()) {
+		return errors.New("config: base URL uses http; use https or set allowInsecureHttp")
+	}
+	if c.CACertFile != "" {
+		if _, caErr := rootPool(c.CACertFile); caErr != nil {
+			return caErr
+		}
+	}
 	switch c.Profile {
 	case "", ProfileOpenCost, ProfileKubecost:
 	default:
@@ -112,6 +132,14 @@ func (c Config) Validate() error {
 }
 
 const currencyCodeLength = 3
+
+func loopbackHost(host string) bool {
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
+}
 
 func isCurrencyCode(s string) bool {
 	if len(s) != currencyCodeLength {
