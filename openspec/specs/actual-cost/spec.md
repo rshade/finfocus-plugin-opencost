@@ -12,6 +12,8 @@ Return recorded allocation totals for one namespace, controller, pod, or node.
 aggregate derived from the resource id, and SHALL return only rows for that
 object. Each result cost SHALL be that row's typed `totalCost`. A real zero
 SHALL be returned. No match SHALL be `NotFound` with `NO_COST_DATA`.
+A controller resource SHALL filter on `controllerName` and SHALL aggregate
+by `namespace,controller`.
 
 #### Scenario: Namespace total from the recorded envelope
 
@@ -22,7 +24,7 @@ SHALL be returned. No match SHALL be `NotFound` with `NO_COST_DATA`.
 #### Scenario: Controller total
 
 - **WHEN** the resource id is `controller/oc-test/fixed` and the body is `allocation-controller-60m.json`
-- **THEN** the query filter is `controller:"fixed"+namespace:"oc-test"` and the aggregate is `namespace,controller`
+- **THEN** the query filter is `controllerName:"fixed"+namespace:"oc-test"` and the aggregate is `namespace,controller`
 - **AND** the response has one result for allocation `oc-test/deployment:fixed`
 
 #### Scenario: Pod total

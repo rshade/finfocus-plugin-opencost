@@ -68,9 +68,9 @@ func TestProjectedCostPrefersAttributeMetadataOverTags(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Contains(t, filter, `namespace:"oc-example"`)
-	require.Contains(t, filter, `controller:"fixed"`)
+	require.Contains(t, filter, `controllerName:"fixed"`)
 	require.NotContains(t, filter, `namespace:"other"`)
-	require.NotContains(t, filter, `controller:"also-wrong"`)
+	require.NotContains(t, filter, `controllerName:"also-wrong"`)
 	require.InDelta(t, 3.0/1.0*730, resp.GetCostPerMonth(), 1e-6)
 }
 
@@ -96,7 +96,7 @@ func TestProjectedCostDoesNotSplitADeploymentURN(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Contains(t, filter, `namespace:"oc-example"`)
-	require.Contains(t, filter, `controller:"fixed"`)
+	require.Contains(t, filter, `controllerName:"fixed"`)
 	require.NotContains(t, filter, "urn:")
 	require.NotContains(t, filter, "v1:Deployment")
 	require.InDelta(t, 3.0/1.0*730, resp.GetCostPerMonth(), 1e-6)
@@ -116,7 +116,7 @@ func TestActualCostUsesCloudIDAndResourceTypeTag(t *testing.T) {
 	resp, err := srv.GetActualCost(t.Context(), req)
 	require.NoError(t, err)
 	require.Contains(t, filter, `namespace:"oc-example"`)
-	require.Contains(t, filter, `controller:"fixed"`)
+	require.Contains(t, filter, `controllerName:"fixed"`)
 	require.Len(t, resp.GetResults(), 1)
 	require.InDelta(t, 1.5, resp.GetResults()[0].GetCost(), 1e-9)
 }

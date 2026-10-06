@@ -1,10 +1,4 @@
-# cost-errors Specification
-
-## Purpose
-
-Map cost RPC failures to explicit gRPC codes, and return a real zero cost instead of hiding it.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Cost RPCs use explicit status codes
 
@@ -49,19 +43,3 @@ rejected field name, and SHALL NOT be `NO_COST_DATA`.
 - **WHEN** the allocation body has an empty data array
 - **THEN** the status is `NotFound`
 - **AND** the message includes `NO_COST_DATA` and `no cost data`
-
-### Requirement: A real zero stays zero
-
-A matching allocation whose total is zero SHALL return one result with cost
-zero. A matching nonzero total SHALL be returned unchanged.
-
-#### Scenario: Zero total
-
-- **WHEN** the matching allocation total is 0
-- **THEN** the call succeeds
-- **AND** the single result cost is 0
-
-#### Scenario: Nonzero total
-
-- **WHEN** the matching allocation total is 1.25
-- **THEN** the single result cost is 1.25

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -42,7 +43,7 @@ func TestGetActualCostFiltersRecordedAllocations(t *testing.T) {
 			name:      "controller",
 			id:        "controller/oc-test/fixed",
 			file:      "allocation-controller-60m.json",
-			filter:    `controller:"fixed"+namespace:"oc-test"`,
+			filter:    `controllerName:"fixed"+namespace:"oc-test"`,
 			aggregate: "namespace,controller",
 			allocName: "oc-test/deployment:fixed",
 		},
@@ -139,11 +140,108 @@ func actualWindow(id string) *pbc.GetActualCostRequest {
 
 func readAllocation(t *testing.T, name string) []byte {
 	t.Helper()
+	return readTestdata(t, "opencost-real", name)
+}
+
+func readControllerCapture(t *testing.T, name string) []byte {
+	t.Helper()
+	return readTestdata(t, "opencost-real-controller", name)
+}
+
+func readTestdata(t *testing.T, dir, name string) []byte {
+	t.Helper()
 	_, file, _, ok := runtime.Caller(0)
 	require.True(t, ok)
-	body, err := os.ReadFile(filepath.Join(filepath.Dir(file), "..", "..", "testdata", "opencost-real", name))
+	body, err := os.ReadFile(filepath.Join(filepath.Dir(file), "..", "..", "testdata", dir, name))
 	require.NoError(t, err)
 	return body
+}
+
+func TestAllocationFilterKeysAreAcceptedFields(t *testing.T) {
+	t.Parallel()
+
+	allowed := map[string]struct{}{
+		"namespace":      {},
+		"pod":            {},
+		"node":           {},
+		"controllerName": {},
+		"cluster":        {},
+	}
+	cases := []struct {
+		id      string
+		wantKey string
+	}{
+		{id: "namespace/oc-test", wantKey: "namespace"},
+		{id: "pod/oc-test/fixed-7996d494d-fbz99", wantKey: "pod"},
+		{id: "node/oc-spike-control-plane", wantKey: "node"},
+		{id: "controller/oc-test/fixed", wantKey: "controllerName"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.id, func(t *testing.T) {
+			t.Parallel()
+			var filter string
+			srv := serverForFilter(t, []byte(`{"code":200,"data":[]}`), &filter)
+			_, err := srv.GetActualCost(t.Context(), actualWindow(tc.id))
+			require.Error(t, err)
+			keys := filterKeys(t, filter)
+			require.Contains(t, keys, tc.wantKey)
+			for _, key := range keys {
+				require.Contains(t, allowed, key)
+				require.NotEqual(t, "controller", key)
+			}
+		})
+	}
+}
+
+func TestCapturedControllerFilterBodies(t *testing.T) {
+	t.Parallel()
+
+	t.Run("accepted row", func(t *testing.T) {
+		t.Parallel()
+		body := readControllerCapture(t, "allocation-controllername-60m.json")
+		want := recordedCost(t, body, "oc-test/deployment:fixed")
+		srv := serverForRecorded(
+			t,
+			body,
+			`controllerName:"fixed"+namespace:"oc-test"`,
+			"namespace,controller",
+		)
+		resp, err := srv.GetActualCost(t.Context(), actualWindow("controller/oc-test/fixed"))
+		require.NoError(t, err)
+		require.Len(t, resp.GetResults(), 1)
+		require.InDelta(t, want, resp.GetResults()[0].GetCost(), 1e-9)
+		require.InDelta(t, 0.02425, want, 1e-9)
+	})
+
+	t.Run("rejected field", func(t *testing.T) {
+		t.Parallel()
+		body := readControllerCapture(t, "error-controller-filter.json")
+		backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write(body)
+		}))
+		t.Cleanup(backend.Close)
+		cli, err := allocation.NewClient(t.Context(), allocation.Config{BaseURL: backend.URL, Currency: "EUR"})
+		require.NoError(t, err)
+		_, err = server.New(cli).GetActualCost(t.Context(), actualWindow("controller/oc-test/fixed"))
+		require.Equal(t, codes.Unavailable, status.Code(err))
+		require.Contains(t, err.Error(), "expect filter field")
+		require.Contains(t, err.Error(), "controller")
+		require.NotContains(t, err.Error(), "NO_COST_DATA")
+	})
+}
+
+func filterKeys(t *testing.T, filter string) []string {
+	t.Helper()
+	require.NotEmpty(t, filter)
+	var keys []string
+	for _, part := range strings.Split(filter, "+") {
+		key, _, ok := strings.Cut(part, `:"`)
+		require.True(t, ok, part)
+		keys = append(keys, key)
+	}
+	return keys
 }
 
 func recordedCost(t *testing.T, body []byte, allocName string) float64 {

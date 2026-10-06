@@ -51,12 +51,19 @@ func parseResourceID(resourceID string) (resourceRef, error) {
 	}
 }
 
+func (r resourceRef) filterKey() string {
+	if r.kind == kindController {
+		return "controllerName"
+	}
+	return r.kind
+}
+
 func (r resourceRef) filter() map[string]string {
 	switch r.kind {
 	case kindNamespace, kindNode:
-		return map[string]string{r.kind: r.name}
+		return map[string]string{r.filterKey(): r.name}
 	default:
-		return map[string]string{kindNamespace: r.namespace, r.kind: r.name}
+		return map[string]string{kindNamespace: r.namespace, r.filterKey(): r.name}
 	}
 }
 
