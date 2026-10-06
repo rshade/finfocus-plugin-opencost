@@ -38,7 +38,7 @@ This is a gRPC plugin that implements the CostSource service from `finfocus-spec
 
 ### Resource ID Mapping
 
-`ResourceDescriptor.id` is an opaque correlation token. A Pulumi URN is not split on `/`. When the id is opaque, the OpenCost name comes from `metadata.name` and `metadata.namespace`. On a descriptor, those values in `attributes` replace the same flattened tags. `GetActualCost` has no attributes field and still reads tags. It accepts these filters:
+`ResourceDescriptor.id` is an opaque correlation token. A Pulumi URN is not split on `/`. When the id is opaque, the OpenCost name comes from `metadata.name` and `metadata.namespace`. On a descriptor, those values in `attributes` replace the same flattened tags. When `GetActualCostRequest.resource` is set, actual cost uses that descriptor. An unset descriptor keeps the resource id and tag path. It accepts these filters:
 
 - `namespace/<name>` → filter by namespace
 - `pod/<namespace>/<name>` → filter by namespace and pod
