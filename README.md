@@ -4,6 +4,12 @@
 It reads Kubernetes allocation costs over HTTP and serves them with gRPC.
 The protocol is `finfocus-spec` v0.7.3.
 
+This plugin integrates [OpenCost](https://opencost.io/)
+([source on GitHub](https://github.com/opencost/opencost)) and
+[Kubecost](https://www.apptio.com/products/kubecost/) and is a plugin for
+[FinFocus](https://github.com/rshade/finfocus), the Pulumi cost CLI.
+See the [FinFocus docs page for this plugin](https://rshade.github.io/finfocus/plugins/opencost/).
+
 ## Capabilities
 
 `GetPluginInfo` reports these capabilities:
