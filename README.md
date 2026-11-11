@@ -155,7 +155,8 @@ How core copies Pulumi types is recorded in [docs/resource-mapping.md](docs/reso
 
 `GetActualCost` returns `totalCost` for matching rows, including a real zero.
 No matching row is the SDK no-data response: no results and `FALLBACK_HINT_RECOMMENDED`.
-It is not an error, so FinFocus reports no actual cost data instead of a failed plugin call.
+The RPC succeeds and returns no gRPC error.
+`finfocus cost actual` still lists that resource under ERRORS as `plugin call failed: no cost data available`, which is the host's own message for an empty result.
 Labels from the row are focus tags.
 The controller kind is extended column `controllerKind`.
 Annotations are extended columns `annotation.<key>`.
