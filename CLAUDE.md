@@ -49,7 +49,11 @@ A bare cloud id such as `oc-example` is a namespace or node when `resource_type`
 
 ### Cost Projections
 
-`GetProjectedCost` queries window `30d` for the requested object, not the cluster. Monthly cost is `totalCost / (minutes / 60) * 730`. `billing_detail` states that 30-day trailing average. `cost_breakdown` sums to `cost_per_month`. A namespace name is `metadata.name` or a bare id with no slash. `unit_price` is the observed hourly rate. Currency comes from the allocation body or pricing config (`OPENCOST_CURRENCY`). The plugin does not assume USD.
+`GetProjectedCost` queries window `30d` for the requested object, not the cluster. Monthly cost is `totalCost / (minutes / 60) * 730`. `billing_detail` states that 30-day trailing average. `cost_breakdown` sums to `cost_per_month`. A namespace name is `metadata.name` or a bare id with no slash. `unit_price` is the observed hourly rate. Currency comes from the allocation body or pricing config (`OPENCOST_CURRENCY`). The plugin does not assume USD. Projected cost divides by the row's own `minutes`, so a short data span changes the sample size, not the monthly rate; it has no coverage warning.
+
+### Actual cost window coverage
+
+Each actual result's FOCUS `charge_period_start` and `charge_period_end` are the row's `start` and `end` (`window_coverage.go`). OpenCost sets those to an object's first and last sample in the window, so a row starts late both for an object created inside the window and for a backend with no older data. Only the second is a gap. When the rows are short, `GetActualCost` reads the cluster-wide span (aggregate `cluster`, same window, no filter); the actual `BatchCost` path uses its own unfiltered body. A short store span logs the `warn` event `allocation data covers only part of the requested window`. Uncovered time counts only above one hour or one percent of the window, whichever is longer, and a window ending after the query is measured to the query time. The cost is never extrapolated. Core writes plugin stderr to its log file (`finfocus logs`) but does not show the warning or read the charge period for coverage yet. Do not name a source file `coverage.*`: `.gitignore` ignores it.
 
 ### Cost prediction
 

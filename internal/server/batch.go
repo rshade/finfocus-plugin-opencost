@@ -72,19 +72,20 @@ func (s *Server) BatchCost(ctx context.Context, req *pbc.BatchCostRequest) (*pbc
 			return nil, err
 		}
 		refs, failures, valid := batchRefs(resources)
-		var detailed *allocation.DetailedAllocationResponse
-		var backendErr error
+		data := batchData{
+			queryType: queryType,
+			start:     req.GetStart().AsTime(),
+			end:       req.GetEnd().AsTime(),
+		}
 		if len(valid) > 0 {
-			detailed, backendErr = s.cli.GetDetailedAllocation(ctx, allocation.Query{
+			data.detailed, data.backendErr = s.cli.GetDetailedAllocation(ctx, allocation.Query{
 				Window:      window,
 				AggregateBy: aggregateFor(valid),
 			})
 		}
 		resp.Results = make([]*pbc.ResourceCostResult, 0, len(resources))
 		for i, resource := range resources {
-			resp.Results = append(resp.Results, s.resourceResult(
-				resource, refs[i], failures[i], detailed, backendErr, queryType,
-			))
+			resp.Results = append(resp.Results, s.resourceResult(ctx, resource, refs[i], failures[i], data))
 		}
 		return resp, nil
 	})
@@ -148,25 +149,35 @@ func aggregateFor(refs []resourceRef) []string {
 	return refs[0].aggregate()
 }
 
+// batchData is the one allocation read a batch shares. start and end are the
+// requested actual window; estimate and projected batches leave them unused.
+type batchData struct {
+	queryType  pbc.CostQueryType
+	start      time.Time
+	end        time.Time
+	detailed   *allocation.DetailedAllocationResponse
+	backendErr error
+}
+
 func (s *Server) resourceResult(
+	ctx context.Context,
 	resource *pbc.ResourceDescriptor,
 	ref resourceRef,
 	failure itemFailure,
-	detailed *allocation.DetailedAllocationResponse,
-	backendErr error,
-	queryType pbc.CostQueryType,
+	data batchData,
 ) *pbc.ResourceCostResult {
 	result := &pbc.ResourceCostResult{Resource: resource}
 	if failure.err != nil {
 		result.Result = itemError(failure.err, failure.unsupported)
 		return result
 	}
-	if backendErr != nil {
-		result.Result = itemError(mapBackendError(backendErr), false)
+	if data.backendErr != nil {
+		result.Result = itemError(mapBackendError(data.backendErr), false)
 		return result
 	}
+	detailed, queryType := data.detailed, data.queryType
 	if queryType == pbc.CostQueryType_COST_QUERY_TYPE_ACTUAL {
-		return s.actualItem(result, detailed, ref)
+		return s.actualItem(ctx, result, data, ref)
 	}
 	parts := partsFor(detailed, ref)
 	if parts.samples == 0 {
@@ -189,10 +200,12 @@ func (s *Server) resourceResult(
 }
 
 func (s *Server) actualItem(
+	ctx context.Context,
 	result *pbc.ResourceCostResult,
-	detailed *allocation.DetailedAllocationResponse,
+	data batchData,
 	ref resourceRef,
 ) *pbc.ResourceCostResult {
+	detailed := data.detailed
 	rows, err := resultsFor(detailed, ref)
 	if err != nil {
 		result.Result = itemError(err, false)
@@ -215,6 +228,8 @@ func (s *Server) actualItem(
 	}
 	applyCurrency(rows, currency)
 	stampActualExpiry(rows, detailed.FetchedUntil)
+	s.reportCoverage(ctx, correlationID(result.GetResource(), ref), rows, data.start, data.end,
+		func() (dataSpan, bool) { return bodySpan(detailed) })
 	result.Result = &pbc.ResourceCostResult_CostData{
 		CostData: &pbc.CostData{
 			Data: &pbc.CostData_ActualCost{ActualCost: &pbc.ActualCostData{Results: rows}},

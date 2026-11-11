@@ -161,6 +161,18 @@ Labels from the row are focus tags.
 The controller kind is extended column `controllerKind`.
 Annotations are extended columns `annotation.<key>`.
 The query window is the window on the request.
+Each result's `focus_record.charge_period_start` and `charge_period_end` are the row's `start` and `end`: the part of the window that row has data for.
+
+When the rows start later or end earlier than the window, the plugin asks for the cluster-wide span over the same window (aggregate `cluster`).
+If that span is also short, the backend has no data for part of the window, for example because Prometheus retention is shorter than the window.
+The plugin then logs a `warn` event `allocation data covers only part of the requested window` with `window_start`, `window_end`, `data_start`, `data_end`, and `coverage` (the covered fraction).
+The cost stays the backend's `totalCost`; it is not extrapolated.
+An object created inside a fully retained window does not log the warning.
+A window that ends after the query is measured to the query time.
+Uncovered time up to one hour, or up to one percent of the window when that is longer, is step alignment or collection lag and does not count.
+The actual `BatchCost` path takes the cluster-wide span from its own unfiltered query.
+FinFocus core writes plugin stderr to its log file, so `finfocus logs` shows the warning.
+The `cost actual` table does not show it yet, and core does not read the charge period for this (a core follow-up).
 
 `GetProjectedCost` queries window `30d`.
 Monthly cost is `totalCost / (minutes / 60) * 730`.

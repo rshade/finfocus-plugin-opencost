@@ -121,7 +121,7 @@ func resultsFor(
 				Timestamp:   timestamppb.New(stamped),
 				Cost:        entry.TotalCost,
 				Source:      pluginName,
-				FocusRecord: focusFor(entry.Properties, ref),
+				FocusRecord: stampChargePeriod(focusFor(entry.Properties, ref), entry),
 			})
 		}
 	}
