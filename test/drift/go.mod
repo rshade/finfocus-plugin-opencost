@@ -1,6 +1,6 @@
 module github.com/rshade/finfocus-plugin-opencost/test/drift
 
-go 1.27.1
+go 1.27.4
 
 require (
 	github.com/opencost/opencost/core v1.121.3
@@ -40,7 +40,7 @@ require (
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/rshade/ax-go v0.7.0 // indirect
-	github.com/rshade/finfocus-spec v0.7.3 // indirect
+	github.com/rshade/finfocus-spec v0.7.5 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -65,7 +65,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260819154853-08b0e4226688 // indirect
