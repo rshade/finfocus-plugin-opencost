@@ -74,7 +74,27 @@ func TestCostRPCErrorMapping(t *testing.T) {
 		}))
 		t.Cleanup(backend.Close)
 		srv := newServer(t, backend.URL)
-		_, err := srv.GetActualCost(t.Context(), actualRequest())
+		resp, err := srv.GetActualCost(t.Context(), actualRequest())
+		require.NoError(t, err)
+		require.Empty(t, resp.GetResults())
+		require.Equal(t, pbc.FallbackHint_FALLBACK_HINT_RECOMMENDED, resp.GetFallbackHint())
+	})
+
+	t.Run("no match without currency", func(t *testing.T) {
+		t.Parallel()
+		srv := serverWithBody(t, []byte(`{"code":200,"data":[]}`), "")
+		resp, err := srv.GetActualCost(t.Context(), actualRequest())
+		require.NoError(t, err)
+		require.Empty(t, resp.GetResults())
+		require.Equal(t, pbc.FallbackHint_FALLBACK_HINT_RECOMMENDED, resp.GetFallbackHint())
+	})
+
+	t.Run("projected no match stays NotFound", func(t *testing.T) {
+		t.Parallel()
+		srv := serverWithBody(t, []byte(`{"code":200,"data":[]}`), "EUR")
+		_, err := srv.GetProjectedCost(t.Context(), &pbc.GetProjectedCostRequest{
+			Resource: namespaceDescriptor("oc-test"),
+		})
 		require.Equal(t, codes.NotFound, status.Code(err))
 		require.Contains(t, err.Error(), "NO_COST_DATA")
 		require.Contains(t, err.Error(), "no cost data")

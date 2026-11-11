@@ -68,6 +68,16 @@ func mapBackendError(err error) error {
 	return status.Errorf(codes.Unavailable, "allocation backend: %v", err)
 }
 
+// noActualData is the SDK's no-data actual response: no results and a
+// recommended fallback. A real zero is a result, never this response.
+func noActualData() *pbc.GetActualCostResponse {
+	return pluginsdk.NewActualCostResponse(
+		pluginsdk.WithFallbackHint(pbc.FallbackHint_FALLBACK_HINT_RECOMMENDED),
+	)
+}
+
+// noCostData reports a missing row on RPCs whose response has no no-data
+// shape (projected, pricing, estimate), where an OK response is a price.
 func noCostData(resourceID string) error {
 	return status.Errorf(codes.NotFound, "NO_COST_DATA: %s", pluginsdk.NoDataError(resourceID).Error())
 }

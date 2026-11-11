@@ -11,7 +11,8 @@ Return recorded allocation totals for one namespace, controller, pod, or node.
 `GetActualCost` SHALL query the OpenCost allocation API with a filter and
 aggregate derived from the resource id, and SHALL return only rows for that
 object. Each result cost SHALL be that row's typed `totalCost`. A real zero
-SHALL be returned. No match SHALL be `NotFound` with `NO_COST_DATA`.
+SHALL be returned. No match SHALL succeed with no results and
+`FALLBACK_HINT_RECOMMENDED`, and SHALL NOT be an error.
 A controller resource SHALL filter on `controllerName` and SHALL aggregate
 by `namespace,controller`.
 
@@ -44,6 +45,12 @@ by `namespace,controller`.
 - **WHEN** the resource id is `namespace/oc-test` and the body is `allocation-namespace-step-1m.json`
 - **THEN** each step that contains `oc-test` produces one result, in step order, including a cost of 0
 
+#### Scenario: No matching row recommends fallback
+
+- **WHEN** the resource id is `namespace/oc-test` and the allocation body has an empty data array
+- **THEN** the call succeeds with no results
+- **AND** the fallback hint is `FALLBACK_HINT_RECOMMENDED`
+
 ### Requirement: Allocation metadata is carried on the result
 
 `GetActualCost` SHALL copy labels, controller kind, and annotations from the
@@ -55,8 +62,8 @@ body when that body names one currency, otherwise from pricing config. The
 plugin SHALL NOT assume USD. Two different currency values in one body SHALL
 be `FailedPrecondition`. When the body and the config both omit a currency,
 `GetActualCost` SHALL return `FailedPrecondition`. A row with none of the three
-metadata fields SHALL still carry `billing_currency`. An empty match SHALL stay
-`NotFound` and SHALL NOT require a currency.
+metadata fields SHALL still carry `billing_currency`. An empty match SHALL be the
+no-data response and SHALL NOT require a currency.
 
 #### Scenario: Recorded pod labels and controller kind
 
@@ -93,7 +100,7 @@ When `GetActualCostRequest.resource` is set, `GetActualCost` SHALL resolve
 the allocation object from that descriptor. Attributes `metadata.name` and
 `metadata.namespace` SHALL replace the same tag keys. An unset descriptor
 SHALL keep the resource id and tag path. A missing row for a set descriptor
-SHALL name the descriptor id in `NO_COST_DATA`.
+SHALL be the no-data response.
 
 #### Scenario: Attributes replace tags
 
@@ -107,8 +114,8 @@ SHALL name the descriptor id in `NO_COST_DATA`.
 - **THEN** the query filter is `namespace:"tag-ns"`
 - **AND** the returned cost is the `tag-ns` row
 
-#### Scenario: Missing descriptor row names the descriptor id
+#### Scenario: Missing descriptor row is no data
 
 - **WHEN** the descriptor is set, its id is a Pulumi URN, and no row matches
-- **THEN** the RPC is `NotFound`
-- **AND** `NO_COST_DATA` contains that URN
+- **THEN** the RPC returns no error and no results
+- **AND** the fallback hint is `FALLBACK_HINT_RECOMMENDED`

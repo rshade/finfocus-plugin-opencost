@@ -181,8 +181,9 @@ func TestAllocationFilterKeysAreAcceptedFields(t *testing.T) {
 			t.Parallel()
 			var filter string
 			srv := serverForFilter(t, []byte(`{"code":200,"data":[]}`), &filter)
-			_, err := srv.GetActualCost(t.Context(), actualWindow(tc.id))
-			require.Error(t, err)
+			resp, err := srv.GetActualCost(t.Context(), actualWindow(tc.id))
+			require.NoError(t, err)
+			require.Empty(t, resp.GetResults())
 			keys := filterKeys(t, filter)
 			require.Contains(t, keys, tc.wantKey)
 			for _, key := range keys {

@@ -29,13 +29,6 @@ func actualRef(req *pbc.GetActualCostRequest) (resourceRef, error) {
 	return resolveRef("", req.GetResourceId(), req.GetTags())
 }
 
-func actualMissingID(req *pbc.GetActualCostRequest, ref resourceRef) string {
-	if req.GetResource() != nil {
-		return correlationID(req.GetResource(), ref)
-	}
-	return req.GetResourceId()
-}
-
 func refForDescriptor(resource *pbc.ResourceDescriptor) (resourceRef, error) {
 	if resource == nil {
 		return resourceRef{}, status.Error(codes.InvalidArgument, "empty resource id")

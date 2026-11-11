@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/rshade/finfocus-plugin-opencost/internal/allocation"
@@ -81,7 +79,7 @@ func TestGetActualCostControllerAttributesWinOverTags(t *testing.T) {
 	require.NotEqual(t, resp.GetResults()[0].GetCost(), plain.GetResults()[0].GetCost())
 }
 
-func TestGetActualCostMissingDescriptorNamesDescriptorID(t *testing.T) {
+func TestGetActualCostMissingDescriptorIsNoData(t *testing.T) {
 	t.Parallel()
 
 	var filter string
@@ -98,12 +96,10 @@ func TestGetActualCostMissingDescriptorNamesDescriptorID(t *testing.T) {
 		Tags:         map[string]string{"metadata.name": "tag-ns"},
 		Attributes:   attrs,
 	}
-	_, err = srv.GetActualCost(t.Context(), req)
-	require.Error(t, err)
-	require.Equal(t, codes.NotFound, status.Code(err))
-	require.Contains(t, err.Error(), "NO_COST_DATA")
-	require.Contains(t, err.Error(), namespaceURN)
-	require.NotContains(t, err.Error(), "namespace/tag-ns")
+	resp, err := srv.GetActualCost(t.Context(), req)
+	require.NoError(t, err)
+	require.Empty(t, resp.GetResults())
+	require.Equal(t, pbc.FallbackHint_FALLBACK_HINT_RECOMMENDED, resp.GetFallbackHint())
 	require.Contains(t, filter, `namespace:"attr-ns"`)
 	require.NotContains(t, filter, `namespace:"tag-ns"`)
 }

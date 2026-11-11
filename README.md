@@ -154,7 +154,8 @@ How core copies Pulumi types is recorded in [docs/resource-mapping.md](docs/reso
 ## API notes
 
 `GetActualCost` returns `totalCost` for matching rows, including a real zero.
-No matching row is `NotFound`.
+No matching row is the SDK no-data response: no results and `FALLBACK_HINT_RECOMMENDED`.
+It is not an error, so FinFocus reports no actual cost data instead of a failed plugin call.
 Labels from the row are focus tags.
 The controller kind is extended column `controllerKind`.
 Annotations are extended columns `annotation.<key>`.
@@ -180,7 +181,8 @@ The fixture follows `kubectl-cost` `pkg/query/prediction_speccost.go` at commit 
 It is not verified against live Kubecost.
 
 `BatchCost` issues one allocation query and returns results in request order.
-A missing object is a per-item `NotFound`, including when currency is unset.
+For an estimate or projected batch, a missing object is a per-item `NotFound`, including when currency is unset.
+For an actual batch, a missing object is per-item actual cost data with no results and `FALLBACK_HINT_RECOMMENDED`.
 A present row with no currency is a per-item `FailedPrecondition`.
 
 Currency comes from the allocation body when that body names one currency.
@@ -231,7 +233,7 @@ The service in that plan stays unsupported.
 - The `kubecost` profile returns status 401: the RPC is `Unauthenticated`. Set `KUBECOST_API_TOKEN`. The `opencost` profile does not send that token.
 - The backend returns status 403: the RPC is `PermissionDenied`. The token in `KUBECOST_API_TOKEN` lacks the permission the endpoint needs.
 - `Supports` names `kubernetes:core/v1:Service`: this plugin has no allocation filter for a Service.
-- Message `no cost data available for resource`: the window has no matching row. `GetActualCost` maps that to `NotFound`.
+- Message `no cost data available for resource`: the 30-day window has no matching row. `GetProjectedCost`, `GetPricingSpec`, and `EstimateCost` map that to `NotFound`, because an OK response on those RPCs is a price. `GetActualCost` returns no results with `FALLBACK_HINT_RECOMMENDED` instead.
 - The API returns HTTP 400 as plain text. A rejected window starts with `Invalid 'window' parameter`.
 - Health fails while a cached cost call succeeds: `Check` calls `GET /healthz` and does not read the allocation cache.
 - `docker run --help` exits 0. The usage text is on stderr and includes `-version` and `-port`.

@@ -59,7 +59,7 @@ func (s *Server) GetActualCost(
 			return nil, err
 		}
 		if len(results) == 0 {
-			return nil, noCostData(actualMissingID(req, ref))
+			return noActualData(), nil
 		}
 		currency, err := s.costCurrency(detailed)
 		if err != nil {
