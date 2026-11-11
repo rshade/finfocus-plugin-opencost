@@ -76,9 +76,9 @@ depend:
 	@echo "Go development tools installed successfully!"
 
 install: build
-	mkdir -p $(INSTALL_DIR)
-	cp bin/$(BINARY) $(INSTALL_DIR)/$(BINARY)
-	go run ./hack/manifestversion -in plugin.manifest.json -out $(INSTALL_DIR)/plugin.manifest.json -version v$(VERSION)
+	mkdir -p "$(INSTALL_DIR)"
+	cp bin/$(BINARY) "$(INSTALL_DIR)/$(BINARY)"
+	go run ./hack/manifestversion -in plugin.manifest.json -out "$(INSTALL_DIR)/plugin.manifest.json" -version v$(VERSION)
 
 version:
 	@echo "Version: $(VERSION)"
