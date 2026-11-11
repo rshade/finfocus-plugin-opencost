@@ -46,7 +46,11 @@ make install
 ```
 
 `make build` writes `bin/finfocus-plugin-opencost`.
-`make install` copies that binary to `~/.finfocus/plugins/opencost/0.1.0/`.
+`make install` builds the binary and copies it to `~/.finfocus/plugins/opencost/v<version>/`, or under `$FINFOCUS_HOME` when that is set.
+The version comes from `.release-please-manifest.json` unless `VERSION` is set, for example `make install VERSION=0.1.2`.
+It also writes `plugin.manifest.json` with `version` set to `v<version>`.
+`finfocus plugin validate` requires the manifest version to equal the version directory name.
+Release archives carry a manifest stamped the same way, so a registry install into `v0.1.2/` validates.
 
 ## Configuration reference
 

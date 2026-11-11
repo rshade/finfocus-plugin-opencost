@@ -6,6 +6,7 @@ before:
   hooks:
     - go mod tidy
     - go mod download
+    - go run ./hack/manifestversion -in plugin.manifest.json -out build/release/plugin.manifest.json -version v{{ .Version }}
 
 builds:
   - env:
@@ -39,8 +40,9 @@ archives:
     files:
       - README.md
       - LICENSE
-      - plugin.manifest.json
       - config.example.yaml
+      - src: build/release/plugin.manifest.json
+        strip_parent: true
 
 checksum:
   name_template: 'checksums.txt'
