@@ -175,7 +175,8 @@ func (s *Server) reportCoverage(
 }
 
 // storeSpan asks the backend for its cluster-wide rows over the window. A failure
-// leaves coverage unknown and does not fail the cost call.
+// leaves coverage unknown and does not fail the cost call. The logged error is the
+// mapped one, so a 401 or 403 body is never written to the log.
 func (s *Server) storeSpan(ctx context.Context, window string) func() (dataSpan, bool) {
 	return func() (dataSpan, bool) {
 		resp, err := s.cli.GetDetailedAllocation(ctx, allocation.Query{
@@ -184,7 +185,7 @@ func (s *Server) storeSpan(ctx context.Context, window string) func() (dataSpan,
 		})
 		if err != nil {
 			log := s.requestLogger(ctx)
-			log.Debug().Err(err).Msg("allocation coverage query failed")
+			log.Debug().Err(mapBackendError(err)).Msg("allocation coverage query failed")
 			return dataSpan{}, false
 		}
 		return bodySpan(resp)

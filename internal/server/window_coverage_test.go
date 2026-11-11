@@ -20,7 +20,10 @@ import (
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
-const partialWindowMessage = "allocation data covers only part of the requested window"
+const (
+	partialWindowMessage = "allocation data covers only part of the requested window"
+	echoedToken          = "secret-token-value"
+)
 
 type span struct {
 	start time.Time
@@ -51,7 +54,7 @@ func (b *coverageBackend) server(t *testing.T) *server.Server {
 			b.clusterHits.Add(1)
 			if b.storeStatus != 0 {
 				w.WriteHeader(b.storeStatus)
-				_, _ = w.Write([]byte(`{"code":500,"message":"boom"}`))
+				_, _ = w.Write([]byte(`{"message":"echoed Authorization: Bearer ` + echoedToken + `"}`))
 				return
 			}
 			if b.store.start.IsZero() {
@@ -243,6 +246,32 @@ func TestBatchActualWarnsWhenStoreCoversPartOfWindow(t *testing.T) {
 	require.Equal(t, "warn", warning["level"])
 	assert.Equal(t, "oc-test", warning["resource"])
 	assert.Equal(t, "2026-10-27T06:05:00Z", warning["data_start"])
+}
+
+func TestActualCostCoverageQueryLogsRedactedAuthErrors(t *testing.T) {
+	t.Parallel()
+
+	month := span{day(10, 12, 0, 0), day(11, 11, 0, 0)}
+	for _, code := range []int{http.StatusUnauthorized, http.StatusForbidden} {
+		t.Run(http.StatusText(code), func(t *testing.T) {
+			t.Parallel()
+			backend := &coverageBackend{
+				window:      month,
+				object:      span{day(10, 27, 6, 5), month.end},
+				storeStatus: code,
+			}
+			srv := backend.server(t)
+			var logs bytes.Buffer
+			srv.SetLogger(zerolog.New(&logs))
+
+			resp, err := srv.GetActualCost(t.Context(), namespaceActual(month))
+			require.NoError(t, err)
+			require.Len(t, resp.GetResults(), 1)
+			require.Equal(t, int32(1), backend.clusterHits.Load())
+			require.NotContains(t, logs.String(), echoedToken)
+			require.Contains(t, logs.String(), "check KUBECOST_API_TOKEN")
+		})
+	}
 }
 
 func findLog(t *testing.T, logs, message string) map[string]any {
