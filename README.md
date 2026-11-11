@@ -62,6 +62,9 @@ Before serving, the plugin validates the config: `baseUrl` must be an `https` UR
 A failure exits with a one-line reason.
 No error or log line contains the API token.
 
+Each log line is JSON from the SDK's plugin logger (`pluginsdk.NewPluginLogger`).
+It carries `plugin_name` `opencost` and `plugin_version`; `finfocus logs` reads `plugin_name` to name the source.
+
 The API token is `KUBECOST_API_TOKEN` only.
 A YAML `apiToken` field is ignored.
 Request logs do not include the token.
@@ -171,7 +174,7 @@ An object created inside a fully retained window does not log the warning.
 A window that ends after the query is measured to the query time.
 Uncovered time up to one hour, or up to one percent of the window when that is longer, is step alignment or collection lag and does not count.
 The actual `BatchCost` path takes the cluster-wide span from its own unfiltered query.
-FinFocus core writes plugin stderr to its log file, so `finfocus logs` shows the warning.
+FinFocus core writes plugin stderr to its log file, so `finfocus logs` shows the warning under source `opencost` (`finfocus logs --source opencost`).
 The `cost actual` table does not show it yet, and core does not read the charge period for this (a core follow-up).
 
 `GetProjectedCost` queries window `30d`.

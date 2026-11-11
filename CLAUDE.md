@@ -53,11 +53,15 @@ A bare cloud id such as `oc-example` is a namespace or node when `resource_type`
 
 ### Actual cost window coverage
 
-Each actual result's FOCUS `charge_period_start` and `charge_period_end` are the row's `start` and `end` (`window_coverage.go`). OpenCost sets those to an object's first and last sample in the window, so a row starts late both for an object created inside the window and for a backend with no older data. Only the second is a gap. When the rows are short, `GetActualCost` reads the cluster-wide span (aggregate `cluster`, same window, no filter); the actual `BatchCost` path uses its own unfiltered body. A short store span logs the `warn` event `allocation data covers only part of the requested window`. Uncovered time counts only above one hour or one percent of the window, whichever is longer, and a window ending after the query is measured to the query time. The cost is never extrapolated. Core writes plugin stderr to its log file (`finfocus logs`) but does not show the warning or read the charge period for coverage yet. Do not name a source file `coverage.*`: `.gitignore` ignores it.
+Each actual result's FOCUS `charge_period_start` and `charge_period_end` are the row's `start` and `end` (`window_coverage.go`). OpenCost sets those to an object's first and last sample in the window, so a row starts late both for an object created inside the window and for a backend with no older data. Only the second is a gap. When the rows are short, `GetActualCost` reads the cluster-wide span (aggregate `cluster`, same window, no filter); the actual `BatchCost` path uses its own unfiltered body. A short store span logs the `warn` event `allocation data covers only part of the requested window`. Uncovered time counts only above one hour or one percent of the window, whichever is longer, and a window ending after the query is measured to the query time. The cost is never extrapolated. Core writes plugin stderr to its log file (`finfocus logs`, source `opencost`) but does not show the warning or read the charge period for coverage yet. Do not name a source file `coverage.*`: `.gitignore` ignores it.
 
 ### Cost prediction
 
 Profile `opencost` `EstimateCost` reads `metadata.name` as a namespace and queries the allocation API for window `30d`. An empty `metadata.namespace` on that profile uses the namespace `default`. Profile `kubecost` `EstimateCost` posts the resource attributes unchanged to `POST /model/prediction/speccost` and returns `costAfter.totalMonthlyRate`. An empty `metadata.namespace` on that profile matches the row in `defaultNamespace`. Query names are `clusterID`, `defaultNamespace`, `windowAvgUsage` (`predictionWindow`, default `2d`), `windowResourceCost` (`7d offset 48h`), and `noUsage=false`. Currency comes from pricing config. The response fixture is a contract example.
+
+### Logging
+
+The logger comes from `pluginsdk.NewPluginLogger` in `main.go` and writes JSON to stderr. Every line carries `plugin_name` (`pluginsdk.FieldPluginName`) and `plugin_version`. Core's `finfocus logs` and web Logs view name a log-file line's source by `plugin_name` only; a line without it shows as `[core]`. Do not set a hand-rolled `plugin` field. `TestBinaryExitsOnInvalidConfig` pins the fields.
 
 ### Error Handling
 
