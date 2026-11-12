@@ -10,11 +10,8 @@ List namespace budget rules from the Kubecost budget API.
 
 When the profile is `kubecost`, `GetBudgets` SHALL send `GET /model/budgets`.
 It SHALL return rules whose `values.namespace` is set and SHALL omit cluster
-rules. `amount.limit` SHALL be `spendLimit`. `amount.currency` SHALL come from
-pricing config and SHALL NOT assume USD. `period` SHALL be monthly or weekly
-from `interval`. A namespace tag SHALL name the namespace. An action
-`percentage` SHALL become an actual threshold. `include_status` SHALL add
-`currentSpend`. The contract is not verified against live Kubecost.
+rules. A namespace tag SHALL name the namespace. The contract is not verified
+against live Kubecost.
 
 #### Scenario: Namespace rule beside a cluster rule
 
@@ -25,11 +22,6 @@ from `interval`. A namespace tag SHALL name the namespace. An action
 - **AND** `currency` is the configured currency
 - **AND** `status.current_spend` equals that rule's `currentSpend`
 
-#### Scenario: Status omitted
-
-- **WHEN** profile `kubecost` lists the same fixture without `include_status`
-- **THEN** the namespace budget has no status
-
 #### Scenario: Namespace filter
 
 - **WHEN** profile `kubecost` lists two namespace rules and one cluster rule, and the request tag `namespace` names the weekly rule
@@ -39,11 +31,28 @@ from `interval`. A namespace tag SHALL name the namespace. An action
 - **AND** a request for an unknown namespace returns no budgets
 - **AND** a request without a namespace tag returns both namespace rules and not the cluster rule
 
+Tested by: TestGetBudgetsUsesNamespaceBudgetContract, TestGetBudgetsFiltersNamespaceAndMapsInterval, TestGetBudgetsKeepsEveryNamespaceOnARule
+
+### Requirement: Budget fields come from the rule
+
+`amount.limit` SHALL be `spendLimit`. `amount.currency` SHALL come from
+pricing config and SHALL NOT assume USD. `period` SHALL be monthly or weekly
+from `interval`. An action `percentage` SHALL become an actual threshold.
+`include_status` SHALL add `currentSpend`. The contract is not verified against
+live Kubecost.
+
+#### Scenario: Status omitted
+
+- **WHEN** profile `kubecost` lists the same fixture without `include_status`
+- **THEN** the namespace budget has no status
+
 #### Scenario: No configured currency
 
 - **WHEN** profile `kubecost` lists budgets and pricing config has no currency
 - **THEN** the RPC is `FailedPrecondition`
 - **AND** the message does not contain `USD`
+
+Tested by: TestGetBudgetsUsesNamespaceBudgetContract, TestGetBudgetsFiltersNamespaceAndMapsInterval, TestGetBudgetsKubecostNeedsCurrency
 
 ### Requirement: Budget health and summary counts
 
@@ -51,22 +60,34 @@ When `include_status` is true, each returned budget's health SHALL come from
 `currentSpend`, `spendLimit`, and the lowest positive action `percentage`.
 Spend over `spendLimit` SHALL be exceeded. Spend equal to `spendLimit` SHALL
 be critical. Spend at or above that percentage and under the limit SHALL be
-warning. Spend below that percentage SHALL be ok. The summary SHALL count ok,
-warning, critical, and exceeded for the budgets the filter returns. Those four
-counts SHALL equal `total_budgets`. Critical SHALL stay in its own count. A
-namespace filter SHALL count only the budgets that filter returns. Without
-`include_status`, the summary SHALL be absent. The contract is not verified
+warning. Spend below that percentage SHALL be ok. The contract is not verified
 against live Kubecost.
 
 #### Scenario: Four health states beside a cluster rule
 
 - **WHEN** profile `kubecost` lists the health contract fixture with `include_status` set
 - **THEN** each namespace budget health matches its spend, limit, and lowest action percentage
-- **AND** the summary counts equal the returned budgets
+
+Tested by: TestGetBudgetsAggregatesHealthAndSummary
+
+### Requirement: Budget summary counts
+
+The summary SHALL count ok, warning, critical, and exceeded for the budgets the
+filter returns. Those four counts SHALL equal `total_budgets`. Critical SHALL
+stay in its own count. A namespace filter SHALL count only the budgets that
+filter returns. Without `include_status`, the summary SHALL be absent. The
+contract is not verified against live Kubecost.
+
+#### Scenario: Summary follows the returned budgets
+
+- **WHEN** profile `kubecost` lists the health contract fixture with `include_status` set
+- **THEN** the summary counts equal the returned budgets
 - **AND** the cluster rule is absent from the budgets and from the summary total
 - **AND** a namespace tag for one rule counts only that rule
 - **AND** an unknown namespace returns no budgets and a zero summary
 - **AND** a request without `include_status` has no summary
+
+Tested by: TestGetBudgetsAggregatesHealthAndSummary, TestGetBudgetsDoesNotDoubleCountSharedNamespaceSpend
 
 ### Requirement: Invalid budget rules are skipped
 
@@ -100,3 +121,5 @@ returned budgets.
 
 - **WHEN** `include_status` is set and one rule is skipped
 - **THEN** the summary counts only the returned budgets
+
+Tested by: TestGetBudgetsSkipsInvalidRules, TestGetBudgetsSkipsAllInvalidRules, TestGetBudgetsFilterOnSkippedNamespaceReturnsEmpty

@@ -14,15 +14,10 @@ context: |
   Errors are explicit gRPC statuses. A zero cost is only a real zero.
   cost_breakdown sums to cost_per_month. Trace ids come from the SDK.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  specs:
+    - Keep each requirement body (the text before its first scenario) at 500 characters or fewer, because openspec validate --strict fails above that. Split a long requirement into two.
+    - End every requirement block, after its last scenario, with one line "Tested by: TestA, TestB" naming top-level Go test functions that exist in a _test.go file, or "Tested by: none (reason)". TestEverySpecRequirementNamesAResolvingTest fails otherwise.
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.

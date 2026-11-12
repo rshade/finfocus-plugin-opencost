@@ -38,6 +38,8 @@ default values in place. Unknown keys in the file SHALL NOT be an error.
 - **WHEN** the config file contains a key the plugin does not know
 - **THEN** loading succeeds and the key is ignored
 
+Tested by: TestConfigFileParseErrorNamesPath, TestLoadConfigFromEnvOrFile_FileNotFound, TestLoadConfigFromEnvOrFile_WithFile
+
 ### Requirement: Environment parse errors name the variable
 
 A set `KUBECOST_TIMEOUT` that does not parse as a duration SHALL be an
@@ -61,6 +63,8 @@ than `true` or `false` SHALL be an error naming
 - **WHEN** `KUBECOST_TIMEOUT` and `KUBECOST_TLS_SKIP_VERIFY` are unset
 - **THEN** loading succeeds with a 15 second timeout and certificate
   verification on
+
+Tested by: TestEnvParseErrorNamesVariable, TestConfigDefaults
 
 ### Requirement: Startup validation
 
@@ -102,6 +106,8 @@ exit non-zero with a one-line reason when validation fails.
 - **WHEN** the config is valid
 - **THEN** validation passes and the plugin serves
 
+Tested by: TestConfigValidate, TestBinaryExitsOnInvalidConfig
+
 ### Requirement: The token never appears in an error or log
 
 No config error or startup log line SHALL contain the API token. Error
@@ -112,6 +118,8 @@ offending secret value.
 
 - **WHEN** `KUBECOST_API_TOKEN` is set and any config value is invalid
 - **THEN** the error message does not contain the token
+
+Tested by: TestConfigErrorsNeverContainToken, TestTokenIsEnvOnlyAndAbsentFromLogs
 
 ### Requirement: Plain HTTP stays on loopback
 
@@ -145,6 +153,8 @@ An `https` URL SHALL stay accepted when the flag is unset.
   `allowInsecureHttp` is unset
 - **THEN** validation passes
 
+Tested by: TestInsecureHTTPRejectsNonLoopback
+
 ### Requirement: Skip-verify logs one warning
 
 Startup SHALL log one warning containing
@@ -166,6 +176,8 @@ The warning SHALL NOT contain the API token or URL userinfo.
 
 - **WHEN** a token and URL userinfo are set and `tlsSkipVerify` is on
 - **THEN** the startup log contains neither secret
+
+Tested by: TestTLSSkipVerifyWarnsAtStartup
 
 ### Requirement: Private CA file extends trust
 
@@ -189,3 +201,5 @@ default roots.
 
 - **WHEN** `caCertFile` is missing or is not a PEM certificate
 - **THEN** startup validation fails with an error naming `caCertFile`
+
+Tested by: TestCACertFileTrustsPrivateCA

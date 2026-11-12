@@ -24,6 +24,8 @@ The request SHALL NOT require a bearer token.
 - **WHEN** the profile is `opencost` and an API token is configured
 - **THEN** the allocation request does not send an `Authorization` header
 
+Tested by: TestAllocationURLProfilesAreStable, TestProfileSendsTokenOnlyForKubecost
+
 ### Requirement: Kubecost allocation profile
 
 The client SHALL request `GET /model/allocation` when the profile is `kubecost`.
@@ -41,6 +43,8 @@ The request SHALL send `Authorization: Bearer <token>` when a token is configure
 - **WHEN** the profile is `kubecost` and an API token is configured
 - **THEN** the allocation request sends `Authorization: Bearer` plus that token
 
+Tested by: TestAllocationURLProfilesAreStable, TestProfileSendsTokenOnlyForKubecost
+
 ### Requirement: Stable query strings
 
 The client SHALL build the identical URL for the same profile and query on every call.
@@ -50,6 +54,8 @@ Filter keys SHALL be sorted before they are joined.
 
 - **WHEN** `BuildAllocationURL` is called twice with the same profile and query
 - **THEN** both results are equal
+
+Tested by: TestBuildAllocationURL, TestAllocationURLProfilesAreStable
 
 ### Requirement: TLS verification is on by default
 
@@ -67,6 +73,8 @@ for that client.
 
 - **WHEN** `tlsSkipVerify` is true for that same server
 - **THEN** the allocation request succeeds
+
+Tested by: TestTLSVerifyIsOnUnlessSkipped
 
 ### Requirement: API token comes from the environment
 
@@ -87,6 +95,8 @@ token.
 - **AND** the request log does not contain the token
 - **AND** a backend error string does not contain the token
 
+Tested by: TestTokenIsEnvOnlyAndAbsentFromLogs, TestBackendAuthErrorOmitsToken
+
 ### Requirement: Hostile filter values are rejected
 
 A filter key or value that contains a double quote, plus, backslash,
@@ -100,6 +110,8 @@ echo the rejected value.
 - **THEN** the backend is not called
 - **AND** the status is `InvalidArgument`
 - **AND** the status message does not contain that namespace name
+
+Tested by: TestHostileNamespaceIsRejected
 
 ### Requirement: Repeated allocation windows are cached
 
@@ -130,6 +142,8 @@ A read inside the TTL SHALL count as use.
 - **THEN** inserting one more body evicts a body that was not read
 - **AND** the body that was read stays
 
+Tested by: TestRepeatedActualCostUsesOneRequest, TestAllocationCacheExpires, TestCachePutCapsLiveEntries, TestCachePutKeepsARecentlyReadEntry
+
 ### Requirement: Cost results advertise expires_at
 
 A successful actual, projected, or estimate result SHALL set `expires_at` to the cache deadline.
@@ -141,6 +155,8 @@ A cache hit SHALL return the same deadline.
 - **WHEN** `GetActualCost` returns a row
 - **THEN** `expires_at` is set
 - **AND** `expires_at` is after the call
+
+Tested by: TestProjectedCostSetsExpiresAt, TestRepeatedActualCostUsesOneRequest
 
 ### Requirement: Outbound allocation requests are rate limited
 
@@ -156,6 +172,8 @@ A cache hit SHALL NOT consume a token.
 - **THEN** the second status is `ResourceExhausted`
 - **AND** the backend receives one request
 
+Tested by: TestRateLimitRejectsTheNextDistinctQuery
+
 ### Requirement: The HTTP client pools connections
 
 The transport SHALL keep idle connections and set an idle timeout, a dial timeout, a TLS handshake timeout, and a response header timeout.
@@ -165,3 +183,5 @@ TLS verification SHALL follow `tlsSkipVerify`.
 
 - **WHEN** two uncached allocation requests go to the same host
 - **THEN** they use one connection
+
+Tested by: TestPooledClientReusesOneConnection

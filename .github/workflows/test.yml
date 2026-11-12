@@ -64,3 +64,19 @@ jobs:
       - name: Run govulncheck
         # grpc is on a stable tag past the GO-2026-6443 fix. A finding fails this job.
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
+
+  openspec:
+    name: OpenSpec validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - uses: jdx/mise-action@v5
+        with:
+          install_only: true
+          install_args: node npm:@fission-ai/openspec
+
+      - name: Validate specs
+        run: mise exec -- openspec validate --all --strict

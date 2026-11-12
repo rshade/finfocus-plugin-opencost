@@ -14,11 +14,6 @@ namespace name. Monthly cost SHALL be that object's `totalCost` divided by its
 hours, times 730. `billing_detail` SHALL say the figure is a 30-day trailing
 average projected to a 730-hour month. A non-empty `cost_breakdown` SHALL sum
 to `cost_per_month`. `unit_price` SHALL be that object's observed hourly rate.
-`currency` SHALL be the single currency named by the allocation body when
-present, otherwise the pricing config currency. The plugin SHALL NOT assume
-USD. Two different currency values in one body SHALL be `FailedPrecondition`.
-No samples SHALL stay `NotFound` and SHALL NOT require a currency. A body and
-config that both omit a currency SHALL be `FailedPrecondition`.
 
 #### Scenario: Two namespaces project to different months
 
@@ -27,6 +22,16 @@ config that both omit a currency SHALL be `FailedPrecondition`.
 - **AND** the two monthly costs differ
 - **AND** each `billing_detail` contains `30-day` and `730`
 - **AND** each `cost_breakdown` sums to `cost_per_month`
+
+Tested by: TestGetProjectedCostUsesRequestedResource
+
+### Requirement: Projected currency follows the allocation or config
+
+`currency` SHALL be the single currency named by the allocation body when
+present, otherwise the pricing config currency. The plugin SHALL NOT assume
+USD. Two different currency values in one body SHALL be `FailedPrecondition`.
+No samples SHALL stay `NotFound` and SHALL NOT require a currency. A body and
+config that both omit a currency SHALL be `FailedPrecondition`.
 
 #### Scenario: Non-USD config fills an empty response currency
 
@@ -43,3 +48,5 @@ config that both omit a currency SHALL be `FailedPrecondition`.
 - **WHEN** the body names no currency and the config currency is empty
 - **THEN** the RPC is `FailedPrecondition`
 - **AND** the status message does not contain `USD`
+
+Tested by: TestCostCurrencyUsesNonUSDConfig, TestAllocationCurrencyOverridesConfig, TestCostCurrencyMissingIsAnError, TestAllocationMixedCurrencyIsAnError

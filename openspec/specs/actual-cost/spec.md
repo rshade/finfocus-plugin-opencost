@@ -51,19 +51,15 @@ by `namespace,controller`.
 - **THEN** the call succeeds with no results
 - **AND** the fallback hint is `FALLBACK_HINT_RECOMMENDED`
 
+Tested by: TestGetActualCostFiltersRecordedAllocations, TestCapturedControllerFilterBodies
+
 ### Requirement: Allocation metadata is carried on the result
 
 `GetActualCost` SHALL copy labels, controller kind, and annotations from the
 matched allocation onto `ActualCostResult.focus_record`. Labels SHALL be the
 focus `tags`. A non-empty controller kind SHALL be extended column
 `controllerKind`. Each annotation SHALL be extended column `annotation.<key>`.
-Each returned row SHALL set `focus_record.billing_currency` from the allocation
-body when that body names one currency, otherwise from pricing config. The
-plugin SHALL NOT assume USD. Two different currency values in one body SHALL
-be `FailedPrecondition`. When the body and the config both omit a currency,
-`GetActualCost` SHALL return `FailedPrecondition`. A row with none of the three
-metadata fields SHALL still carry `billing_currency`. An empty match SHALL be the
-no-data response and SHALL NOT require a currency.
+A row with none of the three metadata fields SHALL still carry `billing_currency`.
 
 #### Scenario: Recorded pod labels and controller kind
 
@@ -77,6 +73,17 @@ no-data response and SHALL NOT require a currency.
 - **WHEN** that same row also has annotation `team` equal to `platform`
 - **THEN** extended column `annotation.team` is `platform`
 - **AND** the labels and controller kind stay equal to the recorded row
+
+Tested by: TestGetActualCostCarriesRecordedMetadata, TestActualCostUsesNamespaceLabels
+
+### Requirement: Actual results carry a billing currency
+
+Each returned row SHALL set `focus_record.billing_currency` from the allocation
+body when that body names one currency, otherwise from pricing config. The
+plugin SHALL NOT assume USD. Two different currency values in one body SHALL
+be `FailedPrecondition`. When the body and the config both omit a currency,
+`GetActualCost` SHALL return `FailedPrecondition`. An empty match SHALL be the
+no-data response and SHALL NOT require a currency.
 
 #### Scenario: Non-USD pricing config
 
@@ -93,6 +100,8 @@ no-data response and SHALL NOT require a currency.
 - **WHEN** the body names no currency and the config currency is empty
 - **THEN** the RPC is `FailedPrecondition`
 - **AND** the status message does not contain `USD`
+
+Tested by: TestCostCurrencyUsesNonUSDConfig, TestAllocationCurrencyOverridesConfig, TestCostCurrencyMissingIsAnError, TestAllocationMixedCurrencyIsAnError
 
 ### Requirement: Descriptor selects the allocation object
 
@@ -120,6 +129,8 @@ SHALL be the no-data response.
 - **THEN** the RPC returns no error and no results
 - **AND** the fallback hint is `FALLBACK_HINT_RECOMMENDED`
 
+Tested by: TestGetActualCostDescriptorAttributesWinOverTags, TestGetActualCostMissingDescriptorIsNoData
+
 ### Requirement: Actual results state the period their data covers
 
 Each `GetActualCost` result SHALL set `focus_record.charge_period_start` and
@@ -131,6 +142,8 @@ be extrapolated.
 
 - **WHEN** the resource id is `namespace/oc-test` and the body is `allocation-namespace-60m.json`
 - **THEN** the result charge period is `2026-10-03T10:55:00Z` to `2026-10-03T10:57:48Z`
+
+Tested by: TestActualCostChargePeriodIsTheRowSpan
 
 ### Requirement: A backend data gap logs a warning
 
@@ -156,6 +169,8 @@ window` with the window, `data_start`, `data_end`, and `coverage`.
 - **WHEN** the row is short and the cluster-wide query returns HTTP 500 or no rows
 - **THEN** the call succeeds with the row's cost and no warning is logged
 
+Tested by: TestActualCostWarnsWhenStoreCoversPartOfWindow, TestActualCostDoesNotWarnWithoutAStoreGap
+
 ### Requirement: Coverage tolerates alignment and lag
 
 A span SHALL be short only when the uncovered time before and after it exceeds
@@ -171,3 +186,5 @@ end at the earlier of its end and the query time.
 
 - **WHEN** the window ends tomorrow and the row ends two minutes before the query
 - **THEN** no warning is logged
+
+Tested by: TestActualCostDoesNotWarnWithoutAStoreGap
