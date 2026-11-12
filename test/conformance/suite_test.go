@@ -78,6 +78,14 @@ func (a tcpAdapter) Supports(ctx context.Context, req *pbc.SupportsRequest) (*pb
 func (a tcpAdapter) GetActualCost(
 	ctx context.Context, req *pbc.GetActualCostRequest,
 ) (*pbc.GetActualCostResponse, error) {
+	if req != nil && req.GetResource() != nil {
+		next, ok := proto.Clone(req).(*pbc.GetActualCostRequest)
+		if !ok || next == nil {
+			return nil, errors.New("clone actual cost request")
+		}
+		next.Resource = conformance.KubernetesProbe(req.GetResource())
+		req = next
+	}
 	return a.client.GetActualCost(ctx, req)
 }
 

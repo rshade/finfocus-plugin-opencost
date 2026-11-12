@@ -42,7 +42,7 @@ func (s *Server) GetActualCost(
 			return nil, err
 		}
 		window := allocation.FormatTimeWindow(req.GetStart().AsTime(), req.GetEnd().AsTime())
-		ref, err := resolveRef("", req.GetResourceId(), req.GetTags())
+		ref, err := actualRef(req)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (s *Server) GetActualCost(
 			return nil, err
 		}
 		if len(results) == 0 {
-			return nil, noCostData(req.GetResourceId())
+			return nil, noCostData(actualMissingID(req, ref))
 		}
 		currency, err := s.costCurrency(detailed)
 		if err != nil {
