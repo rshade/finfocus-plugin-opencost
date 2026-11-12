@@ -67,6 +67,8 @@ func (s *Server) GetActualCost(
 		}
 		applyCurrency(results, currency)
 		stampActualExpiry(results, detailed.FetchedUntil)
+		start, end := req.GetStart().AsTime(), req.GetEnd().AsTime()
+		s.reportCoverage(ctx, ref.id(), results, start, end, s.storeSpan(ctx, window))
 		return &pbc.GetActualCostResponse{Results: results}, nil
 	})
 }
