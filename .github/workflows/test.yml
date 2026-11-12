@@ -62,5 +62,5 @@ jobs:
           args: --timeout=5m
 
       - name: Run govulncheck
-        # grpc v1.86.0-dev is the published fix for GO-2026-6443. A finding fails this job.
+        # grpc is on a stable tag past the GO-2026-6443 fix. A finding fails this job.
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
