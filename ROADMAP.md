@@ -9,7 +9,8 @@ reference follow the boundary safeguards at the end of this file.
 
 Status on 2026-11-12: v0.1.2 is released with binaries. The cost RPCs, the
 kind oracle, the drift checks, and the OpenSpec process are in place. Every
-open issue below waits on an owner decision or input. None is blocked on code.
+Immediate Focus and #69 and #71 wait on an owner decision or input. The
+issues filed on 2026-11-12 (#133 to #140) are code work and are not blocked.
 
 ## Immediate Focus (v0.1.x)
 
@@ -32,11 +33,26 @@ open issue below waits on an owner decision or input. None is blocked on code.
 - [ ] #71 `test`: verify profile `kubecost` against a real backend or label it experimental [M]
   Needs a reachable backend, or the owner's decision to label the profile
   experimental. The kind spike's `GET /model/allocation` returned HTTP 404.
+- [ ] #133 `feat(server)`: report only the capabilities that are enabled [S]
+  `GetPluginInfo` advertises `BUDGETS` on profile `opencost`, where
+  `GetBudgets` returns `Unimplemented`. Core gates RPCs on that list.
+- [ ] #134 `feat(server)`: implement `DryRun` so `finfocus plugin inspect` works [S]
+  Core's `plugin inspect` calls `DryRun`, which the plugin does not implement.
+- [ ] #135 `ci(drift)`: run the cost oracle against the latest OpenCost chart nightly [M]
+  Adds the chart-version and cluster env vars. Depends on the live-drift fix in
+  #131, which has merged but has not yet had a passing run.
 
 ## Future Vision (Long-Term)
 
-- Capability discovery so `finfocus plugin inspect opencost <type>` exits 0 with
-  field mappings. No issue exists yet: the owner confirms the gap is wanted, then files it.
+- [ ] #136 `feat(server)`: efficiency and request/usage on actual cost behind `includeUsage` [M]
+  OpenCost returns this data and the plugin ignores it today.
+- [ ] #137 `spike`: how OpenCost allocation maps to FOCUS 1.3 split-cost columns
+  Timebox 1d. The deliverable is a decision, not code.
+- [ ] #138 `feat(server)`: `GetRecommendations` (right-sizing) behind a flag [L]
+  Blocked on #133 (capabilities follow config) and #136 (usage columns).
+- [ ] #139 `docs`: the spec version in README and CLAUDE.md is stale, and nothing checks it [S]
+- [ ] #140 `test(drift)`: cover the live key-set comparison, now 11.6% [S]
+  Land it before the first real live-drift run is trusted.
 - Profile `kubecost` checked against a live backend in CI, only if #71 finds
   one that can run without a product key.
 
