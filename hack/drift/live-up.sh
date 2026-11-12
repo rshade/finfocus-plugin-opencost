@@ -61,6 +61,8 @@ helm upgrade --install opencost opencost \
 helm --kube-context "${context}" list --namespace opencost
 
 kubectl --context "${context}" apply -f "${kind_dir}/workload.yaml"
+kubectl --context "${context}" --namespace oc-test rollout status deployment/fixed --timeout=180s
+kubectl --context "${context}" --namespace opencost wait --for=condition=Ready pod -l app.kubernetes.io/instance=opencost --timeout=180s
 
 forward_log="$(mktemp)"
 kubectl --context "${context}" --namespace opencost port-forward svc/opencost :9003 >"${forward_log}" 2>&1 &
