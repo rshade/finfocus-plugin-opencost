@@ -73,7 +73,7 @@ The logger comes from `pluginsdk.NewPluginLogger` in `main.go` and writes JSON t
 
 The plugin depends on:
 - `github.com/rshade/finfocus-spec/sdk/go/proto` - Protocol buffer definitions
-- `google.golang.org/grpc` v1.86.0-dev. `govulncheck` reports GO-2026-6443 for v1.84.0, and no stable tag newer than v1.84.0 is published. The Test workflow runs `govulncheck` and fails the job on a finding. The plugin server does not call `xds.NewGRPCServer`.
+- `google.golang.org/grpc` v1.85.0, a stable tag. GO-2026-6443 is fixed in 1.82.2, 1.83.2, and the 1.84.0-dev and 1.85.0-dev builds of 2026-08-25, so stable v1.84.0 and v1.85.0 are outside the affected range (the advisory was revised 2026-10-06). The Test workflow runs `govulncheck` and fails the job on a finding. The plugin server does not call `xds.NewGRPCServer`. `test/drift` pins the same version and must be re-tidied with it.
 - `gopkg.in/yaml.v3` for configuration parsing
 
 ## Testing Approach
