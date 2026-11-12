@@ -5,18 +5,53 @@ on:
     - cron: "17 6 * * *"
   workflow_dispatch:
   pull_request:
-    types: [labeled]
+    types: [opened, synchronize, reopened, labeled]
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  paths:
+    name: Paths
+    runs-on: ubuntu-latest
+    outputs:
+      e2e: ${{ steps.sel.outputs.e2e }}
+    steps:
+      - name: Checkout path selector
+        if: github.event_name == 'pull_request' && github.event.action != 'labeled'
+        uses: actions/checkout@v7
+
+      - name: Select pull request paths
+        id: sel
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [ "${EVENT_NAME}" != "pull_request" ] || [ "${EVENT_ACTION}" = "labeled" ]; then
+            echo "e2e=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          if gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename' \
+            | bash hack/kind/select-pr-paths.sh
+          then
+            echo "e2e=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "e2e=false" >> "${GITHUB_OUTPUT}"
+          fi
+
   e2e:
     name: E2E (kind)
+    needs: paths
     if: >-
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch' ||
-      github.event.label.name == 'e2e-kind'
+      always() && !cancelled() &&
+      (github.event_name == 'schedule' ||
+       github.event_name == 'workflow_dispatch' ||
+       github.event.label.name == 'e2e-kind' ||
+       needs.paths.outputs.e2e == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
