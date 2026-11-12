@@ -1,5 +1,7 @@
 # FinFocus OpenCost plugin
 
+[![Test](https://github.com/rshade/finfocus-plugin-opencost/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/rshade/finfocus-plugin-opencost/actions/workflows/test.yml)
+
 `finfocus-plugin-opencost` is a FinFocus cost source named `opencost`.
 It reads Kubernetes allocation costs over HTTP and serves them with gRPC.
 The protocol is `finfocus-spec` v0.7.3.
