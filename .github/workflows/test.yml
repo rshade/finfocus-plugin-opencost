@@ -14,6 +14,7 @@ permissions:
 jobs:
   test:
     name: Test
+    # No Go matrix: go.mod declares one supported Go version.
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +29,25 @@ jobs:
           cache: true
 
       - name: Run tests
-        run: go test ./...
+        run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Publish coverage summary
+        run: |
+          {
+            echo "### Coverage"
+            echo
+            echo "Total statement coverage: $(go tool cover -func=coverage.out | tail -1 | awk '{print $3}')"
+            echo
+            echo "| Package | Statements covered |"
+            echo "| --- | --- |"
+            awk 'NR > 1 { split($1, a, ":"); dir = a[1]; sub(/\/[^\/]*$/, "", dir); total[dir] += $2; if ($3 > 0) hit[dir] += $2 } END { for (dir in total) printf "| %s | %.1f%% |\n", dir, 100 * hit[dir] / total[dir] }' coverage.out | sort
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage profile
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage.out
 
       - name: Build plugin image
         run: docker build -t finfocus-plugin-opencost:dev .

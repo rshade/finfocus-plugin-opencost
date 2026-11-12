@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -125,7 +126,7 @@ func runStartup(t *testing.T, bin string, env []string) string {
 	port := freePort(t)
 	proc := exec.Command(bin, "--port", port)
 	proc.Env = env
-	var stderr bytes.Buffer
+	var stderr lockedBuffer
 	proc.Stderr = &stderr
 	require.NoError(t, proc.Start())
 	deadline := time.Now().Add(3 * time.Second)
@@ -141,6 +142,23 @@ func runStartup(t *testing.T, bin string, env []string) string {
 	}
 	_ = proc.Wait()
 	return stderr.String()
+}
+
+type lockedBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *lockedBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
 }
 
 func freePort(t *testing.T) string {
