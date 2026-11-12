@@ -13,10 +13,7 @@ When `OC_E2E` is set, the kind suite SHALL use cluster `oc-e2e` and SHALL call
 accept `kubernetes:core/v1:Namespace` and SHALL reject
 `kubernetes:core/v1:Service`. `GetActualCost` for `namespace/oc-test` SHALL
 stay within `relative_tolerance` from `testdata/opencost-real/expected.json`
-when the custom CPU rate is `2.0`. The currency SHALL be `EUR`. Setting that
-CPU rate to `9.0` SHALL push the relative error higher than the tolerance. Restoring
-`2.0` SHALL bring it back within the tolerance. `spotCPU` stays `2.0`. The
-suite SHALL skip when `OC_E2E` is unset.
+when the custom CPU rate is `2.0`. The currency SHALL be `EUR`.
 
 #### Scenario: Oracle rate
 
@@ -24,6 +21,14 @@ suite SHALL skip when `OC_E2E` is unset.
 - **THEN** `GetActualCost` for `namespace/oc-test` is within `relative_tolerance`
 - **AND** the currency is `EUR`
 - **AND** `Supports` accepts the namespace type and rejects the service type
+
+Tested by: TestE2EActualCostMatchesOracle
+
+### Requirement: A changed CPU rate leaves the tolerance
+
+Setting that CPU rate to `9.0` SHALL push the relative error higher than the
+tolerance. Restoring `2.0` SHALL bring it back within the tolerance. `spotCPU`
+stays `2.0`.
 
 #### Scenario: Broken CPU rate
 
@@ -35,7 +40,15 @@ suite SHALL skip when `OC_E2E` is unset.
 - **WHEN** the custom CPU rate is restored to `2.0`
 - **THEN** `GetActualCost` for `namespace/oc-test` is within `relative_tolerance` again
 
+Tested by: TestE2EActualCostMatchesOracle
+
+### Requirement: The kind suite skips without the live flag
+
+The suite SHALL skip when `OC_E2E` is unset.
+
 #### Scenario: Skipped without the live flag
 
 - **WHEN** `OC_E2E` is unset
 - **THEN** the kind oracle test skips
+
+Tested by: TestE2EActualCostMatchesOracle

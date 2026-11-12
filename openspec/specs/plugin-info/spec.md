@@ -21,6 +21,8 @@ be `PROJECTED_COSTS`, `ACTUAL_COSTS`, `PRICING_SPEC`, `ESTIMATE_COST`,
 - **AND** the capability set is those six values
 - **AND** `ALLOCATION` is absent
 
+Tested by: TestGetPluginInfoReportsSpecAndCapabilities
+
 ### Requirement: Supports accepts the Kubernetes types core sends
 
 `Supports` SHALL accept `kubernetes:core/v1:Namespace`,
@@ -41,3 +43,5 @@ be `PROJECTED_COSTS`, `ACTUAL_COSTS`, `PRICING_SPEC`, `ESTIMATE_COST`,
 - **WHEN** `Supports` is called for `kubernetes:core/v1:Service`
 - **THEN** the response says the type is not supported
 - **AND** the reason is not empty
+
+Tested by: TestSupportsKubernetesTypesCoreSends

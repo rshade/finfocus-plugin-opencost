@@ -55,3 +55,20 @@ func TestGetPricingSpecUsesObservedHourlyRate(t *testing.T) {
 	require.Equal(t, codes.InvalidArgument, status.Code(err))
 	require.Contains(t, status.Convert(err).Message(), "ec2")
 }
+
+func TestGetPricingSpecWithNoRowIsNotFound(t *testing.T) {
+	t.Parallel()
+
+	srv := serverForFilter(t, []byte(`{"code":200,"data":[]}`), nil)
+
+	_, err := srv.GetPricingSpec(t.Context(), &pbc.GetPricingSpecRequest{
+		Resource: &pbc.ResourceDescriptor{
+			Provider:     "kubernetes",
+			ResourceType: "kubernetes:core/v1:Namespace",
+			Id:           "no-such-namespace",
+		},
+	})
+	require.Error(t, err)
+	require.Equal(t, codes.NotFound, status.Code(err))
+	require.Contains(t, err.Error(), "NO_COST_DATA")
+}

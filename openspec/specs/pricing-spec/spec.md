@@ -12,11 +12,7 @@ Report the observed hourly cost of one Kubernetes resource. This is not an AWS p
 the descriptor. `provider` SHALL be `kubernetes`. `resource_type` SHALL be
 the requested supported type. `billing_mode` SHALL be `per_hour`.
 `rate_per_unit` SHALL be that object's `totalCost` divided by its hours
-(`minutes / 60`). `currency` SHALL follow the allocation body when it names
-one currency, otherwise the pricing config. The plugin SHALL NOT assume USD.
-A positive total SHALL NOT return a zero rate. No samples SHALL be
-`NotFound`. An unsupported type, including `ec2`, SHALL be `InvalidArgument`
-and SHALL NOT return a price.
+(`minutes / 60`). A positive total SHALL NOT return a zero rate.
 
 #### Scenario: Namespace rate matches the recorded hourly cost
 
@@ -28,8 +24,19 @@ and SHALL NOT return a price.
 - **AND** `rate_per_unit` equals that namespace's `totalCost / (minutes / 60)`
 - **AND** `rate_per_unit` is greater than zero
 
+Tested by: TestGetPricingSpecUsesObservedHourlyRate
+
+### Requirement: Pricing currency and failure statuses
+
+`currency` SHALL follow the allocation body when it names
+one currency, otherwise the pricing config. The plugin SHALL NOT assume USD.
+No samples SHALL be `NotFound`. An unsupported type, including `ec2`, SHALL be `InvalidArgument`
+and SHALL NOT return a price.
+
 #### Scenario: EC2 is not a catalog price
 
 - **WHEN** `GetPricingSpec` is called for provider `aws` and resource type `ec2`
 - **THEN** the status is `InvalidArgument`
 - **AND** the message contains `ec2`
+
+Tested by: TestGetPricingSpecUsesObservedHourlyRate, TestGetPricingSpecWithNoRowIsNotFound, TestCostCurrencyUsesNonUSDConfig

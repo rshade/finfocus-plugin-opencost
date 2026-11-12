@@ -11,16 +11,7 @@ Map cost RPC failures to explicit gRPC codes, and return a real zero cost instea
 A cost request with no window SHALL be `InvalidArgument`. An unsupported
 resource type SHALL be `InvalidArgument`. An allocation backend status of 500
 SHALL be `Unavailable`. A caller deadline SHALL be `DeadlineExceeded` and
-SHALL NOT be `OK`. On `GetProjectedCost`, `GetPricingSpec`, and `EstimateCost`, an
-allocation body with no matching row SHALL be `NotFound`, and the message
-SHALL include `NO_COST_DATA` and `no cost data`. On `GetActualCost` it SHALL
-succeed with no results and `FALLBACK_HINT_RECOMMENDED`. An HTTP 500
-body that names an invalid filter SHALL stay `Unavailable`, SHALL include the
-rejected field name, and SHALL NOT be `NO_COST_DATA`. A backend HTTP 401 on
-any backend call SHALL be `Unauthenticated` and a backend HTTP 403 SHALL be
-`PermissionDenied`; the message SHALL name the `KUBECOST_API_TOKEN` check and
-SHALL NOT contain the token. Other 4xx and 5xx statuses SHALL stay
-`Unavailable`.
+SHALL NOT be `OK`.
 
 #### Scenario: Empty window
 
@@ -37,18 +28,20 @@ SHALL NOT contain the token. Other 4xx and 5xx statuses SHALL stay
 - **WHEN** the allocation backend returns HTTP 500
 - **THEN** the status is `Unavailable`
 
-#### Scenario: Invalid filter body
-
-- **WHEN** `GetActualCost` for `controller/oc-test/fixed` receives the captured HTTP 500 body `error-controller-filter.json`
-- **THEN** the status is `Unavailable`
-- **AND** the message includes `expect filter field` and `controller`
-- **AND** the message does not include `NO_COST_DATA`
-
 #### Scenario: Caller deadline
 
 - **WHEN** the caller deadline has already expired
 - **THEN** the status is `DeadlineExceeded`
 - **AND** the status is not `OK`
+
+Tested by: TestCostRPCErrorMapping
+
+### Requirement: A missing allocation row is no data
+
+On `GetProjectedCost`, `GetPricingSpec`, and `EstimateCost`, an
+allocation body with no matching row SHALL be `NotFound`, and the message
+SHALL include `NO_COST_DATA` and `no cost data`. On `GetActualCost` it SHALL
+succeed with no results and `FALLBACK_HINT_RECOMMENDED`.
 
 #### Scenario: No matching row
 
@@ -61,6 +54,25 @@ SHALL NOT contain the token. Other 4xx and 5xx statuses SHALL stay
 - **WHEN** `GetActualCost` reads an allocation body with an empty data array
 - **THEN** the call succeeds with no results
 - **AND** the fallback hint is `FALLBACK_HINT_RECOMMENDED`
+
+Tested by: TestCostRPCErrorMapping, TestGetActualCostMissingDescriptorIsNoData
+
+### Requirement: Backend failures keep their cause
+
+An HTTP 500
+body that names an invalid filter SHALL stay `Unavailable`, SHALL include the
+rejected field name, and SHALL NOT be `NO_COST_DATA`. A backend HTTP 401 on
+any backend call SHALL be `Unauthenticated` and a backend HTTP 403 SHALL be
+`PermissionDenied`; the message SHALL name the `KUBECOST_API_TOKEN` check and
+SHALL NOT contain the token. Other 4xx and 5xx statuses SHALL stay
+`Unavailable`.
+
+#### Scenario: Invalid filter body
+
+- **WHEN** `GetActualCost` for `controller/oc-test/fixed` receives the captured HTTP 500 body `error-controller-filter.json`
+- **THEN** the status is `Unavailable`
+- **AND** the message includes `expect filter field` and `controller`
+- **AND** the message does not include `NO_COST_DATA`
 
 #### Scenario: Backend rejects the token
 
@@ -79,6 +91,8 @@ SHALL NOT contain the token. Other 4xx and 5xx statuses SHALL stay
 - **WHEN** a backend call gets HTTP 400, 404, or 500
 - **THEN** the status is `Unavailable`
 
+Tested by: TestCapturedControllerFilterBodies, TestBackendAuthMaps401And403, TestBackendAuthErrorOmitsToken, TestBackendStatusErrorIsTyped
+
 ### Requirement: A real zero stays zero
 
 A matching allocation whose total is zero SHALL return one result with cost
@@ -94,3 +108,5 @@ zero. A matching nonzero total SHALL be returned unchanged.
 
 - **WHEN** the matching allocation total is 1.25
 - **THEN** the single result cost is 1.25
+
+Tested by: TestCostRPCErrorMapping

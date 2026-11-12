@@ -13,12 +13,7 @@ Estimate one resource and batch many resources from one allocation query.
 resource with no allocation row SHALL be a per-item `NotFound` containing
 `NO_COST_DATA`. On an actual batch it SHALL be per-item `ActualCostData` with
 no results and `FALLBACK_HINT_RECOMMENDED`. Either way the RPC SHALL still
-succeed, including when neither the body nor the config names a currency. Estimate costs SHALL use the 730-hour projection of that row. Actual
-costs SHALL use that row's `totalCost`. A present row SHALL carry the same
-currency rule as `GetProjectedCost`. Estimate items SHALL set `currency`.
-Actual items SHALL set `focus_record.billing_currency`. A present row whose
-body and config both omit a currency SHALL be a per-item `FailedPrecondition`,
-and the RPC SHALL still succeed.
+succeed, including when neither the body nor the config names a currency.
 
 #### Scenario: Estimate batch with one missing namespace
 
@@ -33,6 +28,24 @@ and the RPC SHALL still succeed.
 - **THEN** the result order matches that request
 - **AND** each total equals that namespace's recorded `totalCost`
 
+#### Scenario: Actual batch with one missing namespace
+
+- **WHEN** `BatchCost` requests actual cost for `oc-test` and an absent namespace from `allocation-namespace-60m.json` and the config currency is empty
+- **THEN** the RPC succeeds
+- **AND** the absent namespace is actual cost data with no results and `FALLBACK_HINT_RECOMMENDED`
+- **AND** it carries no per-item error
+
+Tested by: TestBatchCostKeepsOrderAndPartialFailure, TestBatchActualCostKeepsOrder, TestBatchActualMissingObjectRecommendsFallback
+
+### Requirement: Batch items price a present row and state its currency
+
+Estimate costs SHALL use the 730-hour projection of that row. Actual
+costs SHALL use that row's `totalCost`. A present row SHALL carry the same
+currency rule as `GetProjectedCost`. Estimate items SHALL set `currency`.
+Actual items SHALL set `focus_record.billing_currency`. A present row whose
+body and config both omit a currency SHALL be a per-item `FailedPrecondition`,
+and the RPC SHALL still succeed.
+
 #### Scenario: Missing namespace without a currency
 
 - **WHEN** `BatchCost` estimates `oc-test` and an absent namespace from `allocation-namespace-60m.json` and the config currency is empty
@@ -41,12 +54,7 @@ and the RPC SHALL still succeed.
 - **AND** the `oc-test` item is `FailedPrecondition`
 - **AND** that item message does not contain `USD`
 
-#### Scenario: Actual batch with one missing namespace
-
-- **WHEN** `BatchCost` requests actual cost for `oc-test` and an absent namespace from `allocation-namespace-60m.json` and the config currency is empty
-- **THEN** the RPC succeeds
-- **AND** the absent namespace is actual cost data with no results and `FALLBACK_HINT_RECOMMENDED`
-- **AND** it carries no per-item error
+Tested by: TestBatchMissingObjectStaysNotFoundWithoutCurrency, TestBatchCostKeepsOrderAndPartialFailure
 
 ### Requirement: Estimate one recorded namespace
 
@@ -64,6 +72,8 @@ pricing config, and SHALL NOT assume USD.
 
 - **WHEN** `EstimateCost` reads `allocation-namespace-60m.json` for `oc-test` and the config currency is `EUR`
 - **THEN** `currency` is `EUR`
+
+Tested by: TestEstimateCostUsesRecordedNamespace, TestCostCurrencyUsesNonUSDConfig
 
 ### Requirement: Kubecost profile estimates from spec cost
 
@@ -88,6 +98,8 @@ verified against live Kubecost.
 - **THEN** the RPC is `FailedPrecondition`
 - **AND** the message does not contain `USD`
 
+Tested by: TestEstimateCostKubecostUsesSpecCostContract, TestEstimateCostKubecostPredictionNeedsCurrency
+
 ### Requirement: Actual batch items state the period their data covers
 
 Each result in an actual `BatchCost` item SHALL carry the same charge period
@@ -101,3 +113,5 @@ warning as `GetActualCost`, with `resource` set to the descriptor id.
 - **WHEN** an actual batch for `oc-test` covers 2026-10-12 to 2026-11-11 and every row in the body starts at `2026-10-27T06:05:00Z`
 - **THEN** the item cost is the row's `totalCost` and its charge period starts at `2026-10-27T06:05:00Z`
 - **AND** the plugin logs the warning without a cluster query
+
+Tested by: TestBatchActualWarnsWhenStoreCoversPartOfWindow

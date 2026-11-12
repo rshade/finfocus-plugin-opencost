@@ -16,6 +16,8 @@ on each allocation object. It SHALL NOT take those totals from `rawAllocationOnl
 - **WHEN** `allocation-namespace-60m.json` is decoded
 - **THEN** the `oc-test` entry reports total cost 0.1406, CPU cost 0.09373, and RAM cost 0.04687
 
+Tested by: TestDecodeRecordedAllocations
+
 ### Requirement: Plain-text backend errors
 
 The decoder SHALL return the response body when the HTTP status is 400 and the
@@ -27,6 +29,8 @@ body is plain text.
 - **THEN** the error contains `illegal window: notawindow`
 - **AND** the error does not report a JSON syntax failure
 
+Tested by: TestDecodeRecordedAllocations
+
 ### Requirement: Complete wire-key set
 
 `ConsumedFields` and `IgnoredFields` SHALL be disjoint, and their union SHALL
@@ -37,3 +41,5 @@ equal the set of keys that appear on recorded allocation objects.
 - **WHEN** every `allocation-*.json` file under `testdata/opencost-real/` is scanned
 - **THEN** each allocation key is in exactly one of the two maps
 - **AND** every declared key appears in at least one recorded allocation
+
+Tested by: TestWireFieldsCoverRecordedKeys, TestMarshaledAllocationMatchesWireAndRecordings

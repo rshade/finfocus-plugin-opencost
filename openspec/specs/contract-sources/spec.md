@@ -23,3 +23,5 @@ upstream module. The fixtures are not verified against live Kubecost.
 
 - **WHEN** the `budgets-health.json` row is removed
 - **THEN** the source-list check fails
+
+Tested by: TestKubecostContractSourcesListsEveryFixture

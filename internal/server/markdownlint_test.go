@@ -29,6 +29,9 @@ func TestMarkdownlintIgnoresGeneratedChangelog(t *testing.T) {
 		Ignores []string `json:"ignores"`
 	}
 	require.NoError(t, json.Unmarshal([]byte(kept.String()), &cfg))
-	require.Contains(t, cfg.Ignores, "CHANGELOG.md")
-	require.Contains(t, cfg.Ignores, ".claude/**")
+	require.ElementsMatch(t, []string{
+		".claude/commands/opsx/**",
+		".claude/skills/openspec-*/**",
+		"CHANGELOG.md",
+	}, cfg.Ignores, "only generated files are ignored; pick-issue.md and .claude/agents stay linted")
 }

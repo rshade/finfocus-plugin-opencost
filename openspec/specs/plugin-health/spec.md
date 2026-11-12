@@ -32,6 +32,8 @@ When the context has an SDK trace id, the probe SHALL send that id on the reques
 - **THEN** both health checks reach the backend
 - **AND** the second check fails
 
+Tested by: TestHealthCheckFollowsBackend
+
 ### Requirement: RPC logs report the trace, the count, and the latency
 
 Each health check and each cost-source RPC SHALL log the SDK trace id, a running request count, and the call latency.
@@ -42,6 +44,8 @@ The count SHALL increase for a health check and for `Supports`.
 - **WHEN** a health check runs and then `Supports` runs with the same trace id
 - **THEN** the health log contains that trace id, a request count, and a latency
 - **AND** a later health check reports a higher count
+
+Tested by: TestHealthCheckFollowsBackend, TestSupportsLogsTraceIDFromContext
 
 ### Requirement: Log lines name the plugin with the SDK field
 
@@ -54,3 +58,5 @@ NOT carry a `plugin` field.
 - **WHEN** the plugin starts with no base URL and exits 1
 - **THEN** each stderr line is JSON with `plugin_name` `opencost` and `plugin_version` equal to the build version
 - **AND** no line has a `plugin` field
+
+Tested by: TestBinaryExitsOnInvalidConfig, TestMainSetsServerLogger

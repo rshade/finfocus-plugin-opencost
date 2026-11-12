@@ -1,8 +1,12 @@
 {
-  // OpenSpec writes the command and skill files under .claude.
+  // OpenSpec writes the opsx commands and openspec-* skills. Hand edits are
+  // overwritten. The rest of .claude (pick-issue.md, agents) is hand written
+  // and stays linted.
   // Release Please writes CHANGELOG.md. Hand edits are overwritten.
-  // The prose workflow lints every Markdown file, and those files
-  // are not project prose.
   "globs": ["**/*.md"],
-  "ignores": [".claude/**", "CHANGELOG.md"]
+  "ignores": [
+    ".claude/commands/opsx/**",
+    ".claude/skills/openspec-*/**",
+    "CHANGELOG.md"
+  ]
 }

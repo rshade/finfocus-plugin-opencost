@@ -19,6 +19,8 @@ a registry install names after the tag.
 - **THEN** its `plugin.manifest.json` `version` is `v0.1.2`
 - **AND** `finfocus plugin validate --plugin opencost` reports it valid
 
+Tested by: TestGoreleaserArchivesStampedManifest, TestStampCheckedInManifest
+
 ### Requirement: Local install stamps the same version
 
 `make install` SHALL write the binary and a stamped manifest into
@@ -34,3 +36,5 @@ a registry install names after the tag.
 
 - **WHEN** the stamp is asked for version `0.1.2`
 - **THEN** it fails and writes no manifest
+
+Tested by: TestStampRejectsBadInput, TestRunWritesStampedFile
