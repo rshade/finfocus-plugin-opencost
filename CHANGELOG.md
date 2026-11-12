@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.2.0](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.1.2...v0.2.0) (2026-11-12)
+
+
+### Features
+
+* reject public http and trust a CA file (OC-9.7) ([#96](https://github.com/rshade/finfocus-plugin-opencost/issues/96)) ([bb515bf](https://github.com/rshade/finfocus-plugin-opencost/commit/bb515bf1960262d5f38ad5599ade2f2e04b855c3)), closes [#65](https://github.com/rshade/finfocus-plugin-opencost/issues/65)
+
+
+### Bug Fixes
+
+* **config:** return config parse errors and validate before serving (OC-9.4) ([#91](https://github.com/rshade/finfocus-plugin-opencost/issues/91)) ([2e6d1f3](https://github.com/rshade/finfocus-plugin-opencost/commit/2e6d1f37127130ebfb7ee29b82e876aafb2055ba))
+* **deps:** bump Go to 1.27.4 for GO-2026-6859 ([#109](https://github.com/rshade/finfocus-plugin-opencost/issues/109)) ([594e3fd](https://github.com/rshade/finfocus-plugin-opencost/commit/594e3fd42a15580e3844170dcf521d6e378f7c19))
+* **deps:** bump golang.org/x/net to v0.60.0 and go to 1.27.3 ([#105](https://github.com/rshade/finfocus-plugin-opencost/issues/105)) ([f2eedc8](https://github.com/rshade/finfocus-plugin-opencost/commit/f2eedc8686fc239705e21466f8c3d471cab3a8ff))
+* **deps:** pin grpc to stable v1.85.0 (OC-9.14) ([#126](https://github.com/rshade/finfocus-plugin-opencost/issues/126)) ([41efa4b](https://github.com/rshade/finfocus-plugin-opencost/commit/41efa4bae8bae7296811d20f77b958c3b46c42c9)), closes [#75](https://github.com/rshade/finfocus-plugin-opencost/issues/75)
+* **deps:** update module github.com/rshade/finfocus-spec to v0.7.12 ([#106](https://github.com/rshade/finfocus-plugin-opencost/issues/106)) ([087d628](https://github.com/rshade/finfocus-plugin-opencost/commit/087d6289526f2a4710074ef0de08307c92a45c52))
+* **drift:** wait for the opencost pod before port-forwarding ([404278a](https://github.com/rshade/finfocus-plugin-opencost/commit/404278a1cd4319c1d869923ed74d6b643c404c6e))
+* **plugin:** name the plugin in logs with the SDK plugin_name field ([#111](https://github.com/rshade/finfocus-plugin-opencost/issues/111)) ([117c5f1](https://github.com/rshade/finfocus-plugin-opencost/commit/117c5f172857b0e9a125184c4931a8433ceecb55))
+* **process:** quote the OpenSpec config rules so OpenSpec 2 parses them ([c04a7d2](https://github.com/rshade/finfocus-plugin-opencost/commit/c04a7d262b0bfe3c4452659b0d29e293cb9ce85c))
+* **release:** stamp the release version into the shipped manifest ([#112](https://github.com/rshade/finfocus-plugin-opencost/issues/112)) ([d9da488](https://github.com/rshade/finfocus-plugin-opencost/commit/d9da48827e030c7461ec2e9154925133627ee8e2))
+* replace the CodeRabbit config with one that matches its schema ([b9afdac](https://github.com/rshade/finfocus-plugin-opencost/commit/b9afdacd28bdfb51c4eb5da01539193dfdc03f57))
+* **server:** report missing actual cost as no data, not NotFound ([#108](https://github.com/rshade/finfocus-plugin-opencost/issues/108)) ([6614334](https://github.com/rshade/finfocus-plugin-opencost/commit/6614334d554246eb38daa7ef38ef205aa4136e2f))
+* **server:** skip invalid budget rules and map backend 401/403 (OC-9.5) ([#94](https://github.com/rshade/finfocus-plugin-opencost/issues/94)) ([f631fde](https://github.com/rshade/finfocus-plugin-opencost/commit/f631fde7e25d3e8b07cae7672cd7eb6c8e8a3f65))
+* **server:** state actual cost data span and warn on a backend data gap ([#110](https://github.com/rshade/finfocus-plugin-opencost/issues/110)) ([55df707](https://github.com/rshade/finfocus-plugin-opencost/commit/55df7077d7f9967e5b5b13a7c2e663161489f1ac))
+
+
+### Documentation
+
+* add CONTEXT.md and ROADMAP.md and retire TASKS.md ([5e091ae](https://github.com/rshade/finfocus-plugin-opencost/commit/5e091ae5504618d4fd1f2ec01a125ee8f9baf70c))
+* link OpenCost and Kubecost and FinFocus from the README ([#104](https://github.com/rshade/finfocus-plugin-opencost/issues/104)) ([61e6cae](https://github.com/rshade/finfocus-plugin-opencost/commit/61e6caefb3f4888a1cab266f33b8e061b3c26d18))
+* link the FinFocus docs at finfocus.dev ([#115](https://github.com/rshade/finfocus-plugin-opencost/issues/115)) ([51207b1](https://github.com/rshade/finfocus-plugin-opencost/commit/51207b115ea79a7b5988fed421fffaec8c7cc12e))
+* mark the live-drift race as inferred, not reproduced ([bd7cdaf](https://github.com/rshade/finfocus-plugin-opencost/commit/bd7cdaff14d60dd4ffd268c541a7d0dfd7168244))
+* **tasks:** sync the release block and Phase 9 rows (OC-9.15) ([#90](https://github.com/rshade/finfocus-plugin-opencost/issues/90)) ([d97fc66](https://github.com/rshade/finfocus-plugin-opencost/commit/d97fc663cf476aafb4c6c89a1e251f533e1b54b2))
+* Updating roadmap ([542cc6a](https://github.com/rshade/finfocus-plugin-opencost/commit/542cc6ac5a62846f2350880dabf5397f4ffe1f6c))
+
 ## [0.1.2](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.1.1...v0.1.2) (2026-10-06)
 
 
