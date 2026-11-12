@@ -42,3 +42,15 @@ The count SHALL increase for a health check and for `Supports`.
 - **WHEN** a health check runs and then `Supports` runs with the same trace id
 - **THEN** the health log contains that trace id, a request count, and a latency
 - **AND** a later health check reports a higher count
+
+### Requirement: Log lines name the plugin with the SDK field
+
+Every log line the plugin writes SHALL carry `plugin_name` `opencost` and
+`plugin_version`, the fields `pluginsdk.NewPluginLogger` sets. A line SHALL
+NOT carry a `plugin` field.
+
+#### Scenario: Startup error line
+
+- **WHEN** the plugin starts with no base URL and exits 1
+- **THEN** each stderr line is JSON with `plugin_name` `opencost` and `plugin_version` equal to the build version
+- **AND** no line has a `plugin` field
