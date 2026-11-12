@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -90,4 +91,19 @@ func TestSpecTestLinkCheckerRejectsUnknownNames(t *testing.T) {
 	known := repoTestNames(t, repoRoot(t))
 	require.True(t, known["TestEverySpecRequirementNamesAResolvingTest"])
 	require.False(t, known["TestNoSuchTestAnywhere"])
+}
+
+func TestOpenSpecConfigParsesAndCarriesSpecRules(t *testing.T) {
+	t.Parallel()
+
+	var cfg struct {
+		Rules struct {
+			Specs []string `yaml:"specs"`
+		} `yaml:"rules"`
+	}
+	require.NoError(t, yaml.Unmarshal(readRepoFile(t, "openspec/config.yaml"), &cfg),
+		"openspec 2 refuses a config.yaml that does not parse; quote any rule that contains a colon")
+	require.Len(t, cfg.Rules.Specs, 2)
+	require.Contains(t, cfg.Rules.Specs[0], "500 characters")
+	require.Contains(t, cfg.Rules.Specs[1], "Tested by:")
 }

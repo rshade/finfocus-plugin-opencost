@@ -32,7 +32,7 @@ OpenSpec is how this repo changes behaviour (adopted in #57). The CLI is pinned 
 
 - **Propose, apply, verify, archive** for a change to an RPC, the config surface, an endpoint profile, the resource-type mapping, or the cost arithmetic. Use the `openspec-*` skills or the `/opsx:*` commands. The archive lands in the same commit as the code.
 - **Direct** for tests only, docs only, CI, and a bug fix with no surface change. Do not send a one-file fix through OpenSpec.
-- Keep each requirement body (the text before its first scenario) at 500 characters or fewer, because `openspec validate --strict` fails above that. End every requirement block with one `Tested by: TestA, TestB` line that names top-level Go tests, or `Tested by: none (reason)`. `TestEverySpecRequirementNamesAResolvingTest` fails when a name is not a `func Test...` in some `_test.go` file. `openspec/config.yaml` carries both rules for new specs.
+- Keep each requirement body (the text before its first scenario) at 500 characters or fewer, because `openspec validate --strict` fails above that. End every requirement block with one `Tested by: TestA, TestB` line that names top-level Go tests, or `Tested by: none (reason)`. `TestEverySpecRequirementNamesAResolvingTest` fails when a name is not a `func Test...` in some `_test.go` file. `openspec/config.yaml` carries both rules for new specs. Quote any rule there that contains a colon: OpenSpec 2 refuses a config that does not parse, and `TestOpenSpecConfigParsesAndCarriesSpecRules` checks it.
 - CI runs `mise exec -- openspec validate --all --strict` as the `OpenSpec validate` job in `.github/workflows/test.yml`. It is not a required check. Making it one is the owner's decision.
 
 Three guardrails from the first OpenSpec run:

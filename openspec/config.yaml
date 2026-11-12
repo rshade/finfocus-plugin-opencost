@@ -16,8 +16,8 @@ context: |
 
 rules:
   specs:
-    - Keep each requirement body (the text before its first scenario) at 500 characters or fewer, because openspec validate --strict fails above that. Split a long requirement into two.
-    - End every requirement block, after its last scenario, with one line "Tested by: TestA, TestB" naming top-level Go test functions that exist in a _test.go file, or "Tested by: none (reason)". TestEverySpecRequirementNamesAResolvingTest fails otherwise.
+    - 'Keep each requirement body (the text before its first scenario) at 500 characters or fewer, because openspec validate --strict fails above that. Split a long requirement into two.'
+    - 'End every requirement block, after its last scenario, with one line "Tested by: TestA, TestB" naming top-level Go test functions that exist in a _test.go file, or "Tested by: none (reason)". TestEverySpecRequirementNamesAResolvingTest fails otherwise.'
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.
