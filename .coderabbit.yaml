@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+early_access: false
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  collapse_walkthrough: true
+  poem: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    # Stacked pull requests have a base branch other than main.
+    base_branches:
+      - ".*"
+
+  # Generated or vendored files that are not worth reviewing. The owner-owned
+  # recordings in testdata/opencost-real stay in scope on purpose.
+  path_filters:
+    - "!CHANGELOG.md"
+    - "!**/go.sum"
+    - "!openspec/changes/archive/**"
+    - "!.claude/commands/opsx/**"
+    - "!.claude/skills/openspec-*/**"
+    - "!examples/kubernetes/preview.json"
+
+  path_instructions:
+    - path: "**/*.go"
+      instructions: |
+        Errors are explicit gRPC statuses. A zero cost is only a real zero, and
+        the plugin never assumes USD. The plugin module must not import
+        github.com/opencost/opencost; only the test/drift module does. Outbound
+        HTTP goes through internal/allocation so the cache, the rate limit, and
+        the filter-value validation apply. Do not ask for comments that restate
+        the code.
+    - path: "**/*_test.go"
+      instructions: |
+        Tests use testify. Flag a test that cannot fail. A test that asserts a
+        literal query string does not prove OpenCost accepts it, so a change to
+        the allocation query also needs the kind oracle (make e2e-kind). Tests
+        that mutate environment or process state must not be parallel.
+    - path: "openspec/specs/**"
+      instructions: |
+        Each requirement body, the text before its first scenario, is 500
+        characters or fewer. Each requirement ends with one "Tested by:" line
+        naming top-level Go test functions that exist, or "Tested by: none
+        (reason)". When a requirement is split, every SHALL sentence and every
+        scenario must survive.
+    - path: "testdata/opencost-real/**"
+      instructions: |
+        These are genuine OpenCost captures and are owner-owned. Flag any
+        change unless the pull request says the owner re-captured them.
+    - path: ".github/workflows/**"
+      instructions: |
+        Release tooling (release-please, GoReleaser, release.yml) changes only
+        when the task says so. Do not allow a push: tags trigger, a printed
+        secret, or an action pinned below the current major version. A required
+        check must be skipped at job level, not workflow level, or it stays
+        pending.
+    - path: "hack/**/*.sh"
+      instructions: |
+        Scripts that create kind clusters must wait for readiness before they
+        port-forward and must delete only the clusters they name (oc-e2e and
+        oc-drift), never any other.
+    - path: "{ROADMAP.md,CONTEXT.md,CLAUDE.md,plugin.manifest.json}"
+      instructions: |
+        The word kubecost appears only in lowercase, as the profile name or in
+        a KUBECOST_ environment variable. Flag the capitalised product name.
+
+  tools:
+    # CI already runs these, so CodeRabbit would only repeat them.
+    golangci-lint:
+      enabled: false
+    markdownlint:
+      enabled: false
+    languagetool:
+      enabled: false
+    actionlint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    gitleaks:
+      enabled: true
+
+chat:
+  auto_reply: true
