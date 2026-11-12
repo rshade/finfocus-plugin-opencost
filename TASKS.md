@@ -4,7 +4,7 @@
 
 **Status**: Planning. Rewritten 2026-10-03 and supersedes the 2026-09-30 kubecost plan. Phase 9 added 2026-10-04.
 **Target version**: v0.1.0
-**Go**: 1.27.1. **finfocus-spec**: v0.7.1 minimum.
+**Go**: 1.27.4. **finfocus-spec**: v0.7.1 minimum.
 **Process**: Superpowers for the run, then OpenSpec changes per task group (see section 6). Run prompt: `superpowers-prompt.md`.
 
 ## Release and tag rules (family standard, updated 2026-10-06)
