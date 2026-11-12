@@ -8,7 +8,7 @@ This plugin integrates [OpenCost](https://opencost.io/)
 ([source on GitHub](https://github.com/opencost/opencost)) and
 [Kubecost](https://www.apptio.com/products/kubecost/) and is a plugin for
 [FinFocus](https://github.com/rshade/finfocus), the Pulumi cost CLI.
-See the [FinFocus docs page for this plugin](https://rshade.github.io/finfocus/plugins/opencost/).
+See the [FinFocus docs page for this plugin](https://finfocus.dev/docs/plugins/opencost/).
 
 ## Capabilities
 
