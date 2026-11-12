@@ -9,10 +9,11 @@ Estimate one resource and batch many resources from one allocation query.
 ### Requirement: Batch results keep request order
 
 `BatchCost` SHALL query allocation once for a batch of resources of one kind.
-`results[i]` SHALL correspond to `resources[i]`. A resource with no allocation
-row SHALL be a per-item `NotFound` containing `NO_COST_DATA`, and the RPC
-SHALL still succeed, including when neither the body nor the config names a
-currency. Estimate costs SHALL use the 730-hour projection of that row. Actual
+`results[i]` SHALL correspond to `resources[i]`. On an estimate or projected batch, a
+resource with no allocation row SHALL be a per-item `NotFound` containing
+`NO_COST_DATA`. On an actual batch it SHALL be per-item `ActualCostData` with
+no results and `FALLBACK_HINT_RECOMMENDED`. Either way the RPC SHALL still
+succeed, including when neither the body nor the config names a currency. Estimate costs SHALL use the 730-hour projection of that row. Actual
 costs SHALL use that row's `totalCost`. A present row SHALL carry the same
 currency rule as `GetProjectedCost`. Estimate items SHALL set `currency`.
 Actual items SHALL set `focus_record.billing_currency`. A present row whose
@@ -39,6 +40,13 @@ and the RPC SHALL still succeed.
 - **AND** the absent namespace is `NotFound` with `NO_COST_DATA`
 - **AND** the `oc-test` item is `FailedPrecondition`
 - **AND** that item message does not contain `USD`
+
+#### Scenario: Actual batch with one missing namespace
+
+- **WHEN** `BatchCost` requests actual cost for `oc-test` and an absent namespace from `allocation-namespace-60m.json` and the config currency is empty
+- **THEN** the RPC succeeds
+- **AND** the absent namespace is actual cost data with no results and `FALLBACK_HINT_RECOMMENDED`
+- **AND** it carries no per-item error
 
 ### Requirement: Estimate one recorded namespace
 

@@ -138,6 +138,37 @@ func TestBatchActualCostKeepsOrder(t *testing.T) {
 	require.InDelta(t, left.entry.TotalCost, actualTotal(resp.GetResults()[1]), 1e-6)
 }
 
+func TestBatchActualMissingObjectRecommendsFallback(t *testing.T) {
+	t.Parallel()
+
+	body := readAllocation(t, "allocation-namespace-60m.json")
+	require.NotContains(t, string(body), "currency")
+	srv := serverWithBody(t, body, "")
+	start := time.Date(2026, 10, 3, 10, 0, 0, 0, time.UTC)
+	resp, err := srv.BatchCost(t.Context(), &pbc.BatchCostRequest{
+		QueryType: pbc.CostQueryType_COST_QUERY_TYPE_ACTUAL,
+		Start:     timestamppb.New(start),
+		End:       timestamppb.New(start.Add(time.Hour)),
+		Resources: []*pbc.ResourceDescriptor{
+			namespaceDescriptor("oc-test"),
+			namespaceDescriptor("missing-namespace"),
+		},
+	})
+	require.NoError(t, err)
+	require.Len(t, resp.GetResults(), 2)
+
+	present := resp.GetResults()[0]
+	require.Nil(t, present.GetCostData())
+	require.Equal(t, int32(codes.FailedPrecondition), present.GetError().GetCode())
+
+	missing := resp.GetResults()[1]
+	require.Nil(t, missing.GetError())
+	actual := missing.GetCostData().GetActualCost()
+	require.NotNil(t, actual)
+	require.Empty(t, actual.GetResults())
+	require.Equal(t, pbc.FallbackHint_FALLBACK_HINT_RECOMMENDED, actual.GetFallbackHint())
+}
+
 func namespaceDescriptor(name string) *pbc.ResourceDescriptor {
 	return &pbc.ResourceDescriptor{
 		Provider:     "kubernetes",

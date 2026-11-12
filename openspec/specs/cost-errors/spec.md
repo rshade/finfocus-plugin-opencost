@@ -11,8 +11,10 @@ Map cost RPC failures to explicit gRPC codes, and return a real zero cost instea
 A cost request with no window SHALL be `InvalidArgument`. An unsupported
 resource type SHALL be `InvalidArgument`. An allocation backend status of 500
 SHALL be `Unavailable`. A caller deadline SHALL be `DeadlineExceeded` and
-SHALL NOT be `OK`. An allocation body with no matching row SHALL be `NotFound`,
-and the message SHALL include `NO_COST_DATA` and `no cost data`. An HTTP 500
+SHALL NOT be `OK`. On `GetProjectedCost`, `GetPricingSpec`, and `EstimateCost`, an
+allocation body with no matching row SHALL be `NotFound`, and the message
+SHALL include `NO_COST_DATA` and `no cost data`. On `GetActualCost` it SHALL
+succeed with no results and `FALLBACK_HINT_RECOMMENDED`. An HTTP 500
 body that names an invalid filter SHALL stay `Unavailable`, SHALL include the
 rejected field name, and SHALL NOT be `NO_COST_DATA`. A backend HTTP 401 on
 any backend call SHALL be `Unauthenticated` and a backend HTTP 403 SHALL be
@@ -50,9 +52,15 @@ SHALL NOT contain the token. Other 4xx and 5xx statuses SHALL stay
 
 #### Scenario: No matching row
 
-- **WHEN** the allocation body has an empty data array
+- **WHEN** `GetProjectedCost` reads an allocation body with an empty data array
 - **THEN** the status is `NotFound`
 - **AND** the message includes `NO_COST_DATA` and `no cost data`
+
+#### Scenario: No matching row on actual cost
+
+- **WHEN** `GetActualCost` reads an allocation body with an empty data array
+- **THEN** the call succeeds with no results
+- **AND** the fallback hint is `FALLBACK_HINT_RECOMMENDED`
 
 #### Scenario: Backend rejects the token
 

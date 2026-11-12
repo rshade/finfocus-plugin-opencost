@@ -199,7 +199,13 @@ func (s *Server) actualItem(
 		return result
 	}
 	if len(rows) == 0 {
-		result.Result = itemError(noCostData(correlationID(result.GetResource(), ref)), false)
+		result.Result = &pbc.ResourceCostResult_CostData{
+			CostData: &pbc.CostData{
+				Data: &pbc.CostData_ActualCost{ActualCost: &pbc.ActualCostData{
+					FallbackHint: pbc.FallbackHint_FALLBACK_HINT_RECOMMENDED,
+				}},
+			},
+		}
 		return result
 	}
 	currency, err := s.costCurrency(detailed)
