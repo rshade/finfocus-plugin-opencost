@@ -1,5 +1,6 @@
 BINARY=finfocus-plugin-opencost
-VERSION ?= 0.1.0
+VERSION ?= $(shell sed -n 's/^ *"\.": *"\([^"]*\)".*/\1/p' .release-please-manifest.json)
+INSTALL_DIR ?= $(or $(FINFOCUS_HOME),$(HOME)/.finfocus)/plugins/opencost/v$(VERSION)
 
 # Get git information
 GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
@@ -7,7 +8,7 @@ GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unkno
 GIT_STATE := $(shell if git diff --quiet 2>/dev/null; then echo "clean"; else echo "dirty"; fi)
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S_UTC')
 
-.PHONY: all build test test-race vet lint fmt govulncheck drift e2e-kind e2e-kind-up e2e-kind-wait e2e-kind-down goreleaser-check
+.PHONY: all build install test test-race vet lint fmt govulncheck drift e2e-kind e2e-kind-up e2e-kind-wait e2e-kind-down goreleaser-check
 
 all: build
 
@@ -74,9 +75,10 @@ depend:
 	@go install github.com/tebeka/go2xunit@latest
 	@echo "Go development tools installed successfully!"
 
-install:
-	mkdir -p $$HOME/.finfocus/plugins/opencost/$(VERSION)
-	cp bin/$(BINARY) $$HOME/.finfocus/plugins/opencost/$(VERSION)/$(BINARY)
+install: build
+	mkdir -p "$(INSTALL_DIR)"
+	cp bin/$(BINARY) "$(INSTALL_DIR)/$(BINARY)"
+	go run ./hack/manifestversion -in plugin.manifest.json -out "$(INSTALL_DIR)/plugin.manifest.json" -version v$(VERSION)
 
 version:
 	@echo "Version: $(VERSION)"
