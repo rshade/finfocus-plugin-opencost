@@ -1,5 +1,5 @@
 ---
-description: Take one open issue from TASKS.md through OpenSpec or direct implementation, verify it, and open one pull request
+description: Take one open issue from the ROADMAP.md work queue through OpenSpec or direct implementation, verify it, and open one pull request
 ---
 
 # Pick an Issue: One Issue Per Invocation
@@ -24,7 +24,7 @@ Adapted from the `pick-issue` command in `gojev` (OpenSpec) and in `finfocus`
   is out of date, and cite that command and commit in the comment. #18 stays
   open for the owner. #63 is outside Phase 9; take it only when the launch
   prompt names it. The 2026-10-03 read-only rule applied to Phases 1 to 8.
-- **The plan of record is `TASKS.md`**, not roadmap labels. Phase 9 is the
+- **The plan of record is the Work Queue in `ROADMAP.md`**, not the `roadmap/*` labels. Phase 9 is the
   queue. A row is eligible when its status is exactly `TODO` and every task id
   in Depends is `DONE` or `IN-PROGRESS` on the open stack. `TODO (owner)`, `BLOCKED`, and `BLOCKED-ON-INPUT` are
   not eligible.
@@ -59,12 +59,12 @@ Push the issue branch. A push to `main` is outside this command.
 
 If an issue number was given, use it. Otherwise take the first Phase 9 row
 whose status is exactly `TODO` and whose Depends task ids are `DONE` or
-`IN-PROGRESS` on the open stack. Phase 0 rows marked `TODO (owner)` are the
+`IN-PROGRESS` on the open stack. Owner Decisions rows marked `TODO (owner)` are the
 owner's. When the issue has a Phase 9 row and that row is `BLOCKED` or
 `BLOCKED-ON-INPUT`, report the row and stop.
 
 Read the issue and its comments (`gh issue view N --comments`) and the
-`TASKS.md` entry. Then reconcile before routing:
+`ROADMAP.md` entry. Then reconcile before routing:
 
 ```bash
 git log --oneline <checkpoint>..HEAD
