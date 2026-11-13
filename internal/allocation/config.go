@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,7 +47,32 @@ type Config struct {
 	RequestsPerSecond float64 `yaml:"requestsPerSecond"`
 	// RateBurst is how many outbound requests may run at once. Zero uses the default.
 	RateBurst int `yaml:"rateBurst"`
+	// Kube reaches OpenCost through the Kubernetes API server service proxy
+	// instead of BaseURL. A set Kube.Service selects it.
+	Kube Kube `yaml:"kube"`
 }
+
+// Kube names the in-cluster OpenCost service and the kubeconfig that reaches it.
+type Kube struct {
+	// Context is the kubeconfig context. Empty uses the current context.
+	Context string `yaml:"context"`
+	// Namespace defaults to opencost.
+	Namespace string `yaml:"namespace"`
+	// Service turns kube mode on.
+	Service string `yaml:"service"`
+	// Port defaults to 9003.
+	Port int `yaml:"port"`
+	// Kubeconfig overrides KUBECONFIG and the default path.
+	Kubeconfig string `yaml:"kubeconfig"`
+}
+
+const (
+	// DefaultKubeNamespace is the OpenCost Helm chart namespace.
+	DefaultKubeNamespace = "opencost"
+	// DefaultKubePort is the OpenCost allocation API port.
+	DefaultKubePort = 9003
+	maxPort         = 65535
+)
 
 func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	timeout, err := getenvDuration("KUBECOST_TIMEOUT", defaultTimeoutDuration)
@@ -93,23 +119,85 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 		cfg.Currency = currency
 	}
 	cfg.APIToken = os.Getenv("KUBECOST_API_TOKEN")
+	kube, kubeErr := cfg.Kube.withEnv()
+	if kubeErr != nil {
+		return Config{}, kubeErr
+	}
+	cfg.Kube = kube
 	return cfg, nil
+}
+
+// withEnv returns k with the OPENCOST_KUBE_* variables laid over it.
+func (k Kube) withEnv() (Kube, error) {
+	for env, dst := range map[string]*string{
+		"OPENCOST_KUBE_CONTEXT":   &k.Context,
+		"OPENCOST_KUBE_NAMESPACE": &k.Namespace,
+		"OPENCOST_KUBE_SERVICE":   &k.Service,
+	} {
+		if v := os.Getenv(env); v != "" {
+			*dst = v
+		}
+	}
+	if v := os.Getenv("OPENCOST_KUBE_PORT"); v != "" {
+		port, err := strconv.Atoi(v)
+		if err != nil {
+			return Kube{}, errors.New("environment variable OPENCOST_KUBE_PORT must be an integer")
+		}
+		k.Port = port
+	}
+	return k, nil
+}
+
+// Enabled reports whether requests go through the API server service proxy.
+func (k Kube) Enabled() bool { return k.Service != "" }
+
+// Target returns the namespace and port with defaults applied.
+func (k Kube) Target() (string, int) {
+	namespace, port := k.Namespace, k.Port
+	if namespace == "" {
+		namespace = DefaultKubeNamespace
+	}
+	if port == 0 {
+		port = DefaultKubePort
+	}
+	return namespace, port
+}
+
+func (c Config) validateKube() error {
+	for _, conflict := range []struct {
+		key string
+		set bool
+	}{
+		{"baseUrl", c.BaseURL != ""},
+		{"tlsSkipVerify", c.TLSSkipVerify},
+		{"caCertFile", c.CACertFile != ""},
+		{"allowInsecureHttp", c.AllowInsecureHTTP},
+	} {
+		if conflict.set {
+			return fmt.Errorf(
+				"config: %s cannot be set with kube.service; the kubeconfig owns that connection",
+				conflict.key,
+			)
+		}
+	}
+	if c.Profile == ProfileKubecost {
+		return errors.New("config: profile must be opencost with kube.service")
+	}
+	if c.Kube.Port < 0 || c.Kube.Port > maxPort {
+		return errors.New("config: kube.port must be 1 to 65535")
+	}
+	return nil
 }
 
 // Validate checks the loaded config before the plugin serves.
 // Error messages name the key, never a value: values can carry secrets.
 func (c Config) Validate() error {
-	u, err := url.Parse(c.BaseURL)
-	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
-		return errors.New("config: baseUrl must be an http(s) URL with a host")
-	}
-	if u.Scheme == "http" && !c.AllowInsecureHTTP && !loopbackHost(u.Hostname()) {
-		return errors.New("config: base URL uses http; use https or set allowInsecureHttp")
-	}
-	if c.CACertFile != "" {
-		if _, caErr := rootPool(c.CACertFile); caErr != nil {
-			return caErr
+	if c.Kube.Enabled() {
+		if err := c.validateKube(); err != nil {
+			return err
 		}
+	} else if err := c.validateBaseURL(); err != nil {
+		return err
 	}
 	switch c.Profile {
 	case "", ProfileOpenCost, ProfileKubecost:
@@ -127,6 +215,22 @@ func (c Config) Validate() error {
 	}
 	if c.RateBurst < 0 {
 		return errors.New("config: rateBurst must not be negative")
+	}
+	return nil
+}
+
+func (c Config) validateBaseURL() error {
+	u, err := url.Parse(c.BaseURL)
+	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
+		return errors.New("config: baseUrl must be an http(s) URL with a host")
+	}
+	if u.Scheme == "http" && !c.AllowInsecureHTTP && !loopbackHost(u.Hostname()) {
+		return errors.New("config: base URL uses http; use https or set allowInsecureHttp")
+	}
+	if c.CACertFile != "" {
+		if _, caErr := rootPool(c.CACertFile); caErr != nil {
+			return caErr
+		}
 	}
 	return nil
 }

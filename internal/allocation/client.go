@@ -41,7 +41,16 @@ type Client struct {
 
 const tlsSkipVerifyWarning = "TLS certificate verification is disabled"
 
-func NewClient(_ context.Context, cfg Config) (*Client, error) {
+// Option adjusts how NewClient connects.
+type Option func(*Client)
+
+// WithTransport replaces the HTTP transport. The caller owns TLS and
+// authentication for it, so tlsSkipVerify and caCertFile do not apply.
+func WithTransport(rt http.RoundTripper) Option {
+	return func(c *Client) { c.http.Transport = rt }
+}
+
+func NewClient(_ context.Context, cfg Config, opts ...Option) (*Client, error) {
 	var roots *x509.CertPool
 	if cfg.CACertFile != "" {
 		var err error
@@ -50,13 +59,17 @@ func NewClient(_ context.Context, cfg Config) (*Client, error) {
 			return nil, err
 		}
 	}
-	return &Client{
+	c := &Client{
 		cfg:     cfg,
 		http:    httpClient(cfg, roots),
 		now:     time.Now,
 		cache:   newResponseCache(resolvedCacheTTL(cfg.CacheTTL)),
 		limiter: newLimiter(cfg.RequestsPerSecond, cfg.RateBurst),
-	}, nil
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
+	return c, nil
 }
 
 // WarnIfTLSSkipped logs one warning when certificate verification is off.

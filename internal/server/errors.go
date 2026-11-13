@@ -62,8 +62,9 @@ func mapBackendError(err error) error {
 	if errors.Is(err, context.Canceled) || status.Code(err) == codes.Canceled {
 		return status.Error(codes.Canceled, "allocation query canceled")
 	}
-	if status.Code(err) != codes.Unknown {
-		return err
+	var grpcErr interface{ GRPCStatus() *status.Status }
+	if errors.As(err, &grpcErr) && status.Code(err) != codes.Unknown {
+		return grpcErr.GRPCStatus().Err()
 	}
 	return status.Errorf(codes.Unavailable, "allocation backend: %v", err)
 }

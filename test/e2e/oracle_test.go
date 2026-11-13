@@ -306,6 +306,15 @@ func probeHealth(baseURL string) error {
 
 func startPlugin(t *testing.T, root, baseURL string, pluginLog *tailBuf) (pbc.CostSourceServiceClient, func()) {
 	t.Helper()
+	cfg := fmt.Sprintf(
+		"baseUrl: %s\nprofile: opencost\ncurrency: %s\ncacheTTL: -1s\ntimeout: 30s\n",
+		baseURL, e2eCurrency,
+	)
+	return startPluginWithConfig(t, root, cfg, pluginLog)
+}
+
+func startPluginWithConfig(t *testing.T, root, cfg string, pluginLog *tailBuf) (pbc.CostSourceServiceClient, func()) {
+	t.Helper()
 	bin := filepath.Join(t.TempDir(), "finfocus-plugin-opencost")
 	build := exec.Command("go", "build", "-o", bin, "./cmd/finfocus-plugin-opencost")
 	build.Dir = root
@@ -313,10 +322,6 @@ func startPlugin(t *testing.T, root, baseURL string, pluginLog *tailBuf) (pbc.Co
 	require.NoError(t, err, string(out))
 
 	cfgPath := filepath.Join(t.TempDir(), "opencost.yaml")
-	cfg := fmt.Sprintf(
-		"baseUrl: %s\nprofile: opencost\ncurrency: %s\ncacheTTL: -1s\ntimeout: 30s\n",
-		baseURL, e2eCurrency,
-	)
 	require.NoError(t, os.WriteFile(cfgPath, []byte(cfg), 0o644))
 
 	port := freePort(t)

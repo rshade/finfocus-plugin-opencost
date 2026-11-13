@@ -64,7 +64,7 @@ Precedence runs defaults first, then the environment, then the file for the keys
 `OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, and `KUBECOST_API_TOKEN` are read again after the file and always win.
 
 A file that does not parse, a `KUBECOST_TIMEOUT` value that is not a duration, or a `KUBECOST_TLS_SKIP_VERIFY` or `KUBECOST_ALLOW_INSECURE_HTTP` value other than `true` or `false` stops startup with an error that names the file or the variable.
-Before serving, the plugin validates the config: `baseUrl` must be an `https` URL with a host, or an `http` URL on `localhost`, `127.0.0.0/8`, or `::1`, unless `allowInsecureHttp` is set. `profile` must be empty, `opencost`, or `kubecost`. A set `currency` must be three upper-case letters. `timeout`, `requestsPerSecond`, and `rateBurst` must not be negative. A set `caCertFile` must be a PEM file the process can read.
+Before serving, the plugin validates the config: without a `kube` block, `baseUrl` must be an `https` URL with a host, or an `http` URL on `localhost`, `127.0.0.0/8`, or `::1`, unless `allowInsecureHttp` is set. `profile` must be empty, `opencost`, or `kubecost`. A set `currency` must be three upper-case letters. `timeout`, `requestsPerSecond`, and `rateBurst` must not be negative. A set `caCertFile` must be a PEM file the process can read. A set `kube.service` replaces `baseUrl`, so `baseUrl`, `tlsSkipVerify`, `caCertFile`, and `allowInsecureHttp` next to it are errors, `profile` must not be `kubecost`, and `kube.port` must be 1 to 65535.
 A failure exits with a one-line reason.
 No error or log line contains the API token.
 
@@ -87,6 +87,12 @@ Request logs do not include the token.
 | `tlsSkipVerify` | `KUBECOST_TLS_SKIP_VERIFY` | `false` | Set the variable to `true` to skip certificate checks. Startup then logs one warning. Leave it unset on a shared cluster. |
 | `allowInsecureHttp` | `KUBECOST_ALLOW_INSECURE_HTTP` | `false` | Allow an `http` base URL whose host is not loopback. `http://localhost` works with this left `false`. |
 | `caCertFile` | `KUBECOST_CA_CERT_FILE` | empty | PEM bundle added to the system trust pool. A missing or unparsable file stops startup. |
+| `kube` | none | empty | Reach OpenCost through the Kubernetes API server service proxy. A set `kube.service` turns it on and excludes `baseUrl`. Keys below. |
+| `kube.context` | `OPENCOST_KUBE_CONTEXT` | current context | Kubeconfig context. An unknown context stops startup. |
+| `kube.namespace` | `OPENCOST_KUBE_NAMESPACE` | `opencost` | Namespace of the OpenCost service. |
+| `kube.service` | `OPENCOST_KUBE_SERVICE` | empty | OpenCost service name. Needs `get` on `services/proxy`. |
+| `kube.port` | `OPENCOST_KUBE_PORT` | `9003` | Service port. |
+| `kube.kubeconfig` | none | `KUBECONFIG`, then the default path | Kubeconfig file. With none present, a pod's service account is used. |
 | `cacheTTL` | none | `30s` | How long a successful allocation URL is reused. `0s` selects 30 seconds. A negative value disables the cache. |
 | `requestsPerSecond` | none | `10` | Outbound allocation rate. `0` selects 10 per second. Past that limit, the call is `ResourceExhausted` and does not reach the backend. |
 | `rateBurst` | none | `20` | How many outbound requests may run together. `0` selects 20. |
@@ -212,6 +218,8 @@ Otherwise it comes from `currency` or `OPENCOST_CURRENCY`.
 When both are empty, the RPC is `FailedPrecondition` and the message is `currency is not set in the allocation response or pricing config`.
 
 ## Deployment
+
+A `kubectl port-forward` with `baseUrl` is a development path. For a CI runner, a workstation, or a pod, set `kube.service` and the plugin reaches OpenCost through the Kubernetes API server with your kubeconfig. See [docs/production.md](docs/production.md) for the RBAC grant and each setup.
 
 Build the binary and install it for a local FinFocus host:
 
