@@ -74,7 +74,8 @@ func resolve(t Target, src sources) (Connection, error) {
 		return Connection{}, fmt.Errorf("kube: build transport for context %q: %w", contextName, err)
 	}
 	return Connection{BaseURL: origin, Context: contextName, Transport: &proxyTransport{
-		next: base,
+		next:   base,
+		origin: origin,
 		prefix: fmt.Sprintf("%s/api/v1/namespaces/%s/services/%s:%d/proxy",
 			hostPath, url.PathEscape(t.Namespace), url.PathEscape(t.Service), t.Port),
 		desc: describe{

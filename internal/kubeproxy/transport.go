@@ -21,11 +21,16 @@ type describe struct {
 
 type proxyTransport struct {
 	next   http.RoundTripper
+	origin string
 	prefix string
 	desc   describe
 }
 
 func (p *proxyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if origin := req.URL.Scheme + "://" + req.URL.Host; origin != p.origin {
+		return nil, status.Errorf(codes.Unavailable,
+			"refusing to send Kubernetes credentials for context %q to %q", p.desc.context, req.URL.Host)
+	}
 	out := req.Clone(req.Context())
 	out.URL.Path = p.prefix + req.URL.Path
 	out.URL.RawPath = ""
