@@ -96,7 +96,9 @@ func TestE2EActualCostMatchesOracle(t *testing.T) {
 	gotRel := relative(first.total, want)
 	t.Logf("oracle match relative=%g got=%g want=%g minutes=%g", gotRel, first.total, want, first.minutes)
 	require.LessOrEqual(t, gotRel, spec.tolerance)
-	assertControllerOracle(t, fwd, client, spec, first.start, first.end, spec.cpuRate, true)
+	cases := workloadCases(t, root, kubeconfig, spec)
+	assertKindOracles(t, fwd, client, spec, cases, spec.cpuRate, true)
+	assertNodeBounds(t, fwd, client, kubeconfig, spec, cases, spec.cpuRate)
 
 	broken := bytes.Replace(original, []byte(`CPU: "2.0"`), []byte(`CPU: "9.0"`), 1)
 	require.NotEqual(t, string(original), string(broken))
@@ -113,7 +115,8 @@ func TestE2EActualCostMatchesOracle(t *testing.T) {
 		divergedRel, diverged.total, oracleWant, diverged.minutes,
 	)
 	require.Greater(t, divergedRel, spec.tolerance)
-	assertControllerOracle(t, fwd, client, spec, diverged.start, diverged.end, spec.cpuRate, false)
+	assertKindOracles(t, fwd, client, spec, cases, spec.cpuRate, false)
+	assertNodeBounds(t, fwd, client, kubeconfig, spec, cases, brokenCPU)
 
 	require.NoError(t, os.WriteFile(valuesPath, original, 0o644))
 	helmUpgrade(t, root, kubeconfig)
@@ -127,7 +130,8 @@ func TestE2EActualCostMatchesOracle(t *testing.T) {
 		restoredRel, restored.total, restoredWant, restored.minutes,
 	)
 	require.LessOrEqual(t, restoredRel, spec.tolerance)
-	assertControllerOracle(t, fwd, client, spec, restored.start, restored.end, spec.cpuRate, true)
+	assertKindOracles(t, fwd, client, spec, cases, spec.cpuRate, true)
+	assertNodeBounds(t, fwd, client, kubeconfig, spec, cases, spec.cpuRate)
 }
 
 type oracleSpec struct {
@@ -403,129 +407,6 @@ func fetchCost(client pbc.CostSourceServiceClient, start, end time.Time) (costSa
 		return costSample{}, err
 	}
 	return sampleTotal(resp)
-}
-
-func assertControllerOracle(
-	t *testing.T,
-	fwd *backendForward,
-	client pbc.CostSourceServiceClient,
-	spec oracleSpec,
-	start, end time.Time,
-	cpuRate float64,
-	match bool,
-) {
-	t.Helper()
-	sample, minutes := waitForControllerRow(t, fwd, client, start, end)
-	want := expectedCost(spec, minutes, cpuRate)
-	rel := relative(sample.total, want)
-	t.Logf(
-		"oracle match controller relative=%g got=%g want=%g minutes=%g rate=%g",
-		rel, sample.total, want, minutes, cpuRate,
-	)
-	if match {
-		require.LessOrEqual(t, rel, spec.tolerance)
-		return
-	}
-	require.Greater(t, rel, spec.tolerance)
-}
-
-func waitForControllerRow(
-	t *testing.T,
-	fwd *backendForward,
-	client pbc.CostSourceServiceClient,
-	start, end time.Time,
-) (costSample, float64) {
-	t.Helper()
-	deadline := time.Now().Add(3 * time.Minute)
-	var lastErr error
-	for {
-		sample, err := fetchControllerCost(client, start, end)
-		if err == nil {
-			var minutes float64
-			minutes, err = fetchControllerMinutes(fwd.url(), allocation.FormatTimeWindow(start, end))
-			if err == nil {
-				return sample, minutes
-			}
-		}
-		lastErr = err
-		if time.Now().After(deadline) {
-			require.NoError(t, lastErr, "controller row never appeared")
-		}
-		time.Sleep(5 * time.Second)
-		end = time.Now().UTC().Add(-5 * time.Second)
-		start = end.Add(-2 * time.Minute)
-	}
-}
-
-func fetchControllerCost(client pbc.CostSourceServiceClient, start, end time.Time) (costSample, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	resp, err := client.GetActualCost(ctx, &pbc.GetActualCostRequest{
-		ResourceId: "controller/" + e2eNamespace + "/fixed",
-		Start:      timestamppb.New(start),
-		End:        timestamppb.New(end),
-	})
-	if err != nil {
-		return costSample{}, err
-	}
-	return sampleTotal(resp)
-}
-
-func fetchControllerMinutes(baseURL, window string) (float64, error) {
-	cli, err := allocation.NewClient(context.Background(), allocation.Config{
-		BaseURL:  baseURL,
-		Profile:  allocation.ProfileOpenCost,
-		CacheTTL: -time.Second,
-	})
-	if err != nil {
-		return 0, err
-	}
-	rawURL, err := cli.BuildAllocationURL(allocation.Query{
-		Window:      window,
-		Filter:      map[string]string{"namespace": e2eNamespace, "controllerName": "fixed"},
-		AggregateBy: []string{"namespace", "controller"},
-	})
-	if err != nil {
-		return 0, err
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
-	if err != nil {
-		return 0, err
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("controller allocation status %d: %s", resp.StatusCode, trimBody(body))
-	}
-	var doc struct {
-		Data []map[string]struct {
-			Minutes float64 `json:"minutes"`
-		} `json:"data"`
-	}
-	if unmarshalErr := json.Unmarshal(body, &doc); unmarshalErr != nil {
-		return 0, unmarshalErr
-	}
-	var minutes float64
-	for _, step := range doc.Data {
-		for _, row := range step {
-			if row.Minutes > 0 {
-				minutes += row.Minutes
-			}
-		}
-	}
-	if minutes <= 0 {
-		return 0, errors.New("controller fixed minutes are not positive")
-	}
-	return minutes, nil
 }
 
 func sampleTotal(resp *pbc.GetActualCostResponse) (costSample, error) {
