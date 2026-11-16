@@ -68,7 +68,7 @@ func run() int {
 	plugin.SetLogger(logger)
 	serveErr := pluginsdk.Serve(ctx, pluginsdk.ServeConfig{
 		Plugin:     plugin,
-		PluginInfo: server.Info(),
+		PluginInfo: server.Info(cli.GetConfig()),
 		Port:       port,
 		Logger:     &logger,
 	})

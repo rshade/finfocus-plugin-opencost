@@ -14,14 +14,17 @@ See the [FinFocus docs page for this plugin](https://finfocus.dev/docs/plugins/o
 
 ## Capabilities
 
-`GetPluginInfo` reports these capabilities:
+`GetPluginInfo` reports the capabilities the configured profile can serve.
+Profile `opencost` (the default) reports:
 
 - `PROJECTED_COSTS`
 - `ACTUAL_COSTS`
 - `PRICING_SPEC`
 - `ESTIMATE_COST`
 - `BATCH_COST`
-- `BUDGETS`
+
+Profile `kubecost` reports the same five and adds `BUDGETS`.
+`plugin.manifest.json` lists all six, because it describes what the binary can serve across profiles.
 
 The provider list is `kubernetes`.
 The plugin does not report `ALLOCATION` and does not implement `AllocatorService`.
