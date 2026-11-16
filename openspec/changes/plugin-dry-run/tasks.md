@@ -7,7 +7,7 @@
 
 ## 2. Kube client keeps the operator config
 
-- [ ] 2.1 Write `TestKubeClientKeepsOperatorConfig` in `cmd/finfocus-plugin-opencost` (client built by `newClient` against a `kubetest` API server: `GetConfig().BaseURL` is empty, `GetConfig().Validate()` is nil, `DryRun` reports a valid configuration, and an allocation request still reaches the API server proxy path), then add `allocation.WithBaseURL` and the client-held base URL, and pass the origin from `newClient`. Verify: `go test -count=1 ./cmd/... ./internal/allocation/ ./internal/kubeproxy/...` exits 0. Break check: restore `cfg.BaseURL = conn.BaseURL` in `newClient` and the test fails.
+- [x] 2.1 Write `TestKubeClientKeepsOperatorConfig` in `cmd/finfocus-plugin-opencost` (client built by `newClient` against a `kubetest` API server: `GetConfig().BaseURL` is empty, `GetConfig().Validate()` is nil, `DryRun` reports a valid configuration, and an allocation request still reaches the API server proxy path), then add `allocation.WithBaseURL` and the client-held base URL, and pass the origin from `newClient`. Verify: `go test -count=1 ./cmd/... ./internal/allocation/ ./internal/kubeproxy/...` exits 0. Break check: restore `cfg.BaseURL = conn.BaseURL` in `newClient` and the test fails.
 
 ## 3. Integration
 

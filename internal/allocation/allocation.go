@@ -119,7 +119,7 @@ func (c *Client) BuildAllocationURL(q Query) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	u, err := url.Parse(c.cfg.BaseURL)
+	u, err := url.Parse(c.origin())
 	if err != nil {
 		return "", fmt.Errorf("invalid base URL: %w", err)
 	}
