@@ -194,7 +194,7 @@ func (s *Server) resourceResult(
 		until = detailed.FetchedUntil
 	}
 	if queryType == pbc.CostQueryType_COST_QUERY_TYPE_PROJECTED {
-		return projectedItem(result, parts, currency, until)
+		return projectedItem(result, ref, parts, currency, until)
 	}
 	return estimateItem(result, parts, currency, until)
 }
@@ -240,11 +240,12 @@ func (s *Server) actualItem(
 
 func projectedItem(
 	result *pbc.ResourceCostResult,
+	ref resourceRef,
 	parts costParts,
 	currency string,
 	until time.Time,
 ) *pbc.ResourceCostResult {
-	projected, err := projectedResponse(parts, currency, until)
+	projected, err := projectedResponse(ref, parts, currency, until)
 	if err != nil {
 		result.Result = itemError(err, false)
 		return result

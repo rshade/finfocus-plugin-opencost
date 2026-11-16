@@ -109,3 +109,39 @@ func sumBreakdown(values map[string]float64) float64 {
 	}
 	return total
 }
+
+func TestProjectedBillingDetailNamespaceIncludesWorkloads(t *testing.T) {
+	t.Parallel()
+
+	const includes = "includes every workload in the namespace"
+
+	nsBody := readAllocation(t, "allocation-namespace-60m.json")
+	decoded, err := allocation.DecodeAllocationBody(http.StatusOK, nsBody)
+	require.NoError(t, err)
+	namespace, _ := twoNamespaces(t, decoded.Data[0])
+
+	single := projectNamespace(t, serverForProjection(t, nsBody), namespace.name)
+	require.Contains(t, single.GetBillingDetail(), "30-day")
+	require.Contains(t, single.GetBillingDetail(), "730")
+	require.Contains(t, single.GetBillingDetail(), includes)
+
+	batch, err := serverWithBody(t, nsBody, "EUR").BatchCost(t.Context(), &pbc.BatchCostRequest{
+		QueryType: pbc.CostQueryType_COST_QUERY_TYPE_PROJECTED,
+		Resources: []*pbc.ResourceDescriptor{namespaceDescriptor(namespace.name)},
+	})
+	require.NoError(t, err)
+	require.Len(t, batch.GetResults(), 1)
+	require.Contains(t, batch.GetResults()[0].GetCostData().GetProjectedCost().GetBillingDetail(), includes)
+
+	controller, err := serverWithBody(t, readAllocation(t, "allocation-controller-60m.json"), "EUR").
+		GetProjectedCost(t.Context(), &pbc.GetProjectedCostRequest{
+			Resource: &pbc.ResourceDescriptor{
+				Provider:     "kubernetes",
+				ResourceType: "kubernetes:apps/v1:Deployment",
+				Id:           "kube-system/coredns",
+			},
+		})
+	require.NoError(t, err)
+	require.Contains(t, controller.GetBillingDetail(), "30-day")
+	require.NotContains(t, controller.GetBillingDetail(), "includes every workload")
+}

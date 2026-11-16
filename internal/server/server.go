@@ -104,7 +104,7 @@ func (s *Server) GetProjectedCost(
 		if err != nil {
 			return nil, err
 		}
-		return projectedResponse(parts, currency, detailed.FetchedUntil)
+		return projectedResponse(ref, parts, currency, detailed.FetchedUntil)
 	})
 }
 

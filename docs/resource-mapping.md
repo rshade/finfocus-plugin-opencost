@@ -62,6 +62,8 @@ This cost source does not support those `aws:*`, `gcp:*`, or `azure-native:*` to
 - `kubernetes:batch/v1:Job`
 - `kubernetes:batch/v1:CronJob`
 
+A `kubernetes:core/v1:Namespace` figure is the sum of every workload in that namespace. A stack that prices a Namespace and a workload inside it counts that workload twice, because core sums each row it receives. The projected `billing_detail` for a namespace says so. The bundled example stack declares no Namespace for this reason. De-duplicating across rows needs a parent field in `finfocus-spec` and is not done here.
+
 `kubernetes:core/v1:Service` is a real stack type (`internal/ingest/mapper_test.go:382`). This plugin returns `Supported: false` with a reason. OpenCost allocation filters used here are namespace, pod, controllerName, and node. A controller query still aggregates by `namespace,controller`.
 
 The spec's resource type examples include `k8s-namespace` (`finfocus-spec` `proto/finfocus/v1/costsource.proto:768`). Core docs repeat that example and do not show a translator:
