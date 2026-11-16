@@ -75,9 +75,9 @@ When `OPENCOST_CONFIG` is empty, it reads `KUBECOST_CONFIG`.
 A missing file leaves the environment values in place, even when the path is a typo.
 
 Precedence runs defaults first, then the environment, then the file for the keys it sets.
-`OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, and `KUBECOST_API_TOKEN` are read again after the file and always win.
+`OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, `OPENCOST_INCLUDE_USAGE`, and `KUBECOST_API_TOKEN` are read again after the file and win when set.
 
-A file that does not parse, a `KUBECOST_TIMEOUT` value that is not a duration, or a `KUBECOST_TLS_SKIP_VERIFY` or `KUBECOST_ALLOW_INSECURE_HTTP` value other than `true` or `false` stops startup with an error that names the file or the variable.
+A file that does not parse, a `KUBECOST_TIMEOUT` value that is not a duration, or a `KUBECOST_TLS_SKIP_VERIFY`, `KUBECOST_ALLOW_INSECURE_HTTP`, or `OPENCOST_INCLUDE_USAGE` value other than `true` or `false` stops startup with an error that names the file or the variable.
 Before serving, the plugin validates the config: without a `kube` block, `baseUrl` must be an `https` URL with a host, or an `http` URL on `localhost`, `127.0.0.0/8`, or `::1`, unless `allowInsecureHttp` is set. `profile` must be empty, `opencost`, or `kubecost`. A set `currency` must be three upper-case letters. `timeout`, `requestsPerSecond`, and `rateBurst` must not be negative. A set `caCertFile` must be a PEM file the process can read. A set `kube.service` replaces `baseUrl`, so `baseUrl`, `tlsSkipVerify`, `caCertFile`, and `allowInsecureHttp` next to it are errors, `profile` must not be `kubecost`, and `kube.port` must be 1 to 65535.
 A failure exits with a one-line reason.
 No error or log line contains the API token.
@@ -110,6 +110,7 @@ Request logs do not include the token.
 | `cacheTTL` | none | `30s` | How long a successful allocation URL is reused. `0s` selects 30 seconds. A negative value disables the cache. |
 | `requestsPerSecond` | none | `10` | Outbound allocation rate. `0` selects 10 per second. Past that limit, the call is `ResourceExhausted` and does not reach the backend. |
 | `rateBurst` | none | `20` | How many outbound requests may run together. `0` selects 20. |
+| `includeUsage` | `OPENCOST_INCLUDE_USAGE` | `false` | Add efficiency and request/usage extended columns to actual cost results (see API notes). A set variable wins over the file. |
 | `clusterId` | `KUBECOST_CLUSTER_ID` | empty | Profile `kubecost` `EstimateCost` sends this as `clusterID`. Other cost methods do not. |
 | `defaultNamespace` | `KUBECOST_DEFAULT_NAMESPACE` | `default` | Profile `kubecost` `EstimateCost` sends this as `defaultNamespace`. Other cost methods do not. |
 | `predictionWindow` | `KUBECOST_PREDICTION_WINDOW` | `2d` | Profile `kubecost` `EstimateCost` sends this as `windowAvgUsage`. Other cost methods do not. |
@@ -189,6 +190,9 @@ The RPC succeeds and returns no gRPC error.
 Labels from the row are focus tags.
 The controller kind is extended column `controllerKind`.
 Annotations are extended columns `annotation.<key>`.
+With `includeUsage` on, each actual result also carries the row's efficiency and request/usage averages: `efficiency.cpu`, `efficiency.ram`, `efficiency.total`, `request.cpu_cores`, `usage.cpu_cores`, `request.ram_bytes`, and `usage.ram_bytes`, plus `efficiency.gpu` when the row has a GPU.
+Values are the shortest exact decimal of the recorded number. The `__idle__` row has none of them, and the cost does not change.
+The field names are verified against OpenCost recordings only; profile `kubecost` reads them when present, unverified.
 The query window is the window on the request.
 Each result's `focus_record.charge_period_start` and `charge_period_end` are the row's `start` and `end`: the part of the window that row has data for.
 

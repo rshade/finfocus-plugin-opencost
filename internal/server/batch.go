@@ -206,7 +206,7 @@ func (s *Server) actualItem(
 	ref resourceRef,
 ) *pbc.ResourceCostResult {
 	detailed := data.detailed
-	rows, err := resultsFor(detailed, ref)
+	rows, err := resultsFor(detailed, ref, s.cli.GetConfig().IncludeUsage)
 	if err != nil {
 		result.Result = itemError(err, false)
 		return result

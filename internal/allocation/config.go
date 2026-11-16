@@ -47,6 +47,8 @@ type Config struct {
 	RequestsPerSecond float64 `yaml:"requestsPerSecond"`
 	// RateBurst is how many outbound requests may run at once. Zero uses the default.
 	RateBurst int `yaml:"rateBurst"`
+	// IncludeUsage adds efficiency and request/usage extended columns to actual cost results.
+	IncludeUsage bool `yaml:"includeUsage"`
 	// Kube reaches OpenCost through the Kubernetes API server service proxy
 	// instead of BaseURL. A set Kube.Service selects it.
 	Kube Kube `yaml:"kube"`
@@ -117,6 +119,13 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	}
 	if currency := os.Getenv("OPENCOST_CURRENCY"); currency != "" {
 		cfg.Currency = currency
+	}
+	if os.Getenv("OPENCOST_INCLUDE_USAGE") != "" {
+		includeUsage, usageErr := getenvBool("OPENCOST_INCLUDE_USAGE")
+		if usageErr != nil {
+			return Config{}, usageErr
+		}
+		cfg.IncludeUsage = includeUsage
 	}
 	cfg.APIToken = os.Getenv("KUBECOST_API_TOKEN")
 	kube, kubeErr := cfg.Kube.withEnv()

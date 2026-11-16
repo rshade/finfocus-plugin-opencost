@@ -9,6 +9,7 @@ caCertFile: ""
 cacheTTL: 30s
 requestsPerSecond: 10
 rateBurst: 20
+includeUsage: false
 clusterId: production-cluster
 defaultNamespace: default
 predictionWindow: 2d

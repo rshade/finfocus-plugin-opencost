@@ -14,8 +14,8 @@ const (
 	conditionChargePeriod     = "Set when the OpenCost row has a start and an end: the object's first and last sample in the window."
 	conditionTags             = "OpenCost labels of the row, when it has any."
 	conditionNamespaceTags    = "OpenCost labels of the row, or its namespaceLabels when labels is empty."
-	conditionColumns          = "controllerKind and annotation.<key> columns, when the OpenCost row has them."
-	conditionNamespaceColumns = "annotation.<key> columns, when the OpenCost row has annotations."
+	conditionColumns          = "controllerKind and annotation.<key> columns, when the OpenCost row has them; with includeUsage on, also efficiency.*, request.*, and usage.* columns."
+	conditionNamespaceColumns = "annotation.<key> columns, when the OpenCost row has annotations; with includeUsage on, also efficiency.*, request.*, and usage.* columns."
 )
 
 // HandleDryRun reports the FOCUS fields GetActualCost fills for a resource type
