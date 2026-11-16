@@ -45,16 +45,24 @@ func TestGetPluginInfoCapabilitiesFollowProfile(t *testing.T) {
 		pbc.PluginCapability_PLUGIN_CAPABILITY_DRY_RUN,
 	}
 	cases := []struct {
-		name    string
-		profile string
-		want    []pbc.PluginCapability
+		name            string
+		profile         string
+		recommendations bool
+		want            []pbc.PluginCapability
 	}{
-		{"default profile", "", base},
-		{"opencost", allocation.ProfileOpenCost, base},
+		{"default profile", "", false, base},
+		{"opencost", allocation.ProfileOpenCost, false, base},
 		{
 			"kubecost",
 			allocation.ProfileKubecost,
+			false,
 			append(append([]pbc.PluginCapability{}, base...), pbc.PluginCapability_PLUGIN_CAPABILITY_BUDGETS),
+		},
+		{
+			"recommendations on",
+			allocation.ProfileOpenCost,
+			true,
+			append(append([]pbc.PluginCapability{}, base...), pbc.PluginCapability_PLUGIN_CAPABILITY_RECOMMENDATIONS),
 		},
 	}
 	for _, tc := range cases {
@@ -62,8 +70,10 @@ func TestGetPluginInfoCapabilitiesFollowProfile(t *testing.T) {
 			t.Parallel()
 
 			cli, err := allocation.NewClient(t.Context(), allocation.Config{
-				BaseURL: "http://127.0.0.1:9",
-				Profile: tc.profile,
+				BaseURL:                "http://127.0.0.1:9",
+				Profile:                tc.profile,
+				Recommendations:        tc.recommendations,
+				RecommendationHeadroom: 0.2,
 			})
 			require.NoError(t, err)
 
