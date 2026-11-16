@@ -25,13 +25,13 @@ func main() {
 	fixtures := flag.String("fixtures", "testdata/opencost-real", "read-only recorded fixtures")
 	responses := flag.String("responses", "", "allocation JSON directory to compare instead of -base")
 	flag.Parse()
-	if err := run(*base, *fixtures, *responses); err != nil {
+	if err := run(os.Stdout, *base, *fixtures, *responses); err != nil {
 		fmt.Fprintf(os.Stderr, "live drift: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(base, fixtures, responses string) error {
+func run(out io.Writer, base, fixtures, responses string) error {
 	if (base == "") == (responses == "") {
 		return errors.New("set exactly one of -base or -responses")
 	}
@@ -55,14 +55,14 @@ func run(base, fixtures, responses string) error {
 		return err
 	}
 	added, removed := diffKeys(recorded, live)
-	fmt.Fprintf(os.Stdout, "added: %s\nremoved: %s\n", formatKeys(added), formatKeys(removed))
+	fmt.Fprintf(out, "added: %s\nremoved: %s\n", formatKeys(added), formatKeys(removed))
 	if len(added)+len(removed) > 0 {
 		return errors.New("allocation keys differ from the recorded fixtures")
 	}
 	if errorErr != nil {
 		return errorErr
 	}
-	fmt.Fprintf(os.Stdout, "keys match (%d)\n", len(recorded))
+	fmt.Fprintf(out, "keys match (%d)\n", len(recorded))
 	return nil
 }
 
