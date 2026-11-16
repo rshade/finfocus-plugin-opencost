@@ -12,3 +12,8 @@ func ResolveWith(t Target, home string, inCluster func() (*rest.Config, error)) 
 	conn, err := resolve(t, sources{home: home, inCluster: inCluster})
 	return conn.BaseURL, conn.Transport, err
 }
+
+// APIServerMessage exposes apiServerMessage to the external test package.
+func APIServerMessage(resp *http.Response) (string, bool) {
+	return apiServerMessage(resp)
+}

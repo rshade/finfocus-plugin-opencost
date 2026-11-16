@@ -78,10 +78,9 @@ func TestKubeCredentialsNeverLogged(t *testing.T) {
 			require.NoError(t, proc.Start())
 			t.Cleanup(func() { _ = proc.Process.Kill(); _ = proc.Wait() })
 
-			deadline := time.Now().Add(10 * time.Second)
-			for time.Now().Before(deadline) && !strings.Contains(stderr.String(), "kube_service") {
-				time.Sleep(20 * time.Millisecond)
-			}
+			require.Eventually(t, func() bool {
+				return strings.Contains(stderr.String(), "kube_service")
+			}, 10*time.Second, 20*time.Millisecond, "startup line missing: %s", stderr.String())
 
 			var named []map[string]any
 			for _, line := range strings.Split(strings.TrimSpace(stderr.String()), "\n") {

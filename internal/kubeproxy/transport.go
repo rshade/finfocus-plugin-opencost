@@ -82,8 +82,12 @@ func (p *proxyTransport) statusError(resp *http.Response) error {
 // Status body marks a failure of the API server or the proxy. 401 and 403 are
 // mapped without this check. It restores resp.Body.
 func apiServerMessage(resp *http.Response) (string, bool) {
-	body, err := io.ReadAll(io.LimitReader(resp.Body, maxStatusBody))
-	resp.Body = io.NopCloser(io.MultiReader(bytes.NewReader(body), resp.Body))
+	original := resp.Body
+	body, err := io.ReadAll(io.LimitReader(original, maxStatusBody))
+	resp.Body = struct {
+		io.Reader
+		io.Closer
+	}{io.MultiReader(bytes.NewReader(body), original), original}
 	if err != nil {
 		return "", false
 	}

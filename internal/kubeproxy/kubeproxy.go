@@ -115,6 +115,9 @@ func restConfig(t Target, src sources) (*rest.Config, string, error) {
 		return nil, "", fmt.Errorf("kube: read kubeconfig: %w", err)
 	}
 	if len(raw.Contexts) == 0 && t.Kubeconfig == "" {
+		if env := os.Getenv(clientcmd.RecommendedConfigPathEnvVar); env != "" {
+			return nil, "", fmt.Errorf("kube: KUBECONFIG %q is missing or has no contexts", env)
+		}
 		return inCluster(t, src)
 	}
 	contextName, err := selectContext(t, raw)

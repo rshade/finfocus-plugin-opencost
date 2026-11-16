@@ -59,10 +59,18 @@ all authenticate.
 
 #### Scenario: In-cluster fallback
 
-- **WHEN** no kubeconfig exists and a service account token is mounted
+- **WHEN** no kubeconfig exists, `KUBECONFIG` is unset, and a service
+  account token is mounted
 - **THEN** requests use the in-cluster API server and token
 
-Tested by: TestKubeCredentialSources, TestKubeCredentialSourcesInCluster, TestKubeExecPluginCredentials
+#### Scenario: KUBECONFIG names no usable kubeconfig
+
+- **WHEN** `KUBECONFIG` is set to a missing file or a file with no
+  contexts and a service account token is mounted
+- **THEN** startup fails with a reason naming `KUBECONFIG`
+- **AND** the pod's service account is not used
+
+Tested by: TestKubeCredentialSources, TestKubeCredentialSourcesInCluster, TestKubeExecPluginCredentials, TestKubeSetKubeconfigNeverFallsBackToPod
 
 ### Requirement: A missing context fails at startup
 

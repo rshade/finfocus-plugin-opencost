@@ -94,7 +94,9 @@ export OPENCOST_CURRENCY=EUR
 If the kubeconfig authenticates with an exec plugin, its command must be on the
 runner's `PATH`: `aws` for EKS, `gke-gcloud-auth-plugin` for GKE. When the
 command is missing or fails, the plugin says `kubeconfig credential plugin
-"<command>" failed` and never prints what the command wrote.
+"<command>" failed` and does not add the command's output to that error.
+The command's own stderr passes through to the plugin's stderr, so its
+diagnostics can appear in the run log.
 
 ## DevOps workstation
 
