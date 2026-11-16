@@ -37,7 +37,7 @@ issues filed on 2026-11-12 (#133 to #140) are code work and are not blocked.
   `GetPluginInfo` advertises `BUDGETS` on profile `opencost`, where
   `GetBudgets` returns `Unimplemented`. Core gates RPCs on that list.
 - [ ] #134 `feat(server)`: implement `DryRun` so `finfocus plugin inspect` works [S]
-  Core's `plugin inspect` calls `DryRun`, which the plugin does not implement.
+  Core's `plugin inspect` calls `DryRun`. OC-9.17 adds the handler; open pull request.
 - [ ] #135 `ci(drift)`: run the cost oracle against the latest OpenCost chart nightly [M]
   Adds the chart-version and cluster env vars. Depends on the live-drift fix in
   #131, which has merged but has not yet had a passing run.
@@ -126,7 +126,7 @@ and `BLOCKED-ON-INPUT` are not eligible. The owner sets a blocked row back to
 | --- | --- | --- | --- | --- |
 | OC-9.12 | #69 | Extend the kind oracle to controller, pod, and node. Discover the pod name at run time and derive no number from the plugin. `testdata/opencost-real/` stays read-only until the owner reviews the expected values. Break check: CPU `9.0` diverges for every kind, then restore `2.0`. | OC-9.3, owner-reviewed expectations | BLOCKED-ON-INPUT |
 | OC-9.13 | #71 | Profile `kubecost` needs a backend the agent can call. The kind spike's `GET /model/allocation` returned HTTP 404 (`docs/kubecost-kind-spike.md`). A live capture uses owner-redacted responses. Label the profile experimental only when the owner chooses that in the invocation. | a reachable backend | BLOCKED-ON-INPUT |
-| OC-9.17 | to file | `finfocus plugin inspect opencost <type>` fails with "plugin 'opencost' does not support inspection (capability discovery not implemented)" (seen against v0.1.2). azure-public supports it. The owner confirms the gap is wanted and an issue is filed, then implement what `plugin inspect` needs and document it. Break check: removing the handler fails with the same message. | OC-9.8 | BLOCKED-ON-INPUT |
+| OC-9.17 | #134 | `finfocus plugin inspect opencost <type>` fails with "plugin 'opencost' does not support inspection (capability discovery not implemented)" (seen against v0.1.2). azure-public supports it. The owner confirms the gap is wanted and an issue is filed, then implement what `plugin inspect` needs and document it. Break check: removing the handler fails with the same message. The owner filed #134 and confirmed it on v0.5.8. | OC-9.8 | IN-PROGRESS |
 
 Agent slices already done, with an owner step left:
 
@@ -414,8 +414,8 @@ A pull request to `rshade/finfocus`, modelled on #1697 (azure-public) and #1720
 - Validate with a binary built from the branch and a fresh temporary
   `FINFOCUS_HOME`: `plugin list --available` shows the entry, `plugin install
   <name>` prints `Checksum verified (SHA256)`, and `plugin list` shows the
-  version. Also run `plugin inspect <name> <type>`. It fails for this plugin
-  today, which is OC-9.17.
+  version. Also run `plugin inspect <name> <type>`. It works from the release
+  that carries OC-9.17 (#134).
 
 State on 2026-11-12: v0.1.2 is the first release with assets (v0.1.0 and v0.1.1
 have none). The registry entry merged in `rshade/finfocus` PR 1720.

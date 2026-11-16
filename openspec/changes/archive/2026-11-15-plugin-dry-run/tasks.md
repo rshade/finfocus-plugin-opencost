@@ -11,10 +11,10 @@
 
 ## 3. Integration
 
-- [ ] 3.1 Run `go test ./...`, `go vet ./...`, `make lint`, `make test-race`, `npx markdownlint-cli2 "**/*.md"`, and `mise exec -- openspec validate --all --strict`; each exits 0.
-- [ ] 3.2 Build the plugin, install it with `make install`, and run `finfocus plugin inspect opencost kubernetes:apps/v1:Deployment`; it exits 0 and prints the field mappings. Run it for `kubernetes:core/v1:Service`; it exits 0 with no mappings. Break check: with the handler disabled the command prints "capability discovery not implemented".
-- [ ] 3.3 Run `make e2e-kind` (the allocation client changed) and `OC_E2E=1 go test -tags conformance ./test/conformance`; both report 0 failed.
-- [ ] 3.4 Update `CLAUDE.md` with the `DryRun` behaviour and the `WithBaseURL` wiring.
+- [x] 3.1 Run `go test ./...`, `go vet ./...`, `make lint`, `make test-race`, `npx markdownlint-cli2 "**/*.md"`, and `mise exec -- openspec validate --all --strict`; each exits 0.
+- [x] 3.2 Build the plugin, install it with `make install`, and run `finfocus plugin inspect opencost kubernetes:apps/v1:Deployment`; it exits 0 and prints the field mappings. Run it for `kubernetes:core/v1:Service`; it exits 0 with no mappings. Break check: with the handler disabled the command prints "capability discovery not implemented".
+- [x] 3.3 Run `make e2e-kind` (the allocation client changed) and `OC_E2E=1 go test -tags conformance ./test/conformance`; both report 0 failed.
+- [x] 3.4 Update `CLAUDE.md` with the `DryRun` behaviour and the `WithBaseURL` wiring.
 
 ## Workflow follow-up
 

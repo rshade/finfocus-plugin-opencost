@@ -88,6 +88,10 @@ func TestDryRunRejectsMissingResource(t *testing.T) {
 			resp, err := srv.HandleDryRun(t.Context(), req)
 			require.Nil(t, resp)
 			require.Equal(t, codes.InvalidArgument, status.Code(err))
+
+			resp, err = pluginsdk.NewServer(srv).DryRun(t.Context(), req)
+			require.Nil(t, resp)
+			require.Equal(t, codes.InvalidArgument, status.Code(err))
 		})
 	}
 }
