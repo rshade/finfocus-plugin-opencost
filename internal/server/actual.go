@@ -97,6 +97,7 @@ func (r resourceRef) matches(key string, entry allocation.Entry) bool {
 func resultsFor(
 	resp *allocation.DetailedAllocationResponse,
 	ref resourceRef,
+	includeUsage bool,
 ) ([]*pbc.ActualCostResult, error) {
 	if resp == nil {
 		return nil, nil
@@ -117,11 +118,15 @@ func resultsFor(
 			if err != nil {
 				return nil, err
 			}
+			record := stampChargePeriod(focusFor(entry.Properties, ref), entry)
+			if includeUsage {
+				record = withUsageColumns(record, key, entry)
+			}
 			results = append(results, &pbc.ActualCostResult{
 				Timestamp:   timestamppb.New(stamped),
 				Cost:        entry.TotalCost,
 				Source:      pluginName,
-				FocusRecord: stampChargePeriod(focusFor(entry.Properties, ref), entry),
+				FocusRecord: record,
 			})
 		}
 	}

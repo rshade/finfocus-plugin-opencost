@@ -54,7 +54,7 @@ func (s *Server) GetActualCost(
 		if err != nil {
 			return nil, mapBackendError(err)
 		}
-		results, err := resultsFor(detailed, ref)
+		results, err := resultsFor(detailed, ref, s.cli.GetConfig().IncludeUsage)
 		if err != nil {
 			return nil, err
 		}
