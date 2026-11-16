@@ -31,6 +31,10 @@ const (
 	daemonNamespace = "oc-test-ds"
 	daemonName      = "daemon"
 	bytesPerGiB     = 1 << 30
+	// minRowMinutes keeps OpenCost's five-decimal cost rounding well inside the
+	// tolerance: a row with one minute of data costs about 0.01, so rounding moves
+	// it by under 0.1%. A just-created pod has fewer minutes and is retried.
+	minRowMinutes = 1.0
 )
 
 // kindCase is one GetActualCost request kind with an expectation computed from
@@ -168,8 +172,11 @@ func waitForRow(t *testing.T, fwd *backendForward, client pbc.CostSourceServiceC
 		if err == nil {
 			var minutes float64
 			minutes, err = fetchRowMinutes(fwd.url(), allocation.FormatTimeWindow(start, end), c.filter, c.aggregate)
-			if err == nil {
+			if err == nil && minutes >= minRowMinutes {
 				return total, minutes
+			}
+			if err == nil {
+				err = fmt.Errorf("%s has %g minutes of data, want at least %g", c.resourceID, minutes, minRowMinutes)
 			}
 		}
 		lastErr = err
