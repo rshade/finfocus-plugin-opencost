@@ -17,20 +17,22 @@ import (
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
-var dryRunSupportedTypes = []string{
-	"kubernetes:core/v1:Namespace",
-	"kubernetes:core/v1:Pod",
-	"kubernetes:core/v1:Node",
-	"kubernetes:apps/v1:Deployment",
-	"kubernetes:apps/v1:StatefulSet",
-	"kubernetes:apps/v1:DaemonSet",
-	"kubernetes:apps/v1:ReplicaSet",
-	"kubernetes:batch/v1:Job",
-	"kubernetes:batch/v1:CronJob",
-	"k8s-namespace",
-	"k8s-pod",
-	"k8s-controller",
-	"k8s-node",
+func dryRunSupportedTypes() []string {
+	return []string{
+		"kubernetes:core/v1:Namespace",
+		"kubernetes:core/v1:Pod",
+		"kubernetes:core/v1:Node",
+		"kubernetes:apps/v1:Deployment",
+		"kubernetes:apps/v1:StatefulSet",
+		"kubernetes:apps/v1:DaemonSet",
+		"kubernetes:apps/v1:ReplicaSet",
+		"kubernetes:batch/v1:Job",
+		"kubernetes:batch/v1:CronJob",
+		"k8s-namespace",
+		"k8s-pod",
+		"k8s-controller",
+		"k8s-node",
+	}
 }
 
 func dryRunServer(t *testing.T, cfg allocation.Config) *server.Server {
@@ -95,7 +97,7 @@ func TestDryRunMapsFocusFieldsForEverySupportedType(t *testing.T) {
 
 	srv := dryRunServer(t, allocation.Config{BaseURL: "http://127.0.0.1:9"})
 	conditional := []string{"charge_period_start", "charge_period_end", "tags", "extended_columns"}
-	for _, resourceType := range dryRunSupportedTypes {
+	for _, resourceType := range dryRunSupportedTypes() {
 		t.Run(resourceType, func(t *testing.T) {
 			t.Parallel()
 			resp := dryRun(t, srv, resourceType)
@@ -168,7 +170,7 @@ func TestDryRunMakesNoBackendCall(t *testing.T) {
 
 	valid := dryRunServer(t, allocation.Config{BaseURL: backend.URL})
 	invalid := dryRunServer(t, allocation.Config{BaseURL: backend.URL, Profile: "bogus"})
-	for _, resourceType := range append([]string{"kubernetes:core/v1:Service"}, dryRunSupportedTypes...) {
+	for _, resourceType := range append([]string{"kubernetes:core/v1:Service"}, dryRunSupportedTypes()...) {
 		dryRun(t, valid, resourceType)
 		dryRun(t, invalid, resourceType)
 	}

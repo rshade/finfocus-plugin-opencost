@@ -58,13 +58,6 @@ func WithBaseURL(origin string) Option {
 	return func(c *Client) { c.baseURL = origin }
 }
 
-func (c *Client) origin() string {
-	if c.baseURL != "" {
-		return c.baseURL
-	}
-	return c.cfg.BaseURL
-}
-
 func NewClient(_ context.Context, cfg Config, opts ...Option) (*Client, error) {
 	var roots *x509.CertPool
 	if cfg.CACertFile != "" {
@@ -108,6 +101,13 @@ func rootPool(path string) (*x509.CertPool, error) {
 		return nil, errors.New("config: caCertFile did not contain a PEM certificate")
 	}
 	return pool, nil
+}
+
+func (c *Client) origin() string {
+	if c.baseURL != "" {
+		return c.baseURL
+	}
+	return c.cfg.BaseURL
 }
 
 func (c *Client) clock() time.Time {
