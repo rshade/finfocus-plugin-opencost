@@ -1,5 +1,18 @@
 # Kubecost chart on kind
 
+## Decision (2026-11-15, issue #71)
+
+Profile `kubecost` is **experimental**. No backend this project can reach answered its endpoints, so the profile is verified only against the contract fixtures in `testdata/kubecost-contract/`. The owner chose to label it rather than wait for a capture (option b in #71).
+
+- `GetPluginInfo` metadata on that profile carries `kubecost_profile=experimental` and `kubecost_verified=false`.
+- Each budget carries metadata `verified=false`.
+- Start-up logs one warning that the profile is experimental.
+- The prediction request body (`POST /model/prediction/speccost`) is still unconfirmed against a live backend.
+
+A live capture (option a in #71) would replace this label: record redacted responses under `testdata/kubecost-live/` with the backend version and date, and add decode tests.
+
+The spike results follow.
+
 answer: yes
 
 ```text

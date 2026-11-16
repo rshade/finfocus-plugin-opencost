@@ -233,3 +233,26 @@ func TestGetBudgetsKubecostNeedsCurrency(t *testing.T) {
 	require.Equal(t, codes.FailedPrecondition, status.Code(err))
 	require.NotContains(t, err.Error(), "USD")
 }
+
+func TestBudgetsCarryVerifiedFalse(t *testing.T) {
+	t.Parallel()
+	t.Attr("label", "contract-fixture")
+
+	fixture := readRepoFile(t, "testdata/kubecost-contract/budgets-namespaces.json")
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(fixture)
+	}))
+	t.Cleanup(backend.Close)
+	cli, err := allocation.NewClient(t.Context(), allocation.Config{
+		BaseURL: backend.URL, Profile: allocation.ProfileKubecost, Currency: "EUR",
+	})
+	require.NoError(t, err)
+
+	resp, err := server.New(cli).GetBudgets(t.Context(), &pbc.GetBudgetsRequest{IncludeStatus: true})
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.GetBudgets())
+	for _, budget := range resp.GetBudgets() {
+		require.Equal(t, "false", budget.GetMetadata()["verified"], budget.GetId())
+	}
+}

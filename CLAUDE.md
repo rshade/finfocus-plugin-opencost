@@ -82,6 +82,10 @@ Profile `opencost` `EstimateCost` reads `metadata.name` as a namespace and queri
 
 `GetRecommendations` (`internal/server/recommendations.go`) implements `pluginsdk.RecommendationsProvider` for profile `opencost`. It is `Unimplemented` unless `recommendations` is on (the SDK server then answers an empty list); start-up validation requires `recommendationHeadroom` above zero and rejects profile `kubecost`. `GetPluginInfo` reports `RECOMMENDATIONS` only when it is on; the manifest lists it. It queries `30d` by `namespace,controller`, and per controller cuts each request to usage average × (1 + headroom), rounded up to 1m or 1Mi with a one-unit floor. Savings use the row's own `cpuCost / cpuCoreHours` and `ramCost / ramByteHours`. Request averages are totals across pods. Profile `kubecost` (`/model/savings/requestSizingV2`) is not built and stays on #138.
 
+### Profile kubecost is experimental
+
+Profile `kubecost` is labelled experimental (#71, decision at the top of `docs/kubecost-kind-spike.md`): `Info` adds two metadata keys that label it experimental and unverified on that profile only (keys in `internal/server/info.go`), each budget carries metadata `verified=false`, and `Config.WarnIfExperimental` logs one start-up warning next to `WarnIfTLSSkipped`. `EstimateCostResponse` has no notes field, so the estimate carries no marker. A live capture under `testdata/kubecost-live/` would replace the label.
+
 ### Logging
 
 The logger comes from `pluginsdk.NewPluginLogger` in `main.go` and writes JSON to stderr. Every line carries `plugin_name` (`pluginsdk.FieldPluginName`) and `plugin_version`. Core's `finfocus logs` and web Logs view name a log-file line's source by `plugin_name` only; a line without it shows as `[core]`. Do not set a hand-rolled `plugin` field. `TestBinaryExitsOnInvalidConfig` pins the fields.

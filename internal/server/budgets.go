@@ -120,6 +120,7 @@ func budgetFromRule(rule allocation.BudgetRule, namespace, currency string, incl
 		Metadata: map[string]string{
 			"kind":        rule.Kind,
 			"intervalDay": strconv.Itoa(rule.IntervalDay),
+			"verified":    "false",
 		},
 	}
 	if rule.Window.Start != "" {

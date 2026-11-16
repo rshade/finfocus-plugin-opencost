@@ -40,7 +40,11 @@ type Client struct {
 	limiter *limiter
 }
 
-const tlsSkipVerifyWarning = "TLS certificate verification is disabled"
+const (
+	tlsSkipVerifyWarning = "TLS certificate verification is disabled"
+	experimentalWarning  = "profile kubecost is experimental: it is verified only against contract fixtures, " +
+		"not a live backend"
+)
 
 // Option adjusts how NewClient connects.
 type Option func(*Client)
@@ -86,6 +90,14 @@ func (c Config) WarnIfTLSSkipped(logger zerolog.Logger) {
 		return
 	}
 	logger.Warn().Msg(tlsSkipVerifyWarning)
+}
+
+// WarnIfExperimental logs one warning when the profile is kubecost.
+func (c Config) WarnIfExperimental(logger zerolog.Logger) {
+	if c.Profile != ProfileKubecost {
+		return
+	}
+	logger.Warn().Msg(experimentalWarning)
 }
 
 func rootPool(path string) (*x509.CertPool, error) {

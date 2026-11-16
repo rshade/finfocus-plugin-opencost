@@ -123,6 +123,13 @@ func TestCACertFileTrustsPrivateCA(t *testing.T) {
 
 func runStartup(t *testing.T, bin string, env []string) string {
 	t.Helper()
+	return runStartupFor(t, bin, env, "TLS certificate verification is disabled")
+}
+
+// runStartupFor starts the binary and returns its stderr once warning appears,
+// or after a grace period when it does not.
+func runStartupFor(t *testing.T, bin string, env []string, warning string) string {
+	t.Helper()
 	port := freePort(t)
 	proc := exec.Command(bin, "--port", port)
 	proc.Env = env
@@ -130,7 +137,6 @@ func runStartup(t *testing.T, bin string, env []string) string {
 	proc.Stderr = &stderr
 	require.NoError(t, proc.Start())
 	deadline := time.Now().Add(3 * time.Second)
-	const warning = "TLS certificate verification is disabled"
 	for time.Now().Before(deadline) && !strings.Contains(stderr.String(), warning) {
 		time.Sleep(20 * time.Millisecond)
 	}
