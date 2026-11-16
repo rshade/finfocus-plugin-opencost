@@ -57,6 +57,11 @@ type Entry struct {
 	ExternalCost      float64                `json:"externalCost"`
 	TotalCost         float64                `json:"totalCost"`
 	TotalEfficiency   float64                `json:"totalEfficiency"`
+	GPUEfficiency     float64                `json:"gpuEfficiency"`
+	CPURequestAverage float64                `json:"cpuCoreRequestAverage"`
+	CPUUsageAverage   float64                `json:"cpuCoreUsageAverage"`
+	RAMRequestAverage float64                `json:"ramByteRequestAverage"`
+	RAMUsageAverage   float64                `json:"ramByteUsageAverage"`
 	Currency          string                 `json:"currency,omitempty"`
 	RawAllocationOnly map[string]interface{} `json:"rawAllocationOnly,omitempty"`
 }
