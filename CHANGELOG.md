@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.2.0...v0.3.0) (2026-11-16)
+
+
+### Features
+
+* **server:** implement DryRun so finfocus plugin inspect works (OC-9.17) ([#151](https://github.com/rshade/finfocus-plugin-opencost/issues/151)) ([721fa1b](https://github.com/rshade/finfocus-plugin-opencost/commit/721fa1b561f693cf948833fe8154f0bf6e0f08af)), closes [#134](https://github.com/rshade/finfocus-plugin-opencost/issues/134)
+
 ## [0.2.0](https://github.com/rshade/finfocus-plugin-opencost/compare/v0.1.2...v0.2.0) (2026-11-16)
 
 
