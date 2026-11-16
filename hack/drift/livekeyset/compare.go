@@ -12,6 +12,13 @@ import (
 	"strings"
 )
 
+// isConditionalKey names keys that are present only on allocations that carry the data, so a live window without
+// that data omits them. OpenCost sets rawAllocationOnly only for raw allocations with usage maxima.
+// make drift still checks the field against the upstream struct, so a real removal is caught there.
+func isConditionalKey(key string) bool {
+	return key == "rawAllocationOnly"
+}
+
 func diffKeys(recorded, live map[string]struct{}) ([]string, []string) {
 	var added, removed []string
 	for key := range live {
@@ -20,6 +27,9 @@ func diffKeys(recorded, live map[string]struct{}) ([]string, []string) {
 		}
 	}
 	for key := range recorded {
+		if isConditionalKey(key) {
+			continue
+		}
 		if _, ok := live[key]; !ok {
 			removed = append(removed, key)
 		}
