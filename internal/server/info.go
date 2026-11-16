@@ -14,7 +14,8 @@ import (
 
 // Info builds the plugin record reported by GetPluginInfo for the configured profile.
 // WithCapabilities replaces the SDK's inferred set, so every capability the profile serves is listed here.
-// Profile kubecost adds BUDGETS because only that profile can answer GetBudgets.
+// Profile kubecost adds BUDGETS because only that profile can answer GetBudgets, and
+// metadata that labels the profile experimental: it is verified only against contract fixtures.
 // RECOMMENDATIONS appears only when the recommendations flag is on.
 func Info(cfg allocation.Config) *pluginsdk.PluginInfo {
 	capabilities := []pbc.PluginCapability{
@@ -25,8 +26,13 @@ func Info(cfg allocation.Config) *pluginsdk.PluginInfo {
 		pbc.PluginCapability_PLUGIN_CAPABILITY_BATCH_COST,
 		pbc.PluginCapability_PLUGIN_CAPABILITY_DRY_RUN,
 	}
+	var experimental []pluginsdk.PluginInfoOption
 	if profile, err := cfg.ProfileName(); err == nil && profile == allocation.ProfileKubecost {
 		capabilities = append(capabilities, pbc.PluginCapability_PLUGIN_CAPABILITY_BUDGETS)
+		experimental = append(experimental,
+			pluginsdk.WithMetadata("kubecost_profile", "experimental"),
+			pluginsdk.WithMetadata("kubecost_verified", "false"),
+		)
 	}
 	if cfg.Recommendations {
 		capabilities = append(capabilities, pbc.PluginCapability_PLUGIN_CAPABILITY_RECOMMENDATIONS)
@@ -34,9 +40,11 @@ func Info(cfg allocation.Config) *pluginsdk.PluginInfo {
 	return pluginsdk.NewPluginInfo(
 		pluginName,
 		version.GetVersionInfo().Version,
-		pluginsdk.WithSpecVersion(pluginsdk.SpecVersion),
-		pluginsdk.WithProviders("kubernetes"),
-		pluginsdk.WithCapabilities(capabilities...),
+		append([]pluginsdk.PluginInfoOption{
+			pluginsdk.WithSpecVersion(pluginsdk.SpecVersion),
+			pluginsdk.WithProviders("kubernetes"),
+			pluginsdk.WithCapabilities(capabilities...),
+		}, experimental...)...,
 	)
 }
 

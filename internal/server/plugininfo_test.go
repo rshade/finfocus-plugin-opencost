@@ -83,3 +83,32 @@ func TestGetPluginInfoCapabilitiesFollowProfile(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPluginInfoLabelsKubecostExperimental(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		profile string
+		want    map[string]string
+	}{
+		{allocation.ProfileKubecost, map[string]string{"kubecost_profile": "experimental", "kubecost_verified": "false"}},
+		{allocation.ProfileOpenCost, nil},
+	} {
+		t.Run(tc.profile, func(t *testing.T) {
+			t.Parallel()
+			cli, err := allocation.NewClient(t.Context(), allocation.Config{
+				BaseURL: "http://127.0.0.1:9", Profile: tc.profile,
+			})
+			require.NoError(t, err)
+			resp, err := server.New(cli).GetPluginInfo(t.Context(), &pbc.GetPluginInfoRequest{})
+			require.NoError(t, err)
+			for key, value := range tc.want {
+				require.Equal(t, value, resp.GetMetadata()[key], key)
+			}
+			if tc.want == nil {
+				require.NotContains(t, resp.GetMetadata(), "kubecost_profile")
+				require.NotContains(t, resp.GetMetadata(), "kubecost_verified")
+			}
+		})
+	}
+}
