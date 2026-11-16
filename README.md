@@ -27,7 +27,8 @@ Profile `opencost` (the default) reports:
 - `DRY_RUN`
 
 Profile `kubecost` reports the same six and adds `BUDGETS`.
-`plugin.manifest.json` lists all seven, because it describes what the binary can serve across profiles.
+With `recommendations` on, profile `opencost` also reports `RECOMMENDATIONS`.
+`plugin.manifest.json` lists all eight, because it describes what the binary can serve across configurations.
 
 `DryRun` answers `finfocus plugin inspect opencost <type>` without calling the allocation backend.
 For a supported type it maps every FOCUS field that `GetActualCost` can fill.
@@ -75,10 +76,10 @@ When `OPENCOST_CONFIG` is empty, it reads `KUBECOST_CONFIG`.
 A missing file leaves the environment values in place, even when the path is a typo.
 
 Precedence runs defaults first, then the environment, then the file for the keys it sets.
-`OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, `OPENCOST_INCLUDE_USAGE`, and `KUBECOST_API_TOKEN` are read again after the file and win when set.
+`OPENCOST_PROFILE`, `OPENCOST_CURRENCY`, `OPENCOST_INCLUDE_USAGE`, `OPENCOST_RECOMMENDATIONS`, `OPENCOST_RECOMMENDATION_HEADROOM`, and `KUBECOST_API_TOKEN` are read again after the file and win when set.
 
-A file that does not parse, a `KUBECOST_TIMEOUT` value that is not a duration, or a `KUBECOST_TLS_SKIP_VERIFY`, `KUBECOST_ALLOW_INSECURE_HTTP`, or `OPENCOST_INCLUDE_USAGE` value other than `true` or `false` stops startup with an error that names the file or the variable.
-Before serving, the plugin validates the config: without a `kube` block, `baseUrl` must be an `https` URL with a host, or an `http` URL on `localhost`, `127.0.0.0/8`, or `::1`, unless `allowInsecureHttp` is set. `profile` must be empty, `opencost`, or `kubecost`. A set `currency` must be three upper-case letters. `timeout`, `requestsPerSecond`, and `rateBurst` must not be negative. A set `caCertFile` must be a PEM file the process can read. A set `kube.service` replaces `baseUrl`, so `baseUrl`, `tlsSkipVerify`, `caCertFile`, and `allowInsecureHttp` next to it are errors, `profile` must not be `kubecost`, and `kube.port` must be 1 to 65535.
+Startup stops with an error that names the file or the variable when the file does not parse, `KUBECOST_TIMEOUT` is not a duration, `OPENCOST_RECOMMENDATION_HEADROOM` is not a number, or `KUBECOST_TLS_SKIP_VERIFY`, `KUBECOST_ALLOW_INSECURE_HTTP`, `OPENCOST_INCLUDE_USAGE`, or `OPENCOST_RECOMMENDATIONS` is set to anything other than `true` or `false`.
+Before serving, the plugin validates the config: without a `kube` block, `baseUrl` must be an `https` URL with a host, or an `http` URL on `localhost`, `127.0.0.0/8`, or `::1`, unless `allowInsecureHttp` is set. `profile` must be empty, `opencost`, or `kubecost`. A set `currency` must be three upper-case letters. `recommendations` needs `recommendationHeadroom` above zero and profile `opencost`. `timeout`, `requestsPerSecond`, and `rateBurst` must not be negative. A set `caCertFile` must be a PEM file the process can read. A set `kube.service` replaces `baseUrl`, so `baseUrl`, `tlsSkipVerify`, `caCertFile`, and `allowInsecureHttp` next to it are errors, `profile` must not be `kubecost`, and `kube.port` must be 1 to 65535.
 A failure exits with a one-line reason.
 No error or log line contains the API token.
 
@@ -111,6 +112,8 @@ Request logs do not include the token.
 | `requestsPerSecond` | none | `10` | Outbound allocation rate. `0` selects 10 per second. Past that limit, the call is `ResourceExhausted` and does not reach the backend. |
 | `rateBurst` | none | `20` | How many outbound requests may run together. `0` selects 20. |
 | `includeUsage` | `OPENCOST_INCLUDE_USAGE` | `false` | Add efficiency and request/usage extended columns to actual cost results (see API notes). A set variable wins over the file. |
+| `recommendations` | `OPENCOST_RECOMMENDATIONS` | `false` | Turn on right-sizing `GetRecommendations` and report `RECOMMENDATIONS`. Profile `opencost` only. Needs `recommendationHeadroom`. |
+| `recommendationHeadroom` | `OPENCOST_RECOMMENDATION_HEADROOM` | none | Fraction above average usage that a recommended request keeps, for example `0.2` for 20%. Required when `recommendations` is on; there is no default. |
 | `clusterId` | `KUBECOST_CLUSTER_ID` | empty | Profile `kubecost` `EstimateCost` sends this as `clusterID`. Other cost methods do not. |
 | `defaultNamespace` | `KUBECOST_DEFAULT_NAMESPACE` | `default` | Profile `kubecost` `EstimateCost` sends this as `defaultNamespace`. Other cost methods do not. |
 | `predictionWindow` | `KUBECOST_PREDICTION_WINDOW` | `2d` | Profile `kubecost` `EstimateCost` sends this as `windowAvgUsage`. Other cost methods do not. |
@@ -227,6 +230,17 @@ On profile `kubecost`, `EstimateCost` posts the resource attributes to `POST /mo
 `cost_monthly` is `costAfter.totalMonthlyRate` from that response.
 The fixture follows `kubectl-cost` `pkg/query/prediction_speccost.go` at commit `1f45d3085b2ffa84758bfa8131ea8b7784cd8ed1`.
 It is not verified against live Kubecost.
+
+`GetRecommendations` is off unless `recommendations` is set, and then it needs `recommendationHeadroom`; there is no default headroom.
+It works on profile `opencost` only.
+It queries window `30d` by namespace and controller and returns one `ADJUST_REQUESTS` recommendation for each controller whose CPU or memory request average is above usage × (1 + headroom).
+The recommended request is that target rounded up to 1m CPU or 1Mi memory, and never below one unit, because a zero request changes the pod's QoS class.
+Requests are totals across the controller's pods.
+The saving uses the same row's observed rates (`cpuCost / cpuCoreHours`, `ramCost / ramByteHours`) over 24, 730, or 8760 hours for `daily`, `monthly` (default), or `annual`.
+It is an estimate: OpenCost bills the larger of request and usage, so the saving assumes the new request is what gets billed.
+The id is `opencost/rightsize/<namespace>/<controller>`.
+`excluded_recommendation_ids`, `filter`, `target_resources` (controllers only), and paging apply; results sort by saving, largest first.
+There is no `DismissRecommendation` or `GetRecommendationHistory`, because both need stored state.
 
 `BatchCost` issues one allocation query and returns results in request order.
 For an estimate or projected batch, a missing object is a per-item `NotFound`, including when currency is unset.

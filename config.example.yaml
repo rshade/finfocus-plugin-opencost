@@ -10,6 +10,9 @@ cacheTTL: 30s
 requestsPerSecond: 10
 rateBurst: 20
 includeUsage: false
+recommendations: false
+# Required when recommendations is true: the fraction above average usage to keep (0.2 = 20%).
+recommendationHeadroom: 0.2
 clusterId: production-cluster
 defaultNamespace: default
 predictionWindow: 2d
