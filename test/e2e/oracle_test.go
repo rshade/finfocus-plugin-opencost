@@ -306,6 +306,15 @@ func probeHealth(baseURL string) error {
 
 func startPlugin(t *testing.T, root, baseURL string, pluginLog *tailBuf) (pbc.CostSourceServiceClient, func()) {
 	t.Helper()
+	cfg := fmt.Sprintf(
+		"baseUrl: %s\nprofile: opencost\ncurrency: %s\ncacheTTL: -1s\ntimeout: 30s\n",
+		baseURL, e2eCurrency,
+	)
+	return startPluginWithConfig(t, root, cfg, pluginLog)
+}
+
+func startPluginWithConfig(t *testing.T, root, cfg string, pluginLog *tailBuf) (pbc.CostSourceServiceClient, func()) {
+	t.Helper()
 	bin := filepath.Join(t.TempDir(), "finfocus-plugin-opencost")
 	build := exec.Command("go", "build", "-o", bin, "./cmd/finfocus-plugin-opencost")
 	build.Dir = root
@@ -313,10 +322,6 @@ func startPlugin(t *testing.T, root, baseURL string, pluginLog *tailBuf) (pbc.Co
 	require.NoError(t, err, string(out))
 
 	cfgPath := filepath.Join(t.TempDir(), "opencost.yaml")
-	cfg := fmt.Sprintf(
-		"baseUrl: %s\nprofile: opencost\ncurrency: %s\ncacheTTL: -1s\ntimeout: 30s\n",
-		baseURL, e2eCurrency,
-	)
 	require.NoError(t, os.WriteFile(cfgPath, []byte(cfg), 0o644))
 
 	port := freePort(t)
@@ -411,10 +416,7 @@ func assertControllerOracle(
 	match bool,
 ) {
 	t.Helper()
-	sample, err := fetchControllerCost(client, start, end)
-	require.NoError(t, err)
-	minutes, err := fetchControllerMinutes(fwd.url(), allocation.FormatTimeWindow(start, end))
-	require.NoError(t, err)
+	sample, minutes := waitForControllerRow(t, fwd, client, start, end)
 	want := expectedCost(spec, minutes, cpuRate)
 	rel := relative(sample.total, want)
 	t.Logf(
@@ -426,6 +428,34 @@ func assertControllerOracle(
 		return
 	}
 	require.Greater(t, rel, spec.tolerance)
+}
+
+func waitForControllerRow(
+	t *testing.T,
+	fwd *backendForward,
+	client pbc.CostSourceServiceClient,
+	start, end time.Time,
+) (costSample, float64) {
+	t.Helper()
+	deadline := time.Now().Add(3 * time.Minute)
+	var lastErr error
+	for {
+		sample, err := fetchControllerCost(client, start, end)
+		if err == nil {
+			var minutes float64
+			minutes, err = fetchControllerMinutes(fwd.url(), allocation.FormatTimeWindow(start, end))
+			if err == nil {
+				return sample, minutes
+			}
+		}
+		lastErr = err
+		if time.Now().After(deadline) {
+			require.NoError(t, lastErr, "controller row never appeared")
+		}
+		time.Sleep(5 * time.Second)
+		end = time.Now().UTC().Add(-5 * time.Second)
+		start = end.Add(-2 * time.Minute)
+	}
 }
 
 func fetchControllerCost(client pbc.CostSourceServiceClient, start, end time.Time) (costSample, error) {

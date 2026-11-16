@@ -49,7 +49,7 @@ func run() int {
 		return 1
 	}
 	cfg.WarnIfTLSSkipped(logger)
-	cli, err := allocation.NewClient(context.Background(), cfg)
+	cli, err := newClient(context.Background(), cfg, logger)
 	if err != nil {
 		logger.Error().Err(err).Msg("client")
 		return 1

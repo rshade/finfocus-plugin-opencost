@@ -12,3 +12,12 @@ rateBurst: 20
 clusterId: production-cluster
 defaultNamespace: default
 predictionWindow: 2d
+# Reach OpenCost through the Kubernetes API server service proxy instead of
+# baseUrl. Set a service and remove baseUrl, tlsSkipVerify, caCertFile, and
+# allowInsecureHttp. An empty service keeps baseUrl mode.
+kube:
+  context: ""
+  namespace: opencost
+  service: ""
+  port: 9003
+  kubeconfig: ""
