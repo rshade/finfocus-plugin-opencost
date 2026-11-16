@@ -10,7 +10,8 @@
     "ESTIMATE_COST",
     "BATCH_COST",
     "BUDGETS",
-    "DRY_RUN"
+    "DRY_RUN",
+    "RECOMMENDATIONS"
   ],
   "executable": "finfocus-plugin-opencost",
   "protocol": "grpc",

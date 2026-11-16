@@ -36,10 +36,11 @@ var (
 		"totalEfficiency":       "includeUsage column efficiency.total",
 		"gpuCount":              "whether the row has a GPU, for efficiency.gpu",
 		"gpuHours":              "whether the row has a GPU, for efficiency.gpu",
+		"cpuCoreHours":          "per-core-hour rate for recommendation savings",
+		"ramByteHours":          "per-byte-hour rate for recommendation savings",
 	}
 
 	IgnoredFields = map[string]string{
-		"cpuCoreHours":                   reasonUsage,
 		"cpuCoreLimitAverage":            reasonUsage,
 		"cpuCores":                       reasonUsage,
 		"cpuCostAdjustment":              "adjustment already inside cpuCost",
@@ -62,7 +63,6 @@ var (
 		"pvBytes":                        reasonUsage,
 		"pvCostAdjustment":               "adjustment already inside pvCost",
 		"pvs":                            "per-volume breakdown not priced here",
-		"ramByteHours":                   reasonUsage,
 		"ramByteLimitAverage":            reasonUsage,
 		"ramBytes":                       reasonUsage,
 		"ramCostAdjustment":              "adjustment already inside ramCost",

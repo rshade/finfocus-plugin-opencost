@@ -49,6 +49,11 @@ type Config struct {
 	RateBurst int `yaml:"rateBurst"`
 	// IncludeUsage adds efficiency and request/usage extended columns to actual cost results.
 	IncludeUsage bool `yaml:"includeUsage"`
+	// Recommendations turns on right-sizing GetRecommendations. It needs RecommendationHeadroom.
+	Recommendations bool `yaml:"recommendations"`
+	// RecommendationHeadroom is the fraction above average usage a recommended request keeps.
+	// It has no default: an operator sets it.
+	RecommendationHeadroom float64 `yaml:"recommendationHeadroom"`
 	// Kube reaches OpenCost through the Kubernetes API server service proxy
 	// instead of BaseURL. A set Kube.Service selects it.
 	Kube Kube `yaml:"kube"`
@@ -120,12 +125,8 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	if currency := os.Getenv("OPENCOST_CURRENCY"); currency != "" {
 		cfg.Currency = currency
 	}
-	if os.Getenv("OPENCOST_INCLUDE_USAGE") != "" {
-		includeUsage, usageErr := getenvBool("OPENCOST_INCLUDE_USAGE")
-		if usageErr != nil {
-			return Config{}, usageErr
-		}
-		cfg.IncludeUsage = includeUsage
+	if cfg, err = cfg.withFeatureEnv(); err != nil {
+		return Config{}, err
 	}
 	cfg.APIToken = os.Getenv("KUBECOST_API_TOKEN")
 	kube, kubeErr := cfg.Kube.withEnv()
@@ -134,6 +135,35 @@ func LoadConfigFromEnvOrFile(path string) (Config, error) {
 	}
 	cfg.Kube = kube
 	return cfg, nil
+}
+
+// withFeatureEnv returns c with the feature switches laid over the file values.
+// Each variable wins only when it is set; an unparsable value names the variable.
+func (c Config) withFeatureEnv() (Config, error) {
+	for env, dst := range map[string]*bool{
+		"OPENCOST_INCLUDE_USAGE":   &c.IncludeUsage,
+		"OPENCOST_RECOMMENDATIONS": &c.Recommendations,
+	} {
+		if os.Getenv(env) == "" {
+			continue
+		}
+		value, err := getenvBool(env)
+		if err != nil {
+			return Config{}, err
+		}
+		*dst = value
+	}
+	if raw := os.Getenv("OPENCOST_RECOMMENDATION_HEADROOM"); raw != "" {
+		headroom, err := strconv.ParseFloat(raw, 64)
+		if err != nil {
+			return Config{}, fmt.Errorf(
+				"environment variable OPENCOST_RECOMMENDATION_HEADROOM must be a number: %w",
+				err,
+			)
+		}
+		c.RecommendationHeadroom = headroom
+	}
+	return c, nil
 }
 
 // withEnv returns k with the OPENCOST_KUBE_* variables laid over it.
@@ -224,6 +254,19 @@ func (c Config) Validate() error {
 	}
 	if c.RateBurst < 0 {
 		return errors.New("config: rateBurst must not be negative")
+	}
+	return c.validateRecommendations()
+}
+
+func (c Config) validateRecommendations() error {
+	if !c.Recommendations {
+		return nil
+	}
+	if c.RecommendationHeadroom <= 0 {
+		return errors.New("config: recommendations needs recommendationHeadroom above zero")
+	}
+	if c.Profile == ProfileKubecost {
+		return errors.New("config: recommendations needs profile opencost")
 	}
 	return nil
 }

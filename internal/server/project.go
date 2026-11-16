@@ -197,13 +197,13 @@ func kindForType(resourceType string) string {
 		return kindNode
 	case "kubernetes:core/v1:Pod", "k8s-pod":
 		return kindPod
-	case "kubernetes:apps/v1:Deployment",
-		"kubernetes:apps/v1:StatefulSet",
-		"kubernetes:apps/v1:DaemonSet",
-		"kubernetes:apps/v1:ReplicaSet",
-		"kubernetes:batch/v1:Job",
-		"kubernetes:batch/v1:CronJob",
-		"k8s-controller":
+	case typeDeployment,
+		typeStatefulSet,
+		typeDaemonSet,
+		typeReplicaSet,
+		typeJob,
+		typeCronJob,
+		aliasController:
 		return kindController
 	default:
 		return ""

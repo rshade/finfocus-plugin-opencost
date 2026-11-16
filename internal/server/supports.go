@@ -8,10 +8,17 @@ import (
 )
 
 const (
-	typeNamespace  = "kubernetes:core/v1:Namespace"
-	typeNode       = "kubernetes:core/v1:Node"
-	aliasNamespace = "k8s-namespace"
-	aliasNode      = "k8s-node"
+	typeNamespace   = "kubernetes:core/v1:Namespace"
+	typeNode        = "kubernetes:core/v1:Node"
+	aliasNamespace  = "k8s-namespace"
+	typeDeployment  = "kubernetes:apps/v1:Deployment"
+	typeStatefulSet = "kubernetes:apps/v1:StatefulSet"
+	typeDaemonSet   = "kubernetes:apps/v1:DaemonSet"
+	typeReplicaSet  = "kubernetes:apps/v1:ReplicaSet"
+	typeJob         = "kubernetes:batch/v1:Job"
+	typeCronJob     = "kubernetes:batch/v1:CronJob"
+	aliasController = "k8s-controller"
+	aliasNode       = "k8s-node"
 )
 
 // knownType reports the resource types core forwards and this plugin can filter.
@@ -20,10 +27,8 @@ const (
 func knownType(resourceType string) bool {
 	switch resourceType {
 	case typeNamespace, "kubernetes:core/v1:Pod", typeNode,
-		"kubernetes:apps/v1:Deployment", "kubernetes:apps/v1:StatefulSet",
-		"kubernetes:apps/v1:DaemonSet", "kubernetes:apps/v1:ReplicaSet",
-		"kubernetes:batch/v1:Job", "kubernetes:batch/v1:CronJob",
-		aliasNamespace, "k8s-pod", "k8s-controller", aliasNode:
+		typeDeployment, typeStatefulSet, typeDaemonSet, typeReplicaSet, typeJob, typeCronJob,
+		aliasNamespace, "k8s-pod", aliasController, aliasNode:
 		return true
 	default:
 		return false

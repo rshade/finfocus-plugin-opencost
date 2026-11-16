@@ -15,6 +15,7 @@ import (
 // Info builds the plugin record reported by GetPluginInfo for the configured profile.
 // WithCapabilities replaces the SDK's inferred set, so every capability the profile serves is listed here.
 // Profile kubecost adds BUDGETS because only that profile can answer GetBudgets.
+// RECOMMENDATIONS appears only when the recommendations flag is on.
 func Info(cfg allocation.Config) *pluginsdk.PluginInfo {
 	capabilities := []pbc.PluginCapability{
 		pbc.PluginCapability_PLUGIN_CAPABILITY_PROJECTED_COSTS,
@@ -26,6 +27,9 @@ func Info(cfg allocation.Config) *pluginsdk.PluginInfo {
 	}
 	if profile, err := cfg.ProfileName(); err == nil && profile == allocation.ProfileKubecost {
 		capabilities = append(capabilities, pbc.PluginCapability_PLUGIN_CAPABILITY_BUDGETS)
+	}
+	if cfg.Recommendations {
+		capabilities = append(capabilities, pbc.PluginCapability_PLUGIN_CAPABILITY_RECOMMENDATIONS)
 	}
 	return pluginsdk.NewPluginInfo(
 		pluginName,
