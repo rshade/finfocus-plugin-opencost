@@ -3,7 +3,7 @@
 ## 1. DryRun handler
 
 - [x] 1.1 Write `TestDryRunRejectsMissingResource`, `TestDryRunMapsFocusFieldsForEverySupportedType`, `TestDryRunUnsupportedTypeIsAResponse`, `TestDryRunReportsInvalidConfiguration`, `TestDryRunMakesNoBackendCall`, and `TestDryRunThroughSDKServer` in `internal/server/dryrun_test.go` and watch them fail to compile, then add `internal/server/dryrun.go` (`HandleDryRun`). Verify: `go test -count=1 ./internal/server/ -run DryRun` exits 0. Break check: make `HandleDryRun` return `codes.Unimplemented` and `TestDryRunThroughSDKServer` fails; set `billing_currency` to `UNSUPPORTED` and `TestDryRunMapsFocusFieldsForEverySupportedType` fails.
-- [ ] 1.2 Add `DRY_RUN` to `Info`, `plugin.manifest.json`, the pins in `plugininfo_test.go` and `naming_test.go`, and the README capability list with one `DryRun` paragraph. Verify: `go test -count=1 ./internal/server/ -run 'PluginInfo|Kubecost'` and `npx markdownlint-cli2 README.md` exit 0. Break check: drop `DRY_RUN` from `Info` and `TestGetPluginInfoCapabilitiesFollowProfile` fails.
+- [x] 1.2 Add `DRY_RUN` to `Info`, `plugin.manifest.json`, the pins in `plugininfo_test.go` and `naming_test.go`, and the README capability list with one `DryRun` paragraph. Verify: `go test -count=1 ./internal/server/ -run 'PluginInfo|Kubecost'` and `npx markdownlint-cli2 README.md` exit 0. Break check: drop `DRY_RUN` from `Info` and `TestGetPluginInfoCapabilitiesFollowProfile` fails.
 
 ## 2. Kube client keeps the operator config
 

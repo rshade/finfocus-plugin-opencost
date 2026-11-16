@@ -22,9 +22,18 @@ Profile `opencost` (the default) reports:
 - `PRICING_SPEC`
 - `ESTIMATE_COST`
 - `BATCH_COST`
+- `DRY_RUN`
 
-Profile `kubecost` reports the same five and adds `BUDGETS`.
-`plugin.manifest.json` lists all six, because it describes what the binary can serve across profiles.
+Profile `kubecost` reports the same six and adds `BUDGETS`.
+`plugin.manifest.json` lists all seven, because it describes what the binary can serve across profiles.
+
+`DryRun` answers `finfocus plugin inspect opencost <type>` without calling the allocation backend.
+For a supported type it maps every FOCUS field that `GetActualCost` can fill.
+`billing_currency` is supported.
+`charge_period_start`, `charge_period_end`, `tags`, and `extended_columns` are conditional, and each names its condition.
+Every other field is unsupported, including `billed_cost`: the actual cost amount is `ActualCostResult.cost`, not a FOCUS column.
+An unsupported type returns `resource_type_supported=false` with no mappings and no error.
+`configuration_valid` repeats the config validation the binary runs at start-up.
 
 The provider list is `kubernetes`.
 The plugin does not report `ALLOCATION` and does not implement `AllocatorService`.
