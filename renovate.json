@@ -43,5 +43,17 @@
       "groupName": "go major dependencies",
       "groupSlug": "go-major-deps"
     }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "The kind e2e OpenCost chart pin in hack/kind/versions.env. kind.yml runs the oracle on this version.",
+      "managerFilePatterns": [
+        "/^hack/kind/versions\\.env$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) registryUrl=(?<registryUrl>\\S+)\\n[A-Z_]+=(?<currentValue>\\S+)"
+      ]
+    }
   ]
 }

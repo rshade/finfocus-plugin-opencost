@@ -79,14 +79,14 @@ func kubeConfigYAML(kubeconfig, service string) string {
 	return fmt.Sprintf(
 		"profile: opencost\ncurrency: %s\ncacheTTL: -1s\ntimeout: 30s\n"+
 			"kube:\n  context: %s\n  namespace: %s\n  service: %s\n  port: %d\n  kubeconfig: %s\n",
-		e2eCurrency, e2eContext, proxyNamespace, service, proxyPort, kubeconfig,
+		e2eCurrency, e2eContext(), proxyNamespace, service, proxyPort, kubeconfig,
 	)
 }
 
 func kubeClient(t *testing.T, kubeconfig, service string) *allocation.Client {
 	t.Helper()
 	base, rt, err := kubeproxy.Resolve(kubeproxy.Target{
-		Context: e2eContext, Namespace: proxyNamespace, Service: service, Port: proxyPort, Kubeconfig: kubeconfig,
+		Context: e2eContext(), Namespace: proxyNamespace, Service: service, Port: proxyPort, Kubeconfig: kubeconfig,
 	})
 	require.NoError(t, err)
 	cli, err := allocation.NewClient(context.Background(), allocation.Config{
