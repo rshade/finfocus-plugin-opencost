@@ -196,6 +196,8 @@ The `cost actual` table does not show it yet, and core does not read the charge 
 Monthly cost is `totalCost / (minutes / 60) * 730`.
 `unit_price` is the observed hourly rate.
 `billing_detail` states that this is a 30-day trailing average projected to a 730-hour month.
+A namespace row's `billing_detail` adds that the figure includes every workload in the namespace.
+Pricing a `Namespace` and its workloads in one stack therefore counts the workloads twice, because FinFocus sums every row.
 
 `GetPricingSpec` uses that same 30-day query.
 `provider` is `kubernetes`.

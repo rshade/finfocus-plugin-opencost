@@ -1,6 +1,8 @@
 # Kubernetes example
 
-This stack is a namespace, a deployment, a service, and a daemonset.
+This stack is a deployment, a service, and a daemonset in the existing namespace `oc-example`.
+It declares no `Namespace` resource on purpose: OpenCost's namespace figure sums every workload in
+the namespace, so pricing a `Namespace` next to its workloads counts them twice.
 `pulumi preview` renders the manifests and does not apply them.
 The provider uses `renderYamlToDirectory`, so the preview does not
 need a cluster.
@@ -15,8 +17,8 @@ need a cluster.
 ## Preview
 
 `preview.json` is the output of this command against stack `dev` on a
-file backend. Pulumi 3.264.0 exited 0. The plan creates six resources,
-including the four Kubernetes types below. A diagnostic warning in that
+file backend. Pulumi 3.272.0 exited 0. The plan creates five resources,
+including the three Kubernetes types below. A diagnostic warning in that
 file uses `~` in place of the local home directory.
 
 ```bash
@@ -29,12 +31,11 @@ pulumi preview --non-interactive --stack dev --color never --json
 
 The steps are:
 
-- `kubernetes:core/v1:Namespace` named `oc-example`
 - `kubernetes:apps/v1:Deployment` named `fixed`
 - `kubernetes:core/v1:Service` named `fixed`
 - `kubernetes:apps/v1:DaemonSet` named `node-agent`
 
-The plugin prices the namespace, the deployment, and the daemonset.
+The plugin prices the deployment and the daemonset.
 `Supports` is false for `kubernetes:core/v1:Service`.
 A cluster node stays `node/<node name>`. This stack does not declare a
 `Node`, because the control plane owns that object.
@@ -58,7 +59,7 @@ export OPENCOST_PROFILE=opencost
 ## Costs through FinFocus
 
 FinFocus reads a JSON plan whose top-level field is `steps`.
-`pulumi preview --json` on Pulumi 3.264.0 writes that field, and each
+`pulumi preview --json` on Pulumi 3.272.0 writes that field, and each
 step carries its type on `newState.type`.
 
 ```bash
@@ -76,6 +77,8 @@ Ids the plugin accepts for this stack:
 - `node/<node name>`
 
 Projected cost uses the Pulumi type. The namespace id is the name.
+A stack that does declare a `Namespace` gets a row whose figure includes every workload in it,
+and `billing_detail` says so. Do not add that row to the workload rows.
 A deployment or daemonset id is `namespace/name`.
 
 ## Troubleshooting

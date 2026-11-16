@@ -15,11 +15,12 @@ import (
 )
 
 const (
-	projectionWindow       = "30d"
-	hoursPerMonth          = 730.0
-	minutesPerHour         = 60.0
-	projectedBillingDetail = "30-day trailing average of this resource, projected to a 730-hour month"
-	hourlyRateAssumption   = "observed hourly cost over the trailing 30-day allocation window"
+	projectionWindow        = "30d"
+	hoursPerMonth           = 730.0
+	minutesPerHour          = 60.0
+	projectedBillingDetail  = "30-day trailing average of this resource, projected to a 730-hour month"
+	namespaceIncludesDetail = "; the figure includes every workload in the namespace"
+	hourlyRateAssumption    = "observed hourly cost over the trailing 30-day allocation window"
 )
 
 func actualRef(req *pbc.GetActualCostRequest) (resourceRef, error) {
@@ -312,7 +313,12 @@ func scaledBreakdown(parts costParts, monthly float64) map[string]float64 {
 	return out
 }
 
-func projectedResponse(parts costParts, currency string, until time.Time) (*pbc.GetProjectedCostResponse, error) {
+func projectedResponse(
+	ref resourceRef,
+	parts costParts,
+	currency string,
+	until time.Time,
+) (*pbc.GetProjectedCostResponse, error) {
 	hourly, monthly, breakdown, err := projectMonth(parts)
 	if err != nil {
 		return nil, err
@@ -321,7 +327,7 @@ func projectedResponse(parts costParts, currency string, until time.Time) (*pbc.
 		UnitPrice:     hourly,
 		CostPerMonth:  monthly,
 		Currency:      currency,
-		BillingDetail: projectedBillingDetail,
+		BillingDetail: billingDetailFor(ref),
 		CostBreakdown: breakdown,
 		ExpiresAt:     expiryStamp(until),
 	}
@@ -329,4 +335,11 @@ func projectedResponse(parts costParts, currency string, until time.Time) (*pbc.
 		return nil, status.Errorf(codes.Internal, "projected cost: %v", validateErr)
 	}
 	return resp, nil
+}
+
+func billingDetailFor(ref resourceRef) string {
+	if ref.kind == kindNamespace {
+		return projectedBillingDetail + namespaceIncludesDetail
+	}
+	return projectedBillingDetail
 }

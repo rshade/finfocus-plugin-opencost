@@ -1,28 +1,19 @@
 name: finfocus-plugin-opencost-example
 runtime: yaml
-description: Kubernetes resources whose allocation the OpenCost plugin can price
+description: Kubernetes workloads whose allocation the OpenCost plugin can price, deployed into an existing namespace
 
 resources:
   render:
     type: pulumi:providers:kubernetes
     properties:
       renderYamlToDirectory: rendered
-  appNamespace:
-    type: kubernetes:core/v1:Namespace
-    options:
-      provider: ${render}
-    properties:
-      metadata:
-        name: oc-example
-        labels:
-          app: fixed
   app:
     type: kubernetes:apps/v1:Deployment
     options:
       provider: ${render}
     properties:
       metadata:
-        namespace: ${appNamespace.metadata.name}
+        namespace: oc-example
         name: fixed
         labels:
           app: fixed
@@ -45,7 +36,7 @@ resources:
       provider: ${render}
     properties:
       metadata:
-        namespace: ${appNamespace.metadata.name}
+        namespace: oc-example
         name: fixed
       spec:
         selector:
@@ -60,7 +51,7 @@ resources:
       provider: ${render}
     properties:
       metadata:
-        namespace: ${appNamespace.metadata.name}
+        namespace: oc-example
         name: node-agent
         labels:
           app: node-agent
@@ -77,8 +68,6 @@ resources:
               - name: pause
                 image: registry.k8s.io/pause:3.10
 outputs:
-  namespace:
-    value: ${appNamespace.metadata.name}
   deployment:
     value: ${app.metadata.name}
   service:

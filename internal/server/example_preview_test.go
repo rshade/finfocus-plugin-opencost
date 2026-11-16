@@ -10,8 +10,8 @@ import (
 func TestKubernetesExamplePreviewFixture(t *testing.T) {
 	t.Parallel()
 
+	const namespaceToken = "kubernetes:core/v1:Namespace"
 	tokens := []string{
-		"kubernetes:core/v1:Namespace",
 		"kubernetes:apps/v1:Deployment",
 		"kubernetes:core/v1:Service",
 		"kubernetes:apps/v1:DaemonSet",
@@ -47,4 +47,7 @@ func TestKubernetesExamplePreviewFixture(t *testing.T) {
 	for _, token := range tokens {
 		require.Truef(t, seen[token], "preview steps missing %s", token)
 	}
+	// A namespace figure already includes its workloads, so pricing both double counts them.
+	require.NotContains(t, program, namespaceToken)
+	require.False(t, seen[namespaceToken], "preview prices a Namespace next to its workloads")
 }
