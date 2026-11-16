@@ -19,9 +19,12 @@ issues filed on 2026-11-12 (#133 to #140) are code work and are not blocked.
   the branch-protection ruleset (owner) and a coverage-threshold decision. The
   current total is 76.6%.
 - [ ] #67 `ci(kind)`: run `kind.yml` and `live-drift.yml` once, make E2E (kind) a required check [M]
-  Shipped: the workflow edits and the drift-issue reporter. Left: find out why
-  the nightly live-drift job failed in each of its last five runs, dispatch both
-  workflows once with a token that can start them, and decide whether
+  Shipped: the workflow edits, the drift-issue reporter (labelled `bug`, with the
+  run URL), green nightly runs of both workflows (kind 43685421480, live drift
+  43380999075), and log artifacts on failure (`oc-e2e-logs` on 43778686763,
+  `oc-drift-logs` on 43686867569). The reporter opened #142 and commented on it
+  the next night. The 14 and 15 Nov drift failures were the conditional
+  `rawAllocationOnly` key, fixed in #148. Left (owner): decide whether
   `E2E (kind)` is required. A required check must be skipped at job level, not
   workflow level, or it stays pending forever.
 
@@ -130,10 +133,9 @@ and `BLOCKED-ON-INPUT` are not eligible. The owner sets a blocked row back to
 
 Agent slices already done, with an owner step left:
 
-- OC-9.10 (#67): the workflow edits and the drift-issue reporter are in. Left:
-  dispatch `kind.yml` and `live-drift.yml` once with a token that can start
-  them (the earlier dispatch returned HTTP 403), diagnose the nightly drift
-  failures, and decide on a required check.
+- OC-9.10 (#67): the workflow edits, the drift-issue reporter, green nightly
+  runs of both workflows, and failure log artifacts are in. The nightly
+  schedule replaced the manual dispatch. Left: the required-check decision.
 - OC-9.11 (#68): `-race`, the coverage summary, and the `Test` badge are in.
   Left: the branch-protection ruleset and a coverage-threshold decision.
 

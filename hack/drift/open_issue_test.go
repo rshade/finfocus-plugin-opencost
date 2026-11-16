@@ -58,6 +58,13 @@ func TestOpenIssueCreatesThenUpdatesOneIssue(t *testing.T) {
 	if strings.Count(text, "issue comment") != 1 {
 		t.Fatalf("comments: %s", text)
 	}
+	if !strings.Contains(text, "--label bug") {
+		t.Fatalf("create has no bug label: %s", text)
+	}
+	const run = "Run: https://github.com/example/repo/actions/runs/4242"
+	if strings.Count(text, run) != 2 {
+		t.Fatalf("create and comment must each carry the run URL: %s", text)
+	}
 }
 
 func TestOpenIssueIgnoresAMatchingKeySet(t *testing.T) {
@@ -85,6 +92,8 @@ func runOpenIssue(t *testing.T, bin, log string) string {
 	cmd.Env = append(os.Environ(),
 		"PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
 		"GITHUB_REPOSITORY=example/repo",
+		"GITHUB_SERVER_URL=https://github.com",
+		"GITHUB_RUN_ID=4242",
 	)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
