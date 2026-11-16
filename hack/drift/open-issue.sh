@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Open one issue for a live key-set difference, or comment on that open issue.
+# Open one bug issue for a live key-set difference, or comment on that open
+# issue. Both carry the Actions run URL when GITHUB_RUN_ID is set.
 # A log without added or removed keys does not create an issue.
 set -euo pipefail
 
@@ -20,15 +21,20 @@ if [[ "${differs}" != true ]]; then
 	exit 0
 fi
 
+body="${log}"
+if [[ -n "${GITHUB_RUN_ID:-}" ]]; then
+	body+=$'\n\n'"Run: ${GITHUB_SERVER_URL:-https://github.com}/${repo}/actions/runs/${GITHUB_RUN_ID}"
+fi
+
 number="$(
 	gh issue list --repo "${repo}" --state open --limit 100 --json number,title \
 		--jq ".[] | select(.title == \"${title}\") | .number" | head -n 1
 )"
 
 if [[ -z "${number}" ]]; then
-	gh issue create --repo "${repo}" --title "${title}" --body "${log}"
+	gh issue create --repo "${repo}" --title "${title}" --label bug --body "${body}"
 	exit 0
 fi
 
-gh issue comment "${number}" --repo "${repo}" --body "${log}" >/dev/null
+gh issue comment "${number}" --repo "${repo}" --body "${body}" >/dev/null
 echo "https://github.com/${repo}/issues/${number}"
