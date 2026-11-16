@@ -32,7 +32,6 @@ import (
 )
 
 const (
-	e2eContext   = "kind-oc-e2e"
 	e2eNamespace = "oc-test"
 	e2eCurrency  = "EUR"
 	brokenCPU    = 9.0
@@ -240,7 +239,7 @@ func (f *backendForward) start() error {
 	}
 	f.exited = make(chan struct{})
 	cmd := exec.Command(
-		"kubectl", "--context", e2eContext, "--namespace", "opencost",
+		"kubectl", "--context", e2eContext(), "--namespace", "opencost",
 		"port-forward", "svc/opencost", f.port+":9003",
 	)
 	cmd.Env = append(os.Environ(), "KUBECONFIG="+f.kubeconfig)
@@ -665,18 +664,40 @@ func trimBody(body []byte) string {
 	return text
 }
 
+// e2eContext is the kubeconfig context of the kind cluster under test.
+// OC_E2E_CLUSTER names that cluster; the default is oc-e2e.
+func e2eContext() string {
+	if cluster := os.Getenv("OC_E2E_CLUSTER"); cluster != "" {
+		return "kind-" + cluster
+	}
+	return "kind-oc-e2e"
+}
+
+// chartVersionArgs returns the helm --version flag that hack/kind/chart-version.sh
+// selects, or none when OC_CHART_VERSION is latest.
+func chartVersionArgs(t *testing.T, root string) []string {
+	t.Helper()
+	out, err := exec.Command("bash", filepath.Join(root, "hack", "kind", "chart-version.sh")).Output()
+	require.NoError(t, err)
+	version := strings.TrimSpace(string(out))
+	if version == "" {
+		return nil
+	}
+	return []string{"--version", version}
+}
+
 func helmUpgrade(t *testing.T, root, kubeconfig string) {
 	t.Helper()
-	cmd := exec.Command(
-		"helm", "upgrade", "opencost", "opencost",
-		"--kube-context", e2eContext,
+	args := []string{
+		"upgrade", "opencost", "opencost",
+		"--kube-context", e2eContext(),
 		"--kubeconfig", kubeconfig,
 		"--repo", "https://opencost.github.io/opencost-helm-chart",
-		"--version", "2.5.32",
 		"--namespace", "opencost",
 		"-f", filepath.Join(root, "hack", "kind", "opencost-values.yaml"),
 		"--wait", "--timeout", "5m",
-	)
+	}
+	cmd := exec.Command("helm", append(args, chartVersionArgs(t, root)...)...)
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, string(out))
 }
@@ -685,14 +706,14 @@ func restartOpenCost(t *testing.T, kubeconfig string) {
 	t.Helper()
 	env := append(os.Environ(), "KUBECONFIG="+kubeconfig)
 	restart := exec.Command(
-		"kubectl", "--context", e2eContext, "--namespace", "opencost",
+		"kubectl", "--context", e2eContext(), "--namespace", "opencost",
 		"rollout", "restart", "deployment/opencost",
 	)
 	restart.Env = env
 	out, err := restart.CombinedOutput()
 	require.NoError(t, err, string(out))
 	status := exec.Command(
-		"kubectl", "--context", e2eContext, "--namespace", "opencost",
+		"kubectl", "--context", e2eContext(), "--namespace", "opencost",
 		"rollout", "status", "deployment/opencost", "--timeout=180s",
 	)
 	status.Env = env

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Bring up kind cluster oc-e2e, Prometheus 29.35.0, and OpenCost 2.5.32.
+# Bring up kind cluster oc-e2e, Prometheus 29.35.0, and the OpenCost chart that
+# chart-version.sh names (the versions.env pin unless OC_CHART_VERSION is set).
 # Success is an HTTP 200 from /allocation/compute?window=60m. The cluster stays up.
 set -euo pipefail
 
@@ -49,10 +50,15 @@ helm upgrade --install prometheus prometheus \
   --wait \
   --timeout 15m
 
+chart_version="$(bash "${kind_dir}/chart-version.sh")"
+version_args=()
+if [[ -n "${chart_version}" ]]; then
+  version_args=(--version "${chart_version}")
+fi
 helm upgrade --install opencost opencost \
   --kube-context "${context}" \
   --repo https://opencost.github.io/opencost-helm-chart \
-  --version 2.5.32 \
+  "${version_args[@]}" \
   --namespace opencost \
   --create-namespace \
   -f "${kind_dir}/opencost-values.yaml" \
