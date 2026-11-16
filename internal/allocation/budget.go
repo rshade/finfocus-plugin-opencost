@@ -47,7 +47,7 @@ func (c *Client) ListBudgets(ctx context.Context) ([]BudgetRule, error) {
 	if err := c.limiter.allow(c.clock()); err != nil {
 		return nil, err
 	}
-	u, err := url.Parse(c.cfg.BaseURL)
+	u, err := url.Parse(c.origin())
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}

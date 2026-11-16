@@ -22,6 +22,7 @@ func Info(cfg allocation.Config) *pluginsdk.PluginInfo {
 		pbc.PluginCapability_PLUGIN_CAPABILITY_PRICING_SPEC,
 		pbc.PluginCapability_PLUGIN_CAPABILITY_ESTIMATE_COST,
 		pbc.PluginCapability_PLUGIN_CAPABILITY_BATCH_COST,
+		pbc.PluginCapability_PLUGIN_CAPABILITY_DRY_RUN,
 	}
 	if profile, err := cfg.ProfileName(); err == nil && profile == allocation.ProfileKubecost {
 		capabilities = append(capabilities, pbc.PluginCapability_PLUGIN_CAPABILITY_BUDGETS)

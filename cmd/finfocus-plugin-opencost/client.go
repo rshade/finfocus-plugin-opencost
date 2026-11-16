@@ -33,6 +33,7 @@ func newClient(ctx context.Context, cfg allocation.Config, logger zerolog.Logger
 		Str("kube_service", cfg.Kube.Service).
 		Int("kube_port", port).
 		Msg("reaching OpenCost through the Kubernetes API server service proxy")
-	cfg.BaseURL = conn.BaseURL
-	return allocation.NewClient(ctx, cfg, allocation.WithTransport(conn.Transport))
+	return allocation.NewClient(ctx, cfg,
+		allocation.WithBaseURL(conn.BaseURL),
+		allocation.WithTransport(conn.Transport))
 }

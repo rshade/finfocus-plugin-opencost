@@ -32,6 +32,7 @@ const (
 
 type Client struct {
 	cfg     Config
+	baseURL string
 	http    *http.Client
 	logger  zerolog.Logger
 	now     func() time.Time
@@ -48,6 +49,13 @@ type Option func(*Client)
 // authentication for it, so tlsSkipVerify and caCertFile do not apply.
 func WithTransport(rt http.RoundTripper) Option {
 	return func(c *Client) { c.http.Transport = rt }
+}
+
+// WithBaseURL sends requests to origin instead of Config.BaseURL. GetConfig
+// still returns the config as given, so a kube target keeps an empty baseUrl
+// and passes Validate.
+func WithBaseURL(origin string) Option {
+	return func(c *Client) { c.baseURL = origin }
 }
 
 func NewClient(_ context.Context, cfg Config, opts ...Option) (*Client, error) {
@@ -93,6 +101,13 @@ func rootPool(path string) (*x509.CertPool, error) {
 		return nil, errors.New("config: caCertFile did not contain a PEM certificate")
 	}
 	return pool, nil
+}
+
+func (c *Client) origin() string {
+	if c.baseURL != "" {
+		return c.baseURL
+	}
+	return c.cfg.BaseURL
 }
 
 func (c *Client) clock() time.Time {
@@ -205,7 +220,7 @@ func (c *Client) PredictSpecCost(ctx context.Context, req PredictionRequest) ([]
 	if err := c.limiter.allow(c.clock()); err != nil {
 		return nil, err
 	}
-	u, err := url.Parse(c.cfg.BaseURL)
+	u, err := url.Parse(c.origin())
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}

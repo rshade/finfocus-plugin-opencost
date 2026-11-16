@@ -15,7 +15,7 @@ func (c *Client) Probe(ctx context.Context) error {
 	if c == nil {
 		return errors.New("allocation health: nil client")
 	}
-	base, err := url.Parse(c.cfg.BaseURL)
+	base, err := url.Parse(c.origin())
 	if err != nil {
 		return fmt.Errorf("allocation health: %w", err)
 	}
