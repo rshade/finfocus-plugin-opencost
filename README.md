@@ -54,6 +54,7 @@ The first returned budget carries `skippedRules` and `skippedRuleReasons` in met
 A namespace filter that removes every returned budget also removes that metadata; the WARN log still names each skipped rule.
 That response is a contract fixture and is not verified against live Kubecost.
 That decision is in [docs/allocator-decision.md](docs/allocator-decision.md).
+The plugin leaves the FOCUS split-cost columns (`allocated_*`) empty; [docs/focus-split-cost.md](docs/focus-split-cost.md) explains why.
 
 ## Installation
 
