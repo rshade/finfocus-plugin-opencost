@@ -71,3 +71,19 @@ report it at runtime, and it includes `DRY_RUN` and `RECOMMENDATIONS`.
 - **THEN** they are the five cost capabilities, `BUDGETS`, `DRY_RUN`, and `RECOMMENDATIONS`
 
 Tested by: TestDocsLimitKubecostToProfileAndHistory
+
+### Requirement: Profile kubecost is labelled experimental
+
+On profile `kubecost`, `GetPluginInfo` metadata SHALL carry `kubecost_profile` = `experimental` and `kubecost_verified` = `false`. On profile `opencost` neither key SHALL be present.
+
+#### Scenario: Profile kubecost
+
+- **WHEN** `GetPluginInfo` is called with profile `kubecost`
+- **THEN** metadata `kubecost_profile` is `experimental` and `kubecost_verified` is `false`
+
+#### Scenario: Profile opencost
+
+- **WHEN** `GetPluginInfo` is called with profile `opencost`
+- **THEN** metadata has neither key
+
+Tested by: TestGetPluginInfoLabelsKubecostExperimental

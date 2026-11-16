@@ -139,6 +139,10 @@ It does not send a bearer token.
 
 ### Profile `kubecost`
 
+> **Experimental.** Profile `kubecost` is verified only against contract fixtures, not a live backend.
+> `GetPluginInfo` metadata says `kubecost_profile=experimental` and `kubecost_verified=false`, each budget carries `verified=false`, and start-up logs one warning.
+> The decision and what would lift it are in [docs/kubecost-kind-spike.md](docs/kubecost-kind-spike.md).
+
 The `kubecost` profile calls `GET /model/allocation` with `idle=false`, `accumulate=false`, and `shareIdle=false`.
 It sends `Authorization: Bearer` when `KUBECOST_API_TOKEN` is set.
 An empty token sends no `Authorization` header.
