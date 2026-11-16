@@ -14,9 +14,10 @@ import (
 func TestReadmeBadgesNameWorkflowsThatRunOnMain(t *testing.T) {
 	t.Parallel()
 
+	const actions = `https://github\.com/rshade/finfocus-plugin-opencost/actions/workflows/`
 	badge := regexp.MustCompile(
-		`\[!\[([^\]]+)\]\(https://github\.com/rshade/finfocus-plugin-opencost/actions/workflows/([^/]+)/badge\.svg\?branch=main\)\]` +
-			`\(https://github\.com/rshade/finfocus-plugin-opencost/actions/workflows/([^)]+)\)`)
+		`\[!\[([^\]]+)\]\(` + actions + `([^/]+)/badge\.svg\?branch=main\)\]\(` + actions + `([^)]+)\)`,
+	)
 	matches := badge.FindAllStringSubmatch(string(readRepoFile(t, "README.md")), -1)
 
 	var files []string
