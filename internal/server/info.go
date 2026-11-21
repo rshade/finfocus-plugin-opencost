@@ -28,7 +28,7 @@ func Info(cfg allocation.Config) *pluginsdk.PluginInfo {
 		capabilities = append(capabilities, pbc.PluginCapability_PLUGIN_CAPABILITY_BUDGETS)
 	}
 	return pluginsdk.NewPluginInfo(
-		pluginName,
+		PluginName,
 		version.GetVersionInfo().Version,
 		pluginsdk.WithSpecVersion(pluginsdk.SpecVersion),
 		pluginsdk.WithProviders("kubernetes"),
