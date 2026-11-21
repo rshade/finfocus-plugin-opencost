@@ -120,7 +120,7 @@ func resultsFor(
 			results = append(results, &pbc.ActualCostResult{
 				Timestamp:   timestamppb.New(stamped),
 				Cost:        entry.TotalCost,
-				Source:      pluginName,
+				Source:      PluginName,
 				FocusRecord: stampChargePeriod(focusFor(entry.Properties, ref), entry),
 			})
 		}

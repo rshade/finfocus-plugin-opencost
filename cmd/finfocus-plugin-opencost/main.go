@@ -33,7 +33,7 @@ func run() int {
 		return 0
 	}
 
-	logger := pluginsdk.NewPluginLogger("opencost", version.Version, zerolog.TraceLevel, os.Stderr)
+	logger := pluginsdk.NewPluginLogger(server.PluginName, version.Version, zerolog.TraceLevel, os.Stderr)
 
 	configPath := os.Getenv("OPENCOST_CONFIG")
 	if configPath == "" {

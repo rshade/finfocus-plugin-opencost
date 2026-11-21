@@ -13,7 +13,9 @@ import (
 	pbc "github.com/rshade/finfocus-spec/sdk/go/proto/finfocus/v1"
 )
 
-const pluginName = "opencost"
+// PluginName is the plugin's install name. Every place the plugin states its
+// name uses it.
+const PluginName = "opencost"
 
 // Server implements the FinFocus cost-source plugin interface.
 type Server struct {
@@ -29,7 +31,7 @@ func New(cli *allocation.Client) *Server {
 
 // Name returns the FinFocus cost source name.
 func (s *Server) Name() string {
-	return pluginName
+	return PluginName
 }
 
 // GetActualCost returns allocation totals for one Kubernetes object.
@@ -153,7 +155,7 @@ func (s *Server) GetPricingSpec(
 				RatePerUnit:  hourly,
 				Currency:     currency,
 				Unit:         "hour",
-				Source:       "opencost",
+				Source:       PluginName,
 				Description:  "observed hourly cost from the trailing allocation window",
 				Assumptions:  []string{hourlyRateAssumption},
 			},
